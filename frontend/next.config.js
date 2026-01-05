@@ -2,6 +2,17 @@
 const nextConfig = {
   reactStrictMode: true,
   transpilePackages: ['@quicklyway/shared'],
+  images: {
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
+    ],
+  },
+  turbopack: {
+    // Path aliases are handled by jsconfig.json
+  },
 };
 
 module.exports = nextConfig;
