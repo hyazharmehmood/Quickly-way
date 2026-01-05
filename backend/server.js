@@ -30,7 +30,7 @@ app.use('/api/users', userRoutes);
 
 // MongoDB connection
 mongoose
-  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/freelance-platform')
+  .connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/quicklyway')
   .then(() => {
     console.log('Connected to MongoDB');
   })

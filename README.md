@@ -1,11 +1,11 @@
-# Freelance Platform Monorepo
+# Quicklyway Monorepo
 
 A modern freelance platform built with a monorepo architecture using npm workspaces and Turborepo.
 
 ## Project Structure
 
 ```
-freelance-platform/
+quicklyway/
 ├── frontend/          # Next.js frontend application
 ├── backend/           # Express.js backend API
 ├── shared/            # Shared JavaScript utilities, constants, and schemas
@@ -43,7 +43,7 @@ Create a `.env` file in the `backend/` directory:
 
 ```env
 PORT=3001
-MONGODB_URI=mongodb://localhost:27017/freelance-platform
+MONGODB_URI=mongodb://localhost:27017/quicklyway
 JWT_SECRET=your-secret-key-here
 NODE_ENV=development
 FRONTEND_URL=http://localhost:3000

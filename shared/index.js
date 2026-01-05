@@ -1,6 +1,10 @@
+const utils = require('./utils');
+const constants = require('./constants');
+const schemas = require('./schemas');
+
 module.exports = {
-  ...require('./utils'),
-  ...require('./constants'),
-  ...require('./schemas'),
+  ...utils,
+  ...constants,
+  ...schemas,
 };
 

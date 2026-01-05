@@ -1,5 +1,5 @@
 const User = require('../models/User');
-const { validateUser } = require('@freelance-platform/shared');
+const { validateUser } = require('@quicklyway/shared');
 
 // Get all users
 exports.getAllUsers = async (req, res) => {

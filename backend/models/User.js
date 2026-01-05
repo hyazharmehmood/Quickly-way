@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { USER_ROLES } = require('@freelance-platform/shared');
+const { USER_ROLES } = require('@quicklyway/shared');
 
 const userSchema = new mongoose.Schema(
   {

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose');
-const { PROPOSAL_STATUS } = require('@freelance-platform/shared');
+const { PROPOSAL_STATUS } = require('@quicklyway/shared');
 
 const proposalSchema = new mongoose.Schema(
   {
