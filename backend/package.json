@@ -11,16 +11,17 @@
     "format": "prettier --write \"**/*.{js,json}\""
   },
   "dependencies": {
-    "express": "^4.21.1",
-    "mongoose": "^8.8.4",
+    "@quicklyway/shared": "*",
+    "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "dotenv": "^16.4.7",
-    "@quicklyway/shared": "*"
+    "express": "^4.21.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^8.8.4"
   },
   "devDependencies": {
-    "nodemon": "^3.1.9",
     "eslint": "^9.17.0",
+    "nodemon": "^3.1.9",
     "prettier": "^3.4.2"
   }
 }
-

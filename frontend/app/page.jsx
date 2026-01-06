@@ -8,6 +8,7 @@ import { ServiceGrid } from '@/components/service/ServiceGrid';
 // Mock data - replace with API call later
 const mockServices = [
   {
+    id: 1,  
     image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
     name: 'Robert Martinez',
@@ -18,6 +19,7 @@ const mockServices = [
     price: 129,
   },
   {
+    id: 2,
     image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
     name: 'Jennifer White',
@@ -28,6 +30,7 @@ const mockServices = [
     price: 141,
   },
   {
+    id: 3,
     image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop',
     name: 'William Brown',
@@ -38,6 +41,7 @@ const mockServices = [
     price: 153,
   },
   {
+    id: 4,
     image: 'https://images.unsplash.com/photo-1519389950473-47ba0277781c?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=100&h=100&fit=crop',
     name: 'Sophie Clark',
@@ -48,6 +52,7 @@ const mockServices = [
     price: 165,
   },
   {
+    id: 5,
     image: 'https://images.unsplash.com/photo-1552664730-d307ca884978?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=100&h=100&fit=crop',
     name: 'Ehab Alamri',
@@ -58,6 +63,7 @@ const mockServices = [
     price: 345,
   },
   {
+    id: 6,
     image: 'https://images.unsplash.com/photo-1551434678-e076c223a692?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop',
     name: 'Sarah Jenkins',
@@ -68,7 +74,8 @@ const mockServices = [
     price: 45,
   },
   {
-    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
+    id: 7,
+      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
     name: 'Michael Chen',
     location: 'Texas, USA',
@@ -78,6 +85,7 @@ const mockServices = [
     price: 57,
   },
   {
+    id: 8,
     image: 'https://images.unsplash.com/photo-1522202176988-66273c2fd55f?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=100&h=100&fit=crop',
     name: 'Emma Wilson',

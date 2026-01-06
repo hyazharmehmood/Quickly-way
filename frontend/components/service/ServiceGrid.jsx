@@ -12,7 +12,7 @@ export function ServiceGrid({ services, onServiceClick, onClearFilters }) {
 
   return (
     <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-6 gap-y-10">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
         {services.map((service, index) => (
           <ServiceCard
             key={service.id || index}
@@ -28,7 +28,7 @@ export function ServiceGrid({ services, onServiceClick, onClearFilters }) {
             <Button
               onClick={onClearFilters}
               variant="ghost"
-              className="mt-4 text-[var(--primary)] font-medium hover:underline"
+              className="mt-4 text-primary font-medium hover:underline"
             >
               Clear filters
             </Button>

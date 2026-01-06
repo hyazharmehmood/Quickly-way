@@ -52,10 +52,10 @@ export function CategoryFilter({ selectedCategory: externalSelectedCategory, onS
     if (scrollContainerRef.current) {
       const scrollAmount = 300;
       const currentScroll = scrollContainerRef.current.scrollLeft;
-      const targetScroll = direction === 'left' 
-        ? currentScroll - scrollAmount 
+      const targetScroll = direction === 'left'
+        ? currentScroll - scrollAmount
         : currentScroll + scrollAmount;
-        
+
       scrollContainerRef.current.scrollTo({
         left: targetScroll,
         behavior: 'smooth'
@@ -74,15 +74,15 @@ export function CategoryFilter({ selectedCategory: externalSelectedCategory, onS
             className={cn(
               'whitespace-nowrap px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-shrink-0 h-auto',
               selectedCategory === 'All'
-                ? 'bg-[var(--category-selected)] text-[var(--category-selected-foreground)] shadow-md hover:bg-[var(--category-selected-hover)]'
-                : 'bg-[var(--category-unselected)] text-[var(--category-unselected-foreground)] hover:bg-[var(--category-unselected-hover)] border-0'
+                ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+                : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-0'
             )}
           >
             All
           </Button>
 
           {/* Vertical Separator */}
-          <div className="h-6 w-px bg-[var(--gray-300)] mx-2 hidden sm:block flex-shrink-0"></div>
+          <div className="h-6 w-px bg-border mx-2 hidden sm:block flex-shrink-0"></div>
 
           {/* Left Arrow */}
           <Button
@@ -96,11 +96,11 @@ export function CategoryFilter({ selectedCategory: externalSelectedCategory, onS
           </Button>
 
           {/* Scrollable List (Excluding 'All') */}
-          <div 
+          <div
             ref={scrollContainerRef}
             className="flex-1 flex gap-3 overflow-x-auto no-scrollbar scroll-smooth py-1 min-w-0"
-            style={{ 
-              scrollbarWidth: 'none', 
+            style={{
+              scrollbarWidth: 'none',
               msOverflowStyle: 'none',
               WebkitOverflowScrolling: 'touch'
             }}
@@ -113,8 +113,8 @@ export function CategoryFilter({ selectedCategory: externalSelectedCategory, onS
                 className={cn(
                   'whitespace-nowrap px-6 py-2 rounded-md text-sm font-medium transition-all duration-200 flex-shrink-0 h-auto',
                   selectedCategory === category
-                    ? 'bg-[var(--category-selected)] text-[var(--category-selected-foreground)] shadow-md hover:bg-[var(--category-selected-hover)]'
-                    : 'bg-[var(--category-unselected)] text-[var(--category-unselected-foreground)] hover:bg-[var(--category-unselected-hover)] border-0'
+                    ? 'bg-primary text-primary-foreground shadow-md hover:bg-primary/90'
+                    : 'bg-secondary text-secondary-foreground hover:bg-secondary/80 border-0'
                 )}
               >
                 {category}

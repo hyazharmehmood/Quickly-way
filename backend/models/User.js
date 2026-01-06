@@ -10,6 +10,11 @@ const userSchema = new mongoose.Schema(
       lowercase: true,
       trim: true,
     },
+    password: {
+      type: String,
+      required: true,
+      select: false,
+    },
     name: {
       type: String,
       required: true,
@@ -17,8 +22,18 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: [USER_ROLES.CLIENT, USER_ROLES.FREELANCER],
+      enum: [USER_ROLES.CLIENT, USER_ROLES.FREELANCER, 'admin'],
       required: true,
+      default: USER_ROLES.CLIENT,
+    },
+    isSeller: {
+      type: Boolean,
+      default: false,
+    },
+    sellerStatus: {
+      type: String,
+      enum: ['none', 'pending', 'approved', 'rejected'],
+      default: 'none',
     },
   },
   {

@@ -26,6 +26,16 @@ const PROPOSAL_STATUS = {
 };
 
 /**
+ * Seller application statuses
+ */
+const SELLER_STATUS = {
+  NONE: 'none',
+  PENDING: 'pending',
+  APPROVED: 'approved',
+  REJECTED: 'rejected',
+};
+
+/**
  * API response codes
  */
 const HTTP_STATUS = {
@@ -42,6 +52,7 @@ module.exports = {
   USER_ROLES,
   PROJECT_STATUS,
   PROPOSAL_STATUS,
+  SELLER_STATUS,
   HTTP_STATUS,
 };
 
