@@ -17,7 +17,7 @@ import { Input } from "@/components/ui/input";
 import api from '@/utils/api';
 import { toast } from 'sonner';
 
-export default function AdminSellerApprovals() {
+export default function AdminSellerRequests() {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -37,26 +37,18 @@ export default function AdminSellerApprovals() {
         fetchRequests();
     }, []);
 
-    const handleApprove = async (id) => {
-        try {
-            await api.post(`/admin/seller-approve/${id}`);
-            toast.success("Application approved!");
-            fetchRequests();
-        } catch (error) {
-            toast.error("Failed to approve application.");
+    const handleUpdateStatus = async (id, status, reason = '') => {
+        if (status === 'rejected' && !reason) {
+            reason = window.prompt("Enter rejection reason:");
+            if (reason === null) return;
         }
-    };
-
-    const handleReject = async (id) => {
-        const reason = window.prompt("Enter rejection reason:");
-        if (reason === null) return;
 
         try {
-            await api.post(`/admin/seller-reject/${id}`, { reason });
-            toast.success("Application rejected.");
+            await api.patch(`/admin/seller-requests/${id}/status`, { status, reason });
+            toast.success(`Application ${status}!`);
             fetchRequests();
         } catch (error) {
-            toast.error("Failed to reject application.");
+            toast.error(`Failed to ${status} application.`);
         }
     };
 
@@ -64,7 +56,7 @@ export default function AdminSellerApprovals() {
         <div className="space-y-8 animate-in fade-in duration-500">
             <div className="flex justify-between items-center">
                 <div>
-                    <h2 className="text-3xl font-normal text-foreground tracking-tight">Seller Verification</h2>
+                    <h2 className="text-3xl font-normal text-foreground tracking-tight">Seller Requests</h2>
                     <p className="text-muted-foreground mt-1 text-sm font-normal">Review and approve new freelancer applications.</p>
                 </div>
                 <div className="flex gap-3">
@@ -77,7 +69,7 @@ export default function AdminSellerApprovals() {
 
             <Card className="rounded-[2rem] border-border overflow-hidden shadow-sm bg-card">
                 <CardHeader className="p-8 border-b border-border bg-secondary/10">
-                    <CardTitle className="text-xl font-normal">Pending Applications</CardTitle>
+                    <CardTitle className="text-xl font-normal">Requests List</CardTitle>
                     <CardDescription className="font-normal">{requests.length} applications awaiting review</CardDescription>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -92,6 +84,7 @@ export default function AdminSellerApprovals() {
                                 <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">User</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Skills</TableHead>
+                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Status</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Applied Date</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Actions</TableHead>
                                 </TableRow>
@@ -99,7 +92,7 @@ export default function AdminSellerApprovals() {
                             <TableBody>
                                 {requests.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={4} className="h-40 text-center text-muted-foreground">No pending applications</TableCell>
+                                        <TableCell colSpan={5} className="h-40 text-center text-muted-foreground">No applications found</TableCell>
                                     </TableRow>
                                 ) : (
                                     requests.map((req) => (
@@ -116,6 +109,21 @@ export default function AdminSellerApprovals() {
                                                     {req.skills.length > 3 && <Badge variant="outline" className="text-[10px] font-normal">+{req.skills.length - 3}</Badge>}
                                                 </div>
                                             </TableCell>
+                                            <TableCell className="px-8 py-6">
+                                                <Badge
+                                                    variant={
+                                                        req.status === 'approved' ? 'success' :
+                                                            req.status === 'rejected' ? 'destructive' :
+                                                                'secondary'
+                                                    }
+                                                    className={`text-[10px] font-normal uppercase tracking-wider px-2 py-0.5 rounded-full ${req.status === 'approved' ? 'bg-green-100 text-green-700 hover:bg-green-100' :
+                                                        req.status === 'rejected' ? 'bg-red-100 text-red-700 hover:bg-red-100' :
+                                                            'bg-orange-100 text-orange-700 hover:bg-orange-100'
+                                                        }`}
+                                                >
+                                                    {req.status}
+                                                </Badge>
+                                            </TableCell>
                                             <TableCell className="px-8 py-6 text-sm text-muted-foreground font-normal">
                                                 {new Date(req.createdAt).toLocaleDateString()}
                                             </TableCell>
@@ -124,12 +132,16 @@ export default function AdminSellerApprovals() {
                                                     <Button variant="outline" size="sm" className="rounded-lg h-9">
                                                         <Eye className="w-4 h-4 mr-1" /> View
                                                     </Button>
-                                                    <Button variant="secondary" size="sm" onClick={() => handleApprove(req._id)} className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 rounded-lg h-9">
-                                                        <Check className="w-4 h-4 mr-1" /> Approve
-                                                    </Button>
-                                                    <Button variant="ghost" size="sm" onClick={() => handleReject(req._id)} className="text-destructive hover:bg-destructive/10 rounded-lg h-9">
-                                                        <X className="w-4 h-4 mr-1" /> Reject
-                                                    </Button>
+                                                    {req.status === 'pending' && (
+                                                        <>
+                                                            <Button variant="secondary" size="sm" onClick={() => handleUpdateStatus(req._id, 'approved')} className="bg-primary/10 text-primary border-primary/20 hover:bg-primary/20 rounded-lg h-9">
+                                                                <Check className="w-4 h-4 mr-1" /> Approve
+                                                            </Button>
+                                                            <Button variant="ghost" size="sm" onClick={() => handleUpdateStatus(req._id, 'rejected')} className="text-destructive hover:bg-destructive/10 rounded-lg h-9">
+                                                                <X className="w-4 h-4 mr-1" /> Reject
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </TableCell>
                                         </TableRow>

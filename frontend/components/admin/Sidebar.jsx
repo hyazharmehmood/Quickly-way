@@ -12,7 +12,7 @@ import { usePathname } from 'next/navigation';
 const SidebarLink = ({ icon, label, href, active, isOpen }) => (
     <Link
         href={href}
-        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-[1rem] transition-all font-normal ${active
+        className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-[0.5rem] transition-all font-normal ${active
             ? 'bg-primary text-primary-foreground shadow-md'
             : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             }`}
@@ -20,7 +20,7 @@ const SidebarLink = ({ icon, label, href, active, isOpen }) => (
         <span className={`${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
             {React.cloneElement(icon, { className: 'w-5 h-5', strokeWidth: 1.5 })}
         </span>
-        {isOpen && <span className="text-lg tracking-tight">{label}</span>}
+        {isOpen && <span className="text-md tracking-tight">{label}</span>}
     </Link>
 );
 
@@ -32,7 +32,7 @@ export const Sidebar = ({ onLogout }) => {
         { icon: <LayoutDashboard />, label: "Dashboard", href: "/admin" },
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
         { icon: <ShieldCheck />, label: "Admins", href: "/admin/admins" },
-        { icon: <Briefcase />, label: "Approvals", href: "/admin/approvals" },
+        { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
         { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
         { icon: <Star />, label: "Reviews", href: "/admin/reviews" },

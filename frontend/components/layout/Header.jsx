@@ -70,14 +70,14 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
         <div className="max-w-screen-2xl mx-auto flex items-center justify-start gap-8">
           {/* Navigation Icons Group */}
           <div className="flex items-center gap-6">
-            <Button
+            {/* <Button
               variant="ghost"
               size="icon"
               onClick={() => router.back()}
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
-            </Button>
+            </Button> */}
 
             <Button
               variant="ghost"
@@ -140,7 +140,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           {/* Utility Buttons: Language & Support */}
           <div className="ml-auto flex items-center gap-6">
             {/* Admin Selector */}
-            <Button
+            {/* <Button
               variant="ghost"
               onClick={() => handleNavigate('admin')}
               className="gap-2"
@@ -148,7 +148,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
             >
               <Globe className="w-4 h-4" />
               <span className="text-sm font-normal">Admin</span>
-            </Button>
+            </Button> */}
 
             {/* Support Button */}
             <Button
@@ -179,7 +179,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
 
           {/* Search Bar */}
           <div className="flex-1 w-full flex justify-center px-0 md:px-4">
-            <div className="relative group w-full max-w-2xl">
+            <div className="relative group w-full max-w-xl">
               <Input
                 type="text"
                 placeholder="Search"
@@ -200,7 +200,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           {/* Auth Buttons */}
           <div className="flex items-center gap-6 w-full md:w-auto justify-end md:min-w-[200px]">
             {isLoggedIn ? (
-              <div className="flex items-center gap-6">
+              <div className="flex items-center gap-4">
                 <div className="flex items-center gap-3">
                   {isSeller && sellerStatus === 'approved' ? (
                     <Button
@@ -211,8 +211,8 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                     </Button>
                   ) : !isAdmin && (
                     <Button
-                      onClick={() => router.push('/dashboard/client/become-seller')}
-                      className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-2.5 rounded-full shadow-sm h-auto transition-colors"
+                      onClick={() => router.push('/become-seller')}
+                      className=""
                     >
                       Become a Seller
                     </Button>
@@ -235,7 +235,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                       </Avatar>
                     </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 mt-2 rounded-2xl p-2 bg-white border border-gray-100 shadow-xl" align="end">
+                  <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-white border border-gray-100 shadow-xl" align="end">
                     <DropdownMenuLabel className="font-normal p-4">
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-semibold leading-none text-gray-900">{displayName}</p>
@@ -246,8 +246,12 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
 
                     <div className="p-1 space-y-1">
                       <DropdownMenuItem
-                        onClick={() => router.push(isAdmin ? '/admin' : (isFreelancerView ? '/dashboard/freelancer' : '/dashboard/client'))}
-                        className="gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-50 focus:bg-gray-50 transition-colors border-0 outline-none"
+                        onClick={() => {
+                          if (isAdmin) router.push('/admin');
+                          else if (isFreelancerView) router.push('/dashboard/freelancer');
+                          else router.push('/dashboard/client');
+                        }}
+                        className=""
                       >
                         <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
                           <LayoutDashboard className="w-4 h-4" />
@@ -256,8 +260,11 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
-                        onClick={() => router.push('/dashboard/client/settings')}
-                        className="gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-50 focus:bg-gray-50 transition-colors border-0 outline-none"
+                        onClick={() => {
+                          if (isAdmin) router.push('/admin/settings');
+                          else if (isFreelancerView) router.push('/dashboard/freelancer/settings');
+                          else router.push('/dashboard/client/settings');
+                        }}
                       >
                         <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
                           <UserIcon className="w-4 h-4" />
@@ -266,8 +273,11 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                       </DropdownMenuItem>
 
                       <DropdownMenuItem
-                        onClick={() => router.push('/dashboard/client/settings')}
-                        className="gap-3 p-3 rounded-xl cursor-pointer hover:bg-gray-50 focus:bg-gray-50 transition-colors border-0 outline-none"
+                        onClick={() => {
+                          if (isAdmin) router.push('/admin/settings');
+                          else if (isFreelancerView) router.push('/dashboard/freelancer/settings');
+                          else router.push('/dashboard/client/settings');
+                        }}
                       >
                         <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-600">
                           <Settings className="w-4 h-4" />
@@ -284,7 +294,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                           logout();
                           router.push('/login');
                         }}
-                        className="gap-3 p-3 rounded-xl cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/5 focus:bg-destructive/5 transition-colors border-0 outline-none"
+                        className="  cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/5 focus:bg-destructive/5 transition-colors"
                       >
                         <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive">
                           <LogOut className="w-4 h-4" />

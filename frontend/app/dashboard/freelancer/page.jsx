@@ -15,14 +15,14 @@ export default function FreelancerOverview() {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
-                <MetricCard title="Total Earnings" value="$4,250" trend="+12% this month" icon={<DollarSign />} />
+                <MetricCard title="Total Earnings" value="$2250" trend="+12% this month" icon={<DollarSign />} />
                 <MetricCard title="Active Orders" value="12" trend="3 due soon" icon={<ShoppingCart />} />
                 <MetricCard title="Pending Requests" value="8" trend="4 new" icon={<Clock />} />
                 <MetricCard title="Avg Rating" value="4.9" trend="124 reviews" icon={<Star />} />
                 <Card className="rounded-[1.5rem] border-border shadow-sm flex flex-col p-4 bg-card">
                     <p className="text-muted-foreground text-[14px] font-normal tracking-tight mb-2">Profile Completion</p>
                     <div className="flex items-end justify-between mb-2">
-                        <span className="text-3xl font-normal text-foreground tracking-tight">85%</span>
+                        <span className="text-xl font-normal text-foreground tracking-tight">85%</span>
                         <Activity className="w-5 h-5 text-primary opacity-20" />
                     </div>
                     <Progress value={85} className="h-2 bg-secondary" />

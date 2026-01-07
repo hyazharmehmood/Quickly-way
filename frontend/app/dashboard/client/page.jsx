@@ -45,7 +45,7 @@ export default function ClientOverview() {
                             </div>
                         </div>
                         <Button asChild className={`h-12 px-8 rounded-xl font-normal ${sellerStatus === 'pending' ? 'bg-orange-600 hover:bg-orange-700' : 'bg-primary'}`}>
-                            <Link href="/dashboard/client/become-seller">
+                            <Link href="/become-seller">
                                 {sellerStatus === 'none' && "Become a Seller"}
                                 {sellerStatus === 'pending' && "Check Status"}
                                 {sellerStatus === 'rejected' && "Re-apply Now"}

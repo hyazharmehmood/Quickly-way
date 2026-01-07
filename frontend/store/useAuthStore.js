@@ -20,10 +20,14 @@ const useAuthStore = create(
         (set) => ({
             user: null,
             token: null,
+            refreshToken: null,
             isLoggedIn: false,
             sellerStatus: 'none',
             isSeller: false,
             role: 'client',
+            showExpiryDialog: false,
+
+            setShowExpiryDialog: (show) => set({ showExpiryDialog: show }),
 
             setUser: (user) => {
                 set({
@@ -36,30 +40,38 @@ const useAuthStore = create(
                 if (user?.role) setCookie('role', user.role, 7);
             },
 
-            setToken: (token) => {
-                set({ token });
+            setToken: (token, refreshToken) => {
+                set({ token, refreshToken });
                 if (token) {
                     localStorage.setItem('token', token);
                     setCookie('token', token, 7);
                 } else {
                     localStorage.removeItem('token');
                     removeCookie('token');
-                    removeCookie('role');
+                }
+
+                if (refreshToken) {
+                    localStorage.setItem('refreshToken', refreshToken);
+                } else {
+                    localStorage.removeItem('refreshToken');
                 }
             },
 
             login: async (credentials) => {
                 const response = await api.post('/auth/login', credentials);
-                const { user, token } = response.data;
+                const { user, token, refreshToken } = response.data;
                 set({
                     user,
                     token,
+                    refreshToken,
                     isLoggedIn: true,
                     sellerStatus: user.sellerStatus,
                     isSeller: user.isSeller,
-                    role: user.role
+                    role: user.role,
+                    showExpiryDialog: false
                 });
                 localStorage.setItem('token', token);
+                localStorage.setItem('refreshToken', refreshToken);
                 setCookie('token', token, 7);
                 setCookie('role', user.role, 7);
                 return response.data;
@@ -67,16 +79,19 @@ const useAuthStore = create(
 
             signup: async (userData) => {
                 const response = await api.post('/auth/signup', userData);
-                const { user, token } = response.data;
+                const { user, token, refreshToken } = response.data;
                 set({
                     user,
                     token,
+                    refreshToken,
                     isLoggedIn: true,
                     sellerStatus: user.sellerStatus,
                     isSeller: user.isSeller,
-                    role: user.role
+                    role: user.role,
+                    showExpiryDialog: false
                 });
                 localStorage.setItem('token', token);
+                localStorage.setItem('refreshToken', refreshToken);
                 setCookie('token', token, 7);
                 setCookie('role', user.role, 7);
                 return response.data;
@@ -86,15 +101,47 @@ const useAuthStore = create(
                 set({
                     user: null,
                     token: null,
+                    refreshToken: null,
                     isLoggedIn: false,
                     sellerStatus: 'none',
                     isSeller: false,
-                    role: 'client'
+                    role: 'client',
+                    showExpiryDialog: false
                 });
                 localStorage.removeItem('token');
+                localStorage.removeItem('refreshToken');
                 localStorage.removeItem('auth-storage');
                 removeCookie('token');
                 removeCookie('role');
+            },
+
+            refreshSession: async () => {
+                const currentRefreshToken = useAuthStore.getState().refreshToken || localStorage.getItem('refreshToken');
+                if (!currentRefreshToken) {
+                    useAuthStore.getState().logout();
+                    return;
+                }
+
+                try {
+                    const response = await api.post('/auth/refresh', { refreshToken: currentRefreshToken });
+                    const { token, refreshToken } = response.data;
+
+                    set({
+                        token,
+                        refreshToken,
+                        showExpiryDialog: false
+                    });
+
+                    localStorage.setItem('token', token);
+                    localStorage.setItem('refreshToken', refreshToken);
+                    setCookie('token', token, 7);
+
+                    return true;
+                } catch (error) {
+                    console.error('Failed to refresh session:', error);
+                    useAuthStore.getState().logout();
+                    return false;
+                }
             },
             // ... rest of the store
 
@@ -109,6 +156,25 @@ const useAuthStore = create(
                     role,
                     user: state.user ? { ...state.user, role } : null
                 }));
+            },
+
+            fetchProfile: async () => {
+                try {
+                    const response = await api.get('/auth/me');
+                    const { user } = response.data;
+                    set({
+                        user,
+                        isLoggedIn: true,
+                        sellerStatus: user.sellerStatus,
+                        isSeller: user.isSeller,
+                        role: user.role
+                    });
+                    setCookie('role', user.role, 7);
+                } catch (error) {
+                    if (error.response?.status === 401) {
+                        set({ showExpiryDialog: true });
+                    }
+                }
             }
         }),
         {

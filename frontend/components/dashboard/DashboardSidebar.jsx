@@ -9,7 +9,7 @@ import useAuthStore from '@/store/useAuthStore';
 const SidebarLink = ({ icon, label, href, active, isOpen }) => (
     <Link
         href={href}
-        className={`w-full flex items-center gap-3.5 px-4 py-3 rounded-[1rem] transition-all font-normal ${active
+        className={`w-full flex items-center gap-3.5 px-4 py-2.5 rounded-[0.5rem] transition-all font-normal ${active
             ? 'bg-primary text-primary-foreground shadow-md'
             : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             }`}
@@ -17,9 +17,10 @@ const SidebarLink = ({ icon, label, href, active, isOpen }) => (
         <span className={`${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
             {React.cloneElement(icon, { className: 'w-5 h-5', strokeWidth: 1.5 })}
         </span>
-        {isOpen && <span className="text-lg tracking-tight">{label}</span>}
+        {isOpen && <span className="text-md tracking-tight">{label}</span>}
     </Link>
 );
+
 
 export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => {
     const [isOpen, setIsOpen] = useState(true);
@@ -28,15 +29,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
     const { user, isSeller, sellerStatus } = useAuthStore();
 
     const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
-    const canSwitch = isSeller && sellerStatus === 'approved';
-
-    const handleToggleRole = () => {
-        if (isFreelancerView) {
-            router.push('/dashboard/client');
-        } else {
-            router.push('/dashboard/freelancer');
-        }
-    };
+  
 
     const handleLogout = () => {
         useAuthStore.getState().logout();
@@ -62,26 +55,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
                 </button>
             </div>
 
-            {/* Role Switcher */}
-            {canSwitch && isOpen && (
-                <div className="px-4 mb-4">
-                    <button
-                        onClick={handleToggleRole}
-                        className="w-full flex items-center justify-between px-4 py-3 bg-secondary/50 hover:bg-secondary rounded-2xl border border-border group transition-all"
-                    >
-                        <div className="flex items-center gap-3">
-                            <div className="w-8 h-8 rounded-lg bg-background flex items-center justify-center text-primary border border-border">
-                                <ArrowLeftRight className="w-4 h-4" />
-                            </div>
-                            <div className="text-left">
-                                <p className="text-[10px] text-muted-foreground uppercase tracking-widest leading-none mb-1">Switch to</p>
-                                <p className="text-sm font-normal text-foreground leading-none">{isFreelancerView ? "Client" : "Freelancer"}</p>
-                            </div>
-                        </div>
-                    </button>
-                </div>
-            )}
-
+           
             {/* Navigation links */}
             <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto no-scrollbar">
                 {menuItems.map((item) => (
@@ -96,18 +70,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
 
             {/* Logout section */}
             <div className="p-4 border-t border-border">
-                {/* User Profile Summary */}
-                {isOpen && user && (
-                    <div className="flex items-center gap-3 px-2 mb-4">
-                        <div className="w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground">
-                            <UserIcon className="w-6 h-6" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                            <p className="text-sm font-normal text-foreground truncate">{user.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">{user.email}</p>
-                        </div>
-                    </div>
-                )}
+
                 <button
                     onClick={handleLogout}
                     className="w-full flex items-center gap-4 px-4 py-2.5 text-destructive hover:bg-destructive/10 rounded-xl transition-colors font-normal text-lg"

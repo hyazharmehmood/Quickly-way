@@ -3,12 +3,13 @@ const User = require('../models/User');
 const { SELLER_STATUS, USER_ROLES, HTTP_STATUS } = require('@quicklyway/shared');
 
 /**
- * Get all pending seller applications
+ * Get all seller applications
  */
-exports.getPendingApplications = async (req, res, next) => {
+exports.getAllApplications = async (req, res, next) => {
     try {
-        const applications = await SellerApplication.find({ status: SELLER_STATUS.PENDING })
-            .populate('userId', 'name email');
+        const applications = await SellerApplication.find()
+            .populate('userId', 'name email')
+            .sort({ createdAt: -1 });
         res.status(HTTP_STATUS.OK).json(applications);
     } catch (error) {
         next(error);
@@ -16,15 +17,25 @@ exports.getPendingApplications = async (req, res, next) => {
 };
 
 /**
- * Approve seller application
+ * Update seller application status (Approve/Reject)
  */
-exports.approveApplication = async (req, res, next) => {
+exports.updateApplicationStatus = async (req, res, next) => {
     try {
         const { applicationId } = req.params;
+        const { status, reason } = req.body;
+
+        if (![SELLER_STATUS.APPROVED, SELLER_STATUS.REJECTED].includes(status)) {
+            return res.status(HTTP_STATUS.BAD_REQUEST).json({ message: 'Invalid status update.' });
+        }
+
+        const updateData = { status };
+        if (status === SELLER_STATUS.REJECTED) {
+            updateData.rejectionReason = reason;
+        }
 
         const application = await SellerApplication.findByIdAndUpdate(
             applicationId,
-            { status: SELLER_STATUS.APPROVED },
+            updateData,
             { new: true }
         );
 
@@ -32,50 +43,17 @@ exports.approveApplication = async (req, res, next) => {
             return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Application not found.' });
         }
 
-        // Update user to freelancer
-        await User.findByIdAndUpdate(application.userId, {
-            sellerStatus: SELLER_STATUS.APPROVED,
-            isSeller: true,
-            role: USER_ROLES.FREELANCER,
-        });
-
-        res.status(HTTP_STATUS.OK).json({
-            message: 'Application approved successfully.',
-            application,
-        });
-    } catch (error) {
-        next(error);
-    }
-};
-
-/**
- * Reject seller application
- */
-exports.rejectApplication = async (req, res, next) => {
-    try {
-        const { applicationId } = req.params;
-        const { reason } = req.body;
-
-        const application = await SellerApplication.findByIdAndUpdate(
-            applicationId,
-            {
-                status: SELLER_STATUS.REJECTED,
-                rejectionReason: reason,
-            },
-            { new: true }
-        );
-
-        if (!application) {
-            return res.status(HTTP_STATUS.NOT_FOUND).json({ message: 'Application not found.' });
+        // Update User model based on status
+        const userUpdate = { sellerStatus: status };
+        if (status === SELLER_STATUS.APPROVED) {
+            userUpdate.isSeller = true;
+            userUpdate.role = USER_ROLES.FREELANCER;
         }
 
-        // Update user status
-        await User.findByIdAndUpdate(application.userId, {
-            sellerStatus: SELLER_STATUS.REJECTED,
-        });
+        await User.findByIdAndUpdate(application.userId, userUpdate);
 
         res.status(HTTP_STATUS.OK).json({
-            message: 'Application rejected.',
+            message: `Application ${status} successfully.`,
             application,
         });
     } catch (error) {
