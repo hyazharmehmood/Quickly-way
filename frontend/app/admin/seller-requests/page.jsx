@@ -67,7 +67,7 @@ export default function AdminSellerRequests() {
                 </div>
             </div>
 
-            <Card className="border-none">
+            <Card className="border-none rounded-[2rem]">
                 <CardHeader className="p-8 border-b border-border bg-secondary/10">
                     <CardTitle className="text-xl font-normal">Requests List</CardTitle>
                     <CardDescription className="font-normal">{requests.length} applications awaiting review</CardDescription>

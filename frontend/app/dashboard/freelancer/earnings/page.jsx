@@ -25,24 +25,24 @@ export default function FreelancerEarningsPage() {
     ];
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div>
                 <h2 className="text-2xl font-normal text-foreground tracking-tight">Earnings & Wallet</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Manage your payouts and view financial history.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 rounded-[2.5rem] border-border bg-primary text-primary-foreground p-10 overflow-hidden relative">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2 rounded-[2rem] border-none bg-primary text-primary-foreground p-4 overflow-hidden relative">
                     <div className="relative z-10 flex flex-col h-full justify-between">
                         <div>
                             <p className="text-sm font-normal uppercase tracking-widest opacity-80 mb-2">Available Balance</p>
                             <h3 className="text-5xl font-normal tracking-tighter">$1,240.50</h3>
                         </div>
                         <div className="flex gap-4 mt-12">
-                            <Button className="h-14 px-8 bg-white text-primary rounded-2xl hover:bg-white/90 text-lg font-normal shadow-xl">
+                            <Button size="lg" variant="outline" className="text-primary hover:text-primary  ">
                                 Withdraw Funds
                             </Button>
-                            <Button variant="outline" className="h-14 px-8 border-white/30 text-white hover:bg-white/10 rounded-2xl text-lg font-normal">
+                            <Button size="lg" variant="outline" className="text-primary hover:text-primary  ">
                                 Manage Payout Methods
                             </Button>
                         </div>
@@ -52,10 +52,10 @@ export default function FreelancerEarningsPage() {
                     </div>
                 </Card>
 
-                <div className="space-y-6">
-                    <Card className="rounded-[2.5rem] border-border p-8 bg-card shadow-sm">
-                        <div className="flex items-center gap-4 mb-4">
-                            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-primary border border-border">
+                <div className="space-y-4">
+                    <Card className="border-none p-4 rounded-[2rem]">
+                        <div className="flex items-center gap-4 ">
+                            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-primary border border-border">
                                 <TrendingUp className="w-6 h-6" />
                             </div>
                             <div>
@@ -64,9 +64,9 @@ export default function FreelancerEarningsPage() {
                             </div>
                         </div>
                     </Card>
-                    <Card className="rounded-[2.5rem] border-border p-8 bg-card shadow-sm">
+                    <Card className="border-none p-4 rounded-[2rem]">
                         <div className="flex items-center gap-4">
-                            <div className="w-12 h-12 rounded-2xl bg-secondary flex items-center justify-center text-muted-foreground border border-border">
+                            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground border border-border">
                                 <History className="w-6 h-6" />
                             </div>
                             <div>
@@ -78,8 +78,8 @@ export default function FreelancerEarningsPage() {
                 </div>
             </div>
 
-            <Card className="rounded-[2.5rem] border-border overflow-hidden shadow-sm bg-card">
-                <CardHeader className="p-8 border-b border-border flex flex-row justify-between items-center">
+            <Card className="border-none overflow-hidden rounded-[2rem] ">
+                <CardHeader className="p-4 border-b border-border flex flex-row justify-between items-center">
                     <CardTitle className="text-xl font-normal">Transaction History</CardTitle>
                     <Button variant="outline" size="sm" className="rounded-xl h-10 border-border">
                         <Download className="w-4 h-4 mr-2" /> Export CSV

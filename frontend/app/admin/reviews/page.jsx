@@ -23,7 +23,7 @@ export default function ReviewsPage() {
                 <MetricCard title="New Feed" value="4" trend="Just now" icon={<MessageSquare />} />
             </div>
 
-            <Card className="border-none">
+            <Card className="border-none rounded-[2rem]">
                 <CardHeader className="p-10 border-b border-border flex flex-col md:flex-row justify-between items-center gap-6">
                     <CardTitle className="text-xl font-normal text-foreground">Feedback Hub</CardTitle>
                     <div className="flex gap-3">

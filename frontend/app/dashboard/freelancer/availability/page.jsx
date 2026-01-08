@@ -22,7 +22,7 @@ export default function FreelancerAvailabilityPage() {
     ];
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">Availability & Scheduling</h2>
@@ -36,9 +36,9 @@ export default function FreelancerAvailabilityPage() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="rounded-[2.5rem] border-border bg-card shadow-sm overflow-hidden h-fit">
-                    <CardHeader className="p-10 border-b border-border">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card className="border-none rounded-[2rem]">
+                    <CardHeader className="p-4 border-b border-border">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 rounded-2xl bg-orange-50 text-orange-500 flex items-center justify-center border border-orange-100">
                                 <Sun className="w-6 h-6" />
@@ -63,18 +63,18 @@ export default function FreelancerAvailabilityPage() {
                     </CardContent>
                 </Card>
 
-                <div className="space-y-8">
-                    <Card className="rounded-[2.5rem] border-border bg-card shadow-sm p-10">
+                <div className="space-y-4">
+                    <Card className="border-none rounded-[2rem] p-4">
                         <div className="flex items-center gap-6 mb-8">
-                            <div className="w-14 h-14 rounded-2xl bg-indigo-50 text-indigo-500 flex items-center justify-center border border-indigo-100">
-                                <Moon className="w-7 h-7" />
+                            <div className="w-10 h-10 rounded-xl bg-indigo-50 text-indigo-500 flex items-center justify-center border border-indigo-100">
+                                <Moon className="w-6 h-6" />
                             </div>
                             <div>
                                 <CardTitle className="text-xl font-normal">Vacation Mode</CardTitle>
                                 <p className="text-sm text-muted-foreground font-normal mt-1">Temporarily hide all your services from search.</p>
                             </div>
                         </div>
-                        <div className="p-8 bg-secondary/30 rounded-[2rem] border border-border flex flex-col gap-6">
+                        <div className="p-4 bg-secondary/30 rounded-[1rem] border border-border flex flex-col gap-6">
                             <div className="flex items-center justify-between">
                                 <span className="text-base font-normal text-foreground">Activate Hibernation</span>
                                 <Switch checked={vacationMode} onCheckedChange={setVacationMode} />
@@ -85,14 +85,14 @@ export default function FreelancerAvailabilityPage() {
                         </div>
                     </Card>
 
-                    <Card className="rounded-[2.5rem] border-border bg-primary text-primary-foreground p-10 overflow-hidden relative shadow-lg shadow-primary/20">
+                    <Card className=" rounded-[2rem] border-none bg-primary text-primary-foreground p-10 overflow-hidden relative  shadow-primary/20">
                         <div className="relative z-10">
                             <h3 className="text-xl font-normal mb-2">Automated Payouts</h3>
                             <p className="text-sm opacity-80 font-normal mb-8 leading-relaxed max-w-[280px]">
                                 Your earnings are automatically cleared and sent to your wallet every Friday at midnight.
                             </p>
-                            <Button className="bg-white text-primary hover:bg-white/90 rounded-xl h-12 px-6 font-normal">
-                                <ShieldCheck className="w-5 h-5 mr-2" /> Security Settings
+                            <Button size="lg" variant="outline" className=" hover:text-primary text-primary hover:bg-white/90 ">
+                                <ShieldCheck className="w-5 h-5" /> Security Settings
                             </Button>
                         </div>
                         <div className="absolute top-0 right-0 p-8 opacity-10">
@@ -101,8 +101,8 @@ export default function FreelancerAvailabilityPage() {
                     </Card>
 
                     <div className="flex justify-end gap-3 px-2">
-                        <Button variant="outline" className="h-14 px-8 rounded-2xl border-border text-foreground">Discard Changes</Button>
-                        <Button className="h-14 px-10 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 flex items-center gap-2">
+                        <Button variant="outline" size="lg" className="  border-border text-foreground">Discard Changes</Button>
+                        <Button size="lg" className=" ">
                             <Save className="w-5 h-5" />
                             <span>Save Schedule</span>
                         </Button>

@@ -24,7 +24,7 @@ export default function OrdersPage() {
                 <MetricCard title="Delivered" value="142" trend="Verified" icon={<Package />} />
             </div>
 
-            <Card className="border-none">
+            <Card className="border-none rounded-[2rem]">
                 <CardHeader className="p-8 border-b border-border">
                     <CardTitle className="text-xl font-normal text-foreground">Job Ledger</CardTitle>
                 </CardHeader>

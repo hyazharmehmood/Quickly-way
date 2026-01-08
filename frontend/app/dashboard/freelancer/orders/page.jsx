@@ -37,7 +37,7 @@ export default function FreelancerOrdersPage() {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">Orders Management</h2>
@@ -54,7 +54,7 @@ export default function FreelancerOrdersPage() {
                 </div>
             </div>
 
-            <Card className="rounded-[2rem] border-border overflow-hidden shadow-sm bg-card">
+            <Card className="border-none rounded-[2rem] overflow-hidden">
                 <CardContent className="p-0">
                     <Table>
                         <TableHeader>

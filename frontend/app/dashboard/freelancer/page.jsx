@@ -8,18 +8,18 @@ import { Progress } from "@/components/ui/progress";
 
 export default function FreelancerOverview() {
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div>
                 <h2 className="text-2xl font-normal text-foreground tracking-tight">Freelancer Overview</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Welcome back! Here's what's happening today.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
                 <MetricCard title="Total Earnings" value="$2250" trend="+12% this month" icon={<DollarSign />} />
                 <MetricCard title="Active Orders" value="12" trend="3 due soon" icon={<ShoppingCart />} />
                 <MetricCard title="Pending Requests" value="8" trend="4 new" icon={<Clock />} />
                 <MetricCard title="Avg Rating" value="4.9" trend="124 reviews" icon={<Star />} />
-                <Card className="rounded-[1.5rem] border-border shadow-sm flex flex-col p-4 bg-card">
+                <Card className="rounded-[2rem] border-border shadow-sm flex flex-col p-4 bg-card">
                     <p className="text-muted-foreground text-[14px] font-normal tracking-tight mb-2">Profile Completion</p>
                     <div className="flex items-end justify-between mb-2">
                         <span className="text-xl font-normal text-foreground tracking-tight">85%</span>
@@ -29,8 +29,8 @@ export default function FreelancerOverview() {
                 </Card>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                <Card className="rounded-[2.5rem] border-border h-80 flex flex-col shadow-sm bg-card">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                <Card className="border-none h-80 rounded-[2rem] flex flex-col ">
                     <CardHeader className="p-8 border-b border-border">
                         <CardTitle className="text-xl font-normal">Income Projection</CardTitle>
                     </CardHeader>
@@ -44,7 +44,7 @@ export default function FreelancerOverview() {
                     </CardContent>
                 </Card>
 
-                <Card className="rounded-[2.5rem] border-border h-80 flex flex-col shadow-sm bg-card">
+                <Card className="border-none h-80 rounded-[2rem] flex flex-col ">
                     <CardHeader className="p-8 border-b border-border">
                         <CardTitle className="text-xl font-normal">Upcoming Deadlines</CardTitle>
                     </CardHeader>

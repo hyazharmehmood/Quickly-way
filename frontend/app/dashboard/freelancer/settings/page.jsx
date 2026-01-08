@@ -9,31 +9,31 @@ import { Switch } from "@/components/ui/switch";
 
 export default function SettingsPlaceholder() {
     return (
-        <div className="animate-in fade-in duration-500 space-y-8 max-w-5xl">
+        <div className="animate-in fade-in duration-500 space-y-4 ">
             <div>
                 <h2 className="text-2xl font-normal text-foreground tracking-tight">Account Settings</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Manage your profile, notifications, and security.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="space-y-3">
                     {[
                         { icon: <User />, label: 'Profile Info', active: true },
                         { icon: <Bell />, label: 'Notifications', active: false },
                         { icon: <Shield />, label: 'Security', active: false },
                         { icon: <Languages />, label: 'Appearance', active: false }
                     ].map((item, i) => (
-                        <div key={i} className={`flex items-center gap-4 px-6 py-4 rounded-2xl cursor-pointer transition-all ${item.active ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border border-border hover:bg-secondary/50'}`}>
+                        <Button key={i} size="lg" className={`flex  w-full items-center gap-4  cursor-pointer transition-all ${item.active ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' : 'bg-card text-muted-foreground border border-border hover:bg-secondary/50'}`}>
                             {React.cloneElement(item.icon, { className: 'w-5 h-5', strokeWidth: 1.5 })}
                             <span className="text-base font-normal">{item.label}</span>
-                        </div>
+                        </Button>
                     ))}
                 </div>
 
-                <Card className="md:col-span-2 rounded-[2.5rem] border-border bg-card shadow-sm p-10 space-y-8">
+                <Card className="md:col-span-2 border-none space-y-4 p-4 rounded-[2rem]">
                     <div className="flex items-center gap-6 mb-4">
-                        <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
-                            <User className="w-7 h-7" />
+                        <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
+                            <User className="w-6 h-6" />
                         </div>
                         <CardTitle className="text-xl font-normal">Personal Information</CardTitle>
                     </div>
@@ -57,7 +57,7 @@ export default function SettingsPlaceholder() {
                     </div>
 
                     <div className="pt-6 border-t border-border flex justify-end">
-                        <Button className="h-12 px-10 bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 flex items-center gap-2">
+                        <Button size="lg" className=" shadow-primary/20 hover:bg-primary/90 flex items-center gap-2">
                             <Save className="w-4 h-4" /> Save Profile
                         </Button>
                     </div>

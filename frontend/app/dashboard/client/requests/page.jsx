@@ -35,24 +35,24 @@ export default function ClientRequestsPage() {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">My Requests</h2>
                     <p className="text-muted-foreground font-normal mt-1 text-sm">Manage public requests and service inquiries.</p>
                 </div>
-                <Button className="h-12 px-6 bg-primary text-primary-foreground rounded-2xl shadow-lg shadow-primary/20 hover:bg-primary/90 flex items-center gap-2">
+                <Button size="lg" className=" bg-primary text-primary-foreground   hover:bg-primary/90 ">
                     <Plus className="w-5 h-5" />
                     <span>Create New Request</span>
                 </Button>
             </div>
 
-            <Card className="rounded-[2.5rem] border-border overflow-hidden shadow-sm bg-card">
-                <div className="p-8 border-b border-border bg-secondary/10 flex flex-col md:flex-row justify-between items-center gap-4">
+            <Card className="rounded-[2rem] border-none overflow-hidden ">
+                <div className="p-4 border-b border-border bg-secondary/10 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div className="flex items-center gap-3">
-                        <Button variant="secondary" className="rounded-xl h-10 px-4 bg-background border border-border">All Requests</Button>
-                        <Button variant="ghost" className="rounded-xl h-10 px-4">Open</Button>
-                        <Button variant="ghost" className="rounded-xl h-10 px-4">Archived</Button>
+                        <Button size="lg" variant="secondary" className=" bg-background border border-border">All Requests</Button>
+                        <Button size="lg" variant="ghost" >Open</Button>
+                        <Button size="lg" variant="ghost" >Archived</Button>
                     </div>
                     <div className="flex gap-3 w-full md:w-auto">
                         <div className="relative flex-1 md:w-64">
@@ -76,7 +76,7 @@ export default function ClientRequestsPage() {
                         <TableBody>
                             {requests.map((req) => (
                                 <TableRow key={req.id} className="hover:bg-secondary/10 transition-colors border-b border-border group">
-                                    <TableCell className="px-10 py-6 font-normal text-muted-foreground text-sm">{req.id}</TableCell>
+                                    <TableCell className="px-10 py-6 whitespace-nowrap font-normal text-muted-foreground text-sm">{req.id}</TableCell>
                                     <TableCell className="px-10 py-6">
                                         <div className="font-normal text-foreground text-base max-w-sm truncate">{req.title}</div>
                                         <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-normal">Posted on {req.date}</div>
@@ -86,7 +86,7 @@ export default function ClientRequestsPage() {
                                             {req.proposals} Offers
                                         </Badge>
                                     </TableCell>
-                                    <TableCell className="px-10 py-6 text-center">
+                                    <TableCell className="px-10 py-6 whitespace-nowrap text-center">
                                         {getStatusBadge(req.status)}
                                     </TableCell>
                                     <TableCell className="px-10 py-6 text-right font-normal text-foreground text-sm">
@@ -94,10 +94,10 @@ export default function ClientRequestsPage() {
                                     </TableCell>
                                     <TableCell className="px-10 py-6 text-right">
                                         <div className="flex justify-end gap-2">
-                                            <Button variant="secondary" className="h-9 px-4 rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 font-normal">
+                                            <Button variant="secondary" size="sm" className=" bg-primary text-primary-foreground   hover:bg-primary/90 ">
                                                 View Offers
                                             </Button>
-                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl">
+                                            <Button variant="ghost" size="icon"  >
                                                 <MoreHorizontal className="w-4 h-4 text-muted-foreground" />
                                             </Button>
                                         </div>

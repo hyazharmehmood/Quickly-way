@@ -24,7 +24,7 @@ export default function AdminsPage() {
                 <MetricCard title="Online Status" value="1" trend="Live command" icon={<Activity />} />
             </div>
 
-            <Card className="border-none overflow-hidden ">
+            <Card className="border-none rounded-[2rem] overflow-hidden ">
                 <CardHeader className="p-8 border-b border-border flex flex-col md:flex-row justify-between items-center gap-6">
                     <div>
                         <CardTitle className="text-xl font-normal text-foreground">Admin Command</CardTitle>

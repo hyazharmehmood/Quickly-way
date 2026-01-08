@@ -25,7 +25,7 @@ export default function SEOPage() {
                 <MetricCard title="Total Backlinks" value="3,450" trend="+156 new links" icon={<Link />} />
             </div>
 
-            <Card className="border-none">
+            <Card className="border-none rounded-[2rem]">
                 <CardHeader className="p-8 border-b border-border flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <CardTitle className="text-xl font-normal text-foreground">Keyword Tracking</CardTitle>

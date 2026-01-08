@@ -35,7 +35,7 @@ export default function ClientFavoritesPage() {
     ]);
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">Saved Services</h2>
@@ -58,7 +58,7 @@ export default function ClientFavoritesPage() {
             </div>
 
             {favorites.length > 0 ? (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                     {favorites.map((service) => (
                         <div key={service.id} className="group relative">
                             <div className="absolute top-4 right-4 z-10">

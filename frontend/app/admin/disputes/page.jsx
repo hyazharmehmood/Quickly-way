@@ -22,7 +22,7 @@ export default function DisputesPage() {
                 <MetricCard title="Safe Ratio" value="98%" trend="Trusted score" icon={<Activity />} />
             </div>
 
-            <Card className="border-none">
+            <Card className="border-none rounded-[2rem]">
                 <CardHeader className="p-10 border-b rounded-t-[1.5rem] border-border flex flex-row justify-between items-center bg-card">
                     <CardTitle className="text-xl font-normal text-foreground">Case Unit</CardTitle>
                     <Button variant="outline" className="px-6 py-2 bg-secondary/50 text-muted-foreground rounded-full text-[10px] font-normal uppercase tracking-widest hover:bg-secondary transition-all h-auto border-border">

@@ -19,7 +19,7 @@ export default function SettingsPage() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card className="border-none">
+                <Card className="border-none rounded-[2rem]">
                     <CardHeader className="p-10 pb-0 border-none bg-transparent">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-blue-50 text-blue-500 rounded-[1rem] flex items-center justify-center shadow-inner border border-blue-100">
@@ -48,7 +48,7 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none">
+                <Card className="border-none rounded-[2rem]">
                     <CardHeader className="p-10 pb-0 border-none bg-transparent">
                         <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-destructive/10 text-destructive rounded-[1rem] flex items-center justify-center shadow-inner border border-destructive/20">
@@ -89,7 +89,7 @@ export default function SettingsPage() {
                     { icon: <Smartphone />, title: "App Config", color: "bg-indigo-50/50 text-indigo-500 border-indigo-100" },
                     { icon: <Languages />, title: "Localizations", color: "bg-orange-50/50 text-orange-500 border-orange-100" }
                 ].map((box, i) => (
-                    <Card key={i} className="flex items-center group cursor-pointer border-none">
+                    <Card key={i} className="flex items-center group cursor-pointer border-none rounded-[2rem]">
                         <CardContent className="p-8 flex items-center gap-4 w-full">
                             <div className={`w-12 h-12 rounded-[1rem] flex items-center justify-center transition-all group-hover:scale-110 border ${box.color}`}>
                                 {React.cloneElement(box.icon, { className: 'w-6 h-6', strokeWidth: 1.5 })}

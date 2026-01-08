@@ -26,14 +26,14 @@ export default function ClientPaymentsPage() {
     ];
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div>
                 <h2 className="text-2xl font-normal text-foreground tracking-tight">Payments & Invoices</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Manage your billing information and download receipts.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="lg:col-span-2 rounded-[2.5rem] border-border bg-card shadow-sm p-10 overflow-hidden relative">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="lg:col-span-2 rounded-[2rem] border-none bg-card shadow-sm p-10 overflow-hidden relative">
                     <div className="relative z-10 flex flex-col h-full">
                         <div className="flex justify-between items-start mb-12">
                             <div>
@@ -62,18 +62,18 @@ export default function ClientPaymentsPage() {
                 </Card>
 
                 <div className="space-y-6">
-                    <Card className="rounded-[2.5rem] border-border p-8 bg-card shadow-sm border-l-4 border-l-primary/40">
+                    <Card className="rounded-[2rem] border-none p-4 bg-card shadow-sm border-l-4 border-l-primary/40">
                         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-normal">Total Spent</p>
                         <h3 className="text-3xl font-normal text-foreground tracking-tighter">$14,250.00</h3>
                     </Card>
-                    <Card className="rounded-[2.5rem] border-border p-8 bg-card shadow-sm">
+                    <Card className="rounded-[2rem] border-none p-4 bg-card shadow-sm">
                         <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2 font-normal">Active Refunds</p>
                         <h3 className="text-3xl font-normal text-foreground tracking-tighter opacity-40">$0.00</h3>
                     </Card>
                 </div>
             </div>
 
-            <Card className="rounded-[2.5rem] border-border overflow-hidden shadow-sm bg-card">
+            <Card className="rounded-[2rem] border-none overflow-hidden shadow-sm bg-card">
                 <CardHeader className="p-8 border-b border-border flex flex-row justify-between items-center">
                     <CardTitle className="text-xl font-normal">Billing History</CardTitle>
                     <div className="relative w-64">

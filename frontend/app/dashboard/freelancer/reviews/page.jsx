@@ -19,9 +19,9 @@ export default function FreelancerReviewsPage() {
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Review your performance and interact with clients.</p>
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                <Card className="rounded-[2.5rem] border-border p-10 bg-card shadow-sm">
-                    <div className="text-center mb-10">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+                <Card className="border-none rounded-[2rem]">
+                    <div className="text-center p-4">
                         <p className="text-sm font-normal text-muted-foreground uppercase tracking-widest mb-2">Overall Rating</p>
                         <h3 className="text-6xl font-normal text-foreground">4.9</h3>
                         <div className="flex justify-center gap-1 mt-4">
@@ -32,7 +32,7 @@ export default function FreelancerReviewsPage() {
                         <p className="text-sm text-muted-foreground mt-4 font-normal">142 total reviews</p>
                     </div>
 
-                    <div className="space-y-4">
+                    <div className="space-y-4 p-4">
                         {[5, 4, 3, 2, 1].map((stars) => (
                             <div key={stars} className="flex items-center gap-4">
                                 <span className="text-sm font-normal text-muted-foreground w-4">{stars}</span>
@@ -43,10 +43,10 @@ export default function FreelancerReviewsPage() {
                     </div>
                 </Card>
 
-                <div className="lg:col-span-2 space-y-6">
+                <div className="lg:col-span-2 space-y-4">
                     {reviews.map((rev) => (
-                        <Card key={rev.id} className="rounded-[2.5rem] border-border p-8 bg-card shadow-sm hover:shadow-md transition-all">
-                            <div className="flex justify-between items-start mb-6">
+                        <Card key={rev.id} className="border-none p-4 rounded-[2rem]">
+                            <div className="flex justify-between items-start ">
                                 <div className="flex items-center gap-4">
                                     <div className="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center font-normal text-foreground text-lg">
                                         {rev.user.charAt(0)}

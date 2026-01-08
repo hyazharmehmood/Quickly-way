@@ -35,7 +35,7 @@ export default function ClientOrdersPage() {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-8">
+        <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">My Purchases</h2>
@@ -52,11 +52,11 @@ export default function ClientOrdersPage() {
                 </div>
             </div>
 
-            <div className="space-y-6">
+            <div className="space-y-4">
                 {orders.map((order) => (
-                    <Card key={order.id} className="rounded-[2.5rem] border-border bg-card shadow-sm hover:shadow-md transition-all overflow-hidden">
+                    <Card key={order.id} className="rounded-[2rem] border-none  transition-all overflow-hidden">
                         <div className="flex flex-col lg:flex-row">
-                            <div className="p-8 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
+                            <div className="p-4 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center text-primary">
@@ -90,19 +90,19 @@ export default function ClientOrdersPage() {
                             </div>
 
                             <div className="p-8 lg:w-1/3 bg-secondary/10 flex flex-col justify-center gap-3">
-                                <Button className="h-12 w-full bg-primary text-primary-foreground rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 font-normal">
-                                    <Eye className="w-4 h-4 mr-2" /> View Project Details
+                                <Button size="lg" className=" w-full bg-primary text-primary-foreground   hover:bg-primary/90 ">
+                                    <Eye className="w-4 h-4 " /> View Project Details
                                 </Button>
-                                <Button variant="outline" className="h-12 w-full border-border rounded-xl bg-card font-normal">
-                                    <MessageSquare className="w-4 h-4 mr-2" /> Contact Freelancer
+                                <Button size="lg" variant="outline" className=" w-full border-border  ">
+                                    <MessageSquare className="w-4 h-4 " /> Contact Freelancer
                                 </Button>
                                 {order.status === 'Delivered' && (
-                                    <Button variant="secondary" className="h-12 w-full bg-primary/10 text-primary border border-primary/20 rounded-xl font-normal">
-                                        <Download className="w-4 h-4 mr-2" /> Download Assets
+                                    <Button size="lg" variant="secondary" className=" w-full bg-primary/10 text-primary border border-primary/20 ">
+                                        <Download className="w-4 h-4 " /> Download Assets
                                     </Button>
                                 )}
-                                <Button variant="ghost" className="h-10 w-full text-muted-foreground hover:text-destructive font-normal text-xs">
-                                    <AlertCircle className="w-3.5 h-3.5 mr-1.5" /> Report an Issue
+                                <Button size="lg" variant="ghost" className=" w-full text-muted-foreground hover:text-destructive ">
+                                    <AlertCircle className="w-3.5 h-3.5 " /> Report an Issue
                                 </Button>
                             </div>
                         </div>
