@@ -1,6 +1,6 @@
-# Quicklyway Monorepo
+# Quicklyway
 
-A modern freelance platform built with a monorepo architecture using npm workspaces and Turborepo. This project features a high-quality, responsive frontend designed with Next.js, Tailwind CSS, and Shadcn UI.
+A modern freelance platform built as a robust, single-repository Next.js application. This project features a high-quality, responsive frontend designed with Tailwind CSS and Shadcn UI, tightly integrated with serverless API routes for a seamless full-stack experience.
 
 ## 🎨 Design System & UI
 
@@ -12,158 +12,116 @@ The application follows a modern, clean aesthetic characterized by a "Box/Card" 
 - **Typography**: Geist Sans & Geist Mono (Next.js fonts).
 
 ### Visual Identity
-- **Primary Color**: Emerald Green - Managed via `--color-primary` in `globals.css` and applied using the `text-primary` or `bg-primary` utility classes.
+- **Primary Color**: Emerald Green - Managed via `--color-primary` in `globals.css`.
 - **Surface**: Clean white backgrounds (`bg-card`/`bg-background`) on a soft neutral-gray canvas (`bg-secondary`/`bg-muted`).
-- **Shape**: Consistent usage of `rounded-[2.5rem]` for main content containers and `rounded-[1.5rem]` for secondary elements like cards and buttons.
-- **Shadows**: Soft, subtle shadows (`shadow-sm`, `shadow-md`) to lift content off the page.
-
----
-<!-- Email: admin@quicklyway.com
-Password: adminPassword123 -->
-## 🧩 Core Features & Components
-
-### 1. Authentication (`/login`, `/signup`)
-A robust authentication flow featuring varying layouts and validation.
-- **Components**: `components/auth/Login.jsx`, `components/auth/Signup.jsx`, `components/auth/ForgotPassword.jsx`.
-- **Design**:
-  - Uses Shadcn `Input` and `Button` for accessible, styled forms.
-  - Interactive "Show Password" toggles.
-  - Form validation with visual feedback.
-  - Routing managed via `next/navigation`.
-
-### 2. Service Discovery (Home)
-The landing page allows users to find services quickly.
-- **Global Header**: Fixed sticky header with Search, Navigation, and Auth actions.
-- **Category Filter**: Horizontal scrollable list of service categories styles as pills.
-- **Service Grid**: Responsive grid layout displaying `ServiceCard` components.
-
-### 3. Service Details (`/service/[id]`)
-A dynamic, data-rich page displaying full details of a specific service.
-- **Layout**: 
-  - **Grid System**: 2-column layout (Main Content + Sticky Sidebar) on large screens.
-  - **Boxy/Card Architecture**: Every section (Header, Description, Gallery, Reviews) is wrapped in a Shadcn `Card` with `rounded-[2.5rem]` to maintain consistency.
-- **Key Sections**:
-  - **Provider Header**: Avatar, status (online/offline), rating summary, and "Favorite" action.
-  - **Gallery**: Interactive image carousel with thumbnail navigation.
-  - **Sidebar**: Sticky sidebar containing Price, Working Hours, Payment Methods, and Complaint actions.
-  - **Reviews**: Detailed review list with rating distribution bars.
-- **Interactivity**: 
-  - **Modals**: Custom Shadcn `Dialog` components for "Contact Me", "Report Service", and "Write a Review".
+- **Shape**: Consistent usage of `rounded-[2.5rem]` for main content containers and `rounded-[1.5rem]` for secondary elements.
 
 ---
 
-### 4. Admin Dashboard (`/admin`)
-A comprehensive management interface for platform administrators.
-- **Architecture**: Features a consolidated file-based routing system (`frontend/app/admin`) where each section's logic is embedded directly in its route page, eliminating intermediate component layers.
-- **Design & Layout**:
-  - **Fixed Shell**: Persistent `Sidebar` and `AdminHeader` components with a scrollable main content area.
-  - **Unified Aesthetics**: Every page follows the "Box/Card" design using Shadcn `Card` widgets and semantic color variables.
-- **Key Modules**:
-  - **Dashboard**: High-level metrics and platform analytics.
-  - **User & Admin Management**: Registry with status controls, role badges, and registration tracking.
-  - **Service Moderation**: "Approvals" queue for authorizing new service listings.
-  - **Operational Control**: Orders ledger, Dispute resolution unit, and Review moderation hub.
-  - **Growth & Config**: SEO keyword tracking and a centralized System Settings panel.
+## 🧩 Core Features
+
+### 1. Authentication
+Secure email/password authentication flow with JWT tokens.
+- **Routes**: `/login`, `/signup`, `/forgot-password`.
+- **API**: Internal Next.js API routes (`/api/auth/*`) handling secure sessions.
+
+### 2. Service Discovery
+- **Home Page**: Global search, category filters, and service listings.
+- **Service Details**: Detailed service pages with galleries, reviews, and provider info.
+
+### 3. Freelancer & Client Portals
+- **Workspaces**: Dedicated dashboard views for managing projects, proposals, and orders.
+- **Seller Application**: Capability for users to apply to become sellers.
+
+### 4. Admin Dashboard
+A comprehensive management interface for platform administrators to moderate services, manage users, and oversee platform health.
 
 ---
 
-## 🏗 Component Architecture (Frontend)
+## 🏗 Architecture
 
-The frontend is structured to be modular and scalable (`frontend/components`).
+Quicklyway uses a **Single-Repo, Full-Stack Next.js** architecture.
 
+- **Frontend**: Next.js App Router (`frontend/app`).
+- **Backend**: Next.js API Routes (`frontend/app/api`).
+- **Database**: MongoDB with Mongoose (Models located in `frontend/lib/models`).
+- **Deployment**: Optimized for Vercel or any Node.js hosting.
+
+### File Structure
 ```bash
-components/
-├── admin/          # Admin-specific components (Sidebar, MetricCard, etc.)
-├── auth/           # Login, Signup, ForgotPwd forms
-├── layout/         # Header, Footer, dynamic layouts
-├── service/        # Service-related components
-│   ├── ServiceCard.jsx     # Reusable card for grid/lists
-│   ├── ServiceDetails.jsx  # Main details page component
-│   └── modals/             # Action modals (Contact, Report, etc.)
-├── ui/             # Reusable Shadcn primitives (Button, Card, Table, etc.)
-└── types.js        # Shared JSDoc type definitions
+frontend/
+├── app/
+│   ├── api/            # Backend API routes (Auth, Users, Services)
+│   ├── admin/          # Admin dashboard pages
+│   └── (routes)/       # Public pages (Login, Home, Service)
+├── components/         # Reusable UI components
+├── lib/
+│   ├── db.js           # Database connection
+│   ├── models/         # Mongoose models (User, Project, etc.)
+│   └── utils/          # Shared utilities (JWT, Email)
+└── public/             # Static assets
 ```
-
----
-
-## 🎨 Design System Implementation
-
-The platform uses a unified design system that ensures consistency and theme-readability.
-
-- **Semantic Colors**: Instead of hardcoded hex codes, components use Tailwind classes like `text-primary`, `bg-secondary`, and `border-border`, which are mapped to brand tokens in `globals.css`.
-- **Absolute Imports**: Managed via `@/` alias for cleaner imports (e.g., `@/components/ui/button`).
-- **Responsive Layouts**: Optimized for seamless transitions between mobile, tablet, and desktop views.
 
 ---
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js (>= 18.0.0)
-- npm (>= 9.0.0)
-- MongoDB (for backend)
+- Node.js (>= 20.9.0)
+- npm (>= 10.0.0)
+- MongoDB Connection URI
 
 ### Installation
-Install all dependencies for frontend, backend, and shared packages:
 
-```bash
-npm install
-```
+1. Clone the repository and install dependencies:
+   ```bash
+   npm install
+   ```
 
-### Environment Variables
+2. Configure Environment Variables:
+   Create a `.env.local` file in the `frontend` directory:
+   ```env
+   # App
+   NEXT_PUBLIC_APP_URL=http://localhost:3000
+   NEXT_PUBLIC_API_URL=/api
 
-#### Frontend
-Create a `.env.local` file in the `frontend/` directory:
-```env
-NEXT_PUBLIC_API_URL=http://localhost:3001/api
-NEXT_PUBLIC_APP_URL=http://localhost:3000
-```
+   # Database
+   MONGODB_URI=mongodb+srv://...
 
-#### Backend
-Create a `.env` file in the `backend/` directory:
-```env
-PORT=3001
-MONGODB_URI=mongodb://localhost:27017/quicklyway
-JWT_SECRET=your-secret-key-here
-JWT_REFRESH_SECRET=your-refresh-secret-key-here
-NODE_ENV=development
-FRONTEND_URL=http://localhost:3000
-RESEND_API_KEY=re_9nFNZ2pR_Q8RDm17uBj9axve1CgQUd7pD
-EMAIL_FROM=Quicklyway <onboarding@resend.dev>
-```
+   # Secrets
+   JWT_SECRET=your-secret-key
+   JWT_REFRESH_SECRET=your-refresh-secret
+
+   # Email Service (Resend)
+   RESEND_API_KEY=re_...
+   EMAIL_FROM=Quicklyway <onboarding@resend.dev>
+   ```
 
 ### Development
-Run both across the workspace:
+
+Start the development server:
 ```bash
 npm run dev
 ```
+Open [http://localhost:3000](http://localhost:3000) to view the app.
 
 ### Build
+
+To create a production build:
 ```bash
 npm run build
 ```
 
 ---
 
-## 🛠 Tech Stack Details
+## 🛠 Tech Stack
 
-### Frontend
-- **Next.js 14** (App Router)
-- **Tailwind CSS** + **Tailwind Merge**
-- **Shadcn/UI** (Radix UI)
-- **Lucide React** (Icons)
-- **Axios** (Data Fetching)
-
-### Backend
-- **Express.js**
-- **MongoDB** / **Mongoose**
-- **JWT** Authentication
-
-## Workspace Scripts
-- `npm run dev` - Run full stack
-- `npm run dev:frontend` - Run frontend only
-- `npm run dev:backend` - Run backend only
+- **Framework**: Next.js 16 (App Router)
+- **Database**: MongoDB + Mongoose
+- **Styling**: Tailwind CSS
+- **Components**: Shadcn/UI (Radix UI)
+- **Email**: Resend
+- **Auth**: JWT (Custom Implementation)
 
 ## License
 MIT
-

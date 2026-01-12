@@ -1,0 +1,115 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  CLIENT
+  FREELANCER
+  ADMIN
+}
+
+enum SellerStatus {
+  NONE
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProjectStatus {
+  OPEN
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+}
+
+enum ProposalStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+}
+
+model User {
+  id              String   @id @default(uuid())
+  name            String
+  email           String   @unique
+  password        String
+  role            UserRole @default(CLIENT)
+  isSeller        Boolean  @default(false)
+  sellerStatus    SellerStatus @default(NONE)
+  
+  // Profile fields (optional in Mongoose, keep optional here)
+  bio             String?
+  skills          String[]
+  portfolio       String?
+  
+  refreshToken    String?
+  
+  passwordResetToken   String?
+  passwordResetExpires DateTime?
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  clientProjects     Project[] @relation("ClientProjects")
+  freelancerProjects Project[] @relation("FreelancerProjects")
+  proposals          Proposal[]
+  sellerApplication  SellerApplication?
+}
+
+model Project {
+  id          String        @id @default(uuid())
+  title       String
+  description String
+  budget      Float
+  deadline    DateTime?
+  status      ProjectStatus @default(OPEN)
+  
+  clientId    String
+  client      User   @relation("ClientProjects", fields: [clientId], references: [id])
+  
+  freelancerId String?
+  freelancer   User?   @relation("FreelancerProjects", fields: [freelancerId], references: [id])
+  
+  proposals    Proposal[]
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Proposal {
+  id          String         @id @default(uuid())
+  bidAmount   Float
+  coverLetter String
+  status      ProposalStatus @default(PENDING)
+  
+  projectId   String
+  project     Project @relation(fields: [projectId], references: [id])
+  
+  freelancerId String
+  freelancer   User    @relation(fields: [freelancerId], references: [id])
+  
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model SellerApplication {
+  id              String       @id @default(uuid())
+  fullName        String
+  skills          String[]
+  bio             String?
+  portfolio       String?
+  status          SellerStatus @default(PENDING)
+  rejectionReason String?
+  
+  userId          String       @unique
+  user            User         @relation(fields: [userId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
