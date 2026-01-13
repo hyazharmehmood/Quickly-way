@@ -29,7 +29,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
     const { user, isSeller, sellerStatus } = useAuthStore();
 
     const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
-  
+
 
     const handleLogout = () => {
         useAuthStore.getState().logout();
@@ -55,14 +55,18 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
                 </button>
             </div>
 
-           
+
             {/* Navigation links */}
             <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto no-scrollbar">
                 {menuItems.map((item) => (
                     <SidebarLink
                         key={item.href}
                         {...item}
-                        active={pathname === item.href}
+                        active={
+                            item.href === '/dashboard/freelancer' || item.href === '/dashboard'
+                                ? pathname === item.href
+                                : pathname.startsWith(item.href)
+                        }
                         isOpen={isOpen}
                     />
                 ))}

@@ -7,7 +7,7 @@ export function proxy(request) {
 
     // 1. Protect Admin Routes
     if (pathname.startsWith('/admin')) {
-        if (!token || role !== 'admin') {
+        if (!token || role !== 'ADMIN') {
             return NextResponse.redirect(new URL('/login', request.url));
         }
     }
@@ -20,8 +20,9 @@ export function proxy(request) {
 
         // Freelancer-specific protection
         if (pathname.startsWith('/dashboard/freelancer')) {
-            if (role !== 'freelancer' && role !== 'admin') {
-                return NextResponse.redirect(new URL('/dashboard/client', request.url));
+            const normalizedRole = role ? role.toUpperCase() : '';
+            if (normalizedRole !== 'FREELANCER' && normalizedRole !== 'ADMIN') {
+                return NextResponse.redirect(new URL('/', request.url));
             }
         }
     }
@@ -29,7 +30,7 @@ export function proxy(request) {
     // 3. Redirect logged-in users away from /login and /signup
     if (pathname === '/login' || pathname === '/signup') {
         if (token) {
-            if (role === 'admin') {
+            if (role === 'ADMIN') {
                 return NextResponse.redirect(new URL('/admin', request.url));
             }
             return NextResponse.redirect(new URL('/', request.url));

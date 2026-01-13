@@ -8,7 +8,7 @@ import { ServiceGrid } from '@/components/service/ServiceGrid';
 // Mock data - replace with API call later
 const mockServices = [
   {
-    id: 1,  
+    id: 1,
     image: 'https://images.unsplash.com/photo-1581291518857-4e27b48ff24e?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
     name: 'Robert Martinez',
@@ -75,7 +75,7 @@ const mockServices = [
   },
   {
     id: 7,
-      image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
+    image: 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=400&h=300&fit=crop',
     profileImage: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop',
     name: 'Michael Chen',
     location: 'Texas, USA',
@@ -124,11 +124,8 @@ export default function Home() {
   };
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        searchQuery={searchQuery}
-        onSearchChange={setSearchQuery}
-      />
+    <main className="min-h-screen bg-background">
+      <h1 className="sr-only">Find Top Freelance Services</h1>
       <CategoryFilter
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
@@ -138,6 +135,6 @@ export default function Home() {
         onServiceClick={handleServiceClick}
         onClearFilters={handleClearFilters}
       />
-    </div>
+    </main>
   );
 }

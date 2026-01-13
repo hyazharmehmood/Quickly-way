@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Plus, MoreVertical, Edit2, Trash2, Eye, Power } from 'lucide-react';
+import Link from 'next/link';
 import { ServiceCard } from '@/components/service/ServiceCard';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -71,19 +72,21 @@ export default function FreelancerServicesPage() {
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">My Services</h2>
                     <p className="text-muted-foreground font-normal mt-1 text-sm">Create and manage your professional offerings.</p>
                 </div>
-                <Button size="lg" className="">
-                    <Plus className="w-5 h-5" />
-                    <span>Create New Service</span>
-                </Button>
+                <Link href="/dashboard/freelancer/services/create">
+                    <Button size="lg" className="">
+                        <Plus className="w-5 h-5" />
+                        <span>Create New Service</span>
+                    </Button>
+                </Link>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                 {myServices.map((service) => (
                     <div key={service.id} >
-              
-                            <ServiceCard service={service} />
 
-                       
+                        <ServiceCard service={service} />
+
+
                     </div>
                 ))}
             </div>

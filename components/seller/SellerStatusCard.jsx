@@ -66,9 +66,9 @@ export const SellerStatusCard = ({ status, reason, onRetry }) => {
                         </Button>
                     ) : (
                         <Button asChild variant="outline" className="h-14 border-border rounded-2xl bg-secondary/30">
-                            <Link href="/dashboard/client">
+                            <Link href="/">
                                 <ArrowLeft className="w-5 h-5 mr-2" />
-                                Back to Dashboard
+                                Back to Home
                             </Link>
                         </Button>
                     )}

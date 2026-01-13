@@ -35,7 +35,7 @@ export default function ClientOrdersPage() {
     };
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-4">
+        <div className="animate-in fade-in duration-500 space-y-4 container mx-auto py-6 px-4 md:px-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">My Purchases</h2>
@@ -56,7 +56,7 @@ export default function ClientOrdersPage() {
                 {orders.map((order) => (
                     <Card key={order.id} className="rounded-[2rem] border-none  transition-all overflow-hidden">
                         <div className="flex flex-col lg:flex-row">
-                            <div className="p-4 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
+                            <div className="p-5 md:p-8 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
                                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
                                     <div className="flex items-center gap-4">
                                         <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center text-primary">
@@ -89,20 +89,20 @@ export default function ClientOrdersPage() {
                                 </div>
                             </div>
 
-                            <div className="p-8 lg:w-1/3 bg-secondary/10 flex flex-col justify-center gap-3">
-                                <Button size="lg" className=" w-full bg-primary text-primary-foreground   hover:bg-primary/90 ">
-                                    <Eye className="w-4 h-4 " /> View Project Details
+                            <div className="p-4 md:p-8 lg:w-1/3 bg-secondary/10 flex flex-col justify-center gap-3">
+                                <Button size="lg" className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                                    <Eye className="w-4 h-4 mr-2" /> View Project Details
                                 </Button>
-                                <Button size="lg" variant="outline" className=" w-full border-border  ">
-                                    <MessageSquare className="w-4 h-4 " /> Contact Freelancer
+                                <Button size="lg" variant="outline" className="w-full border-border">
+                                    <MessageSquare className="w-4 h-4 mr-2" /> Contact Freelancer
                                 </Button>
                                 {order.status === 'Delivered' && (
-                                    <Button size="lg" variant="secondary" className=" w-full bg-primary/10 text-primary border border-primary/20 ">
-                                        <Download className="w-4 h-4 " /> Download Assets
+                                    <Button size="lg" variant="secondary" className="w-full bg-primary/10 text-primary border border-primary/20">
+                                        <Download className="w-4 h-4 mr-2" /> Download Assets
                                     </Button>
                                 )}
-                                <Button size="lg" variant="ghost" className=" w-full text-muted-foreground hover:text-destructive ">
-                                    <AlertCircle className="w-3.5 h-3.5 " /> Report an Issue
+                                <Button size="lg" variant="ghost" className="w-full text-muted-foreground hover:text-destructive">
+                                    <AlertCircle className="w-3.5 h-3.5 mr-2" /> Report an Issue
                                 </Button>
                             </div>
                         </div>

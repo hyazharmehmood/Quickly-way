@@ -1,9 +1,11 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/store/useAuthStore';
 import {
     CreditCard, ShieldCheck, Download,
-    ArrowUpRight, ArrowDownLeft, FileText, Search
+    ArrowUpRight, ArrowDownLeft, FileText, Search, Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -19,14 +21,31 @@ import {
 } from "@/components/ui/table";
 
 export default function ClientPaymentsPage() {
+    const { isLoggedIn, isLoading } = useAuthStore();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoggedIn && !isLoading) {
+            router.push('/login');
+        }
+    }, [isLoggedIn, isLoading, router]);
+
     const invoices = [
         { id: 'INV-1024', date: 'Nov 22, 2024', service: 'React Dashboard', status: 'Paid', amount: 450.00 },
         { id: 'INV-1010', date: 'Nov 18, 2024', service: 'Logo Design', status: 'Refunded', amount: 50.00 },
         { id: 'INV-0988', date: 'Oct 12, 2024', service: 'SEO Audit', status: 'Paid', amount: 120.00 },
     ];
 
+    if (isLoading || !isLoggedIn) {
+        return (
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
-        <div className="animate-in fade-in duration-500 space-y-4">
+        <div className="container mx-auto py-8 animate-in fade-in duration-500 space-y-4">
             <div>
                 <h2 className="text-2xl font-normal text-foreground tracking-tight">Payments & Invoices</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Manage your billing information and download receipts.</p>
@@ -82,41 +101,43 @@ export default function ClientPaymentsPage() {
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
-                                <TableHead className="px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Date</TableHead>
-                                <TableHead className="px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Service</TableHead>
-                                <TableHead className="px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
-                                <TableHead className="px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Amount</TableHead>
-                                <TableHead className="px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Receipt</TableHead>
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {invoices.map((inv) => (
-                                <TableRow key={inv.id} className="hover:bg-secondary/10 border-b border-border transition-colors">
-                                    <TableCell className="px-10 py-6 text-sm text-foreground font-normal">{inv.date}</TableCell>
-                                    <TableCell className="px-10 py-6 text-sm font-normal text-foreground">
-                                        {inv.service}
-                                        <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-normal">{inv.id}</div>
-                                    </TableCell>
-                                    <TableCell className="px-10 py-6 text-center">
-                                        <Badge variant="secondary" className={`font-normal rounded-lg px-2.5 py-1 ${inv.status === 'Paid' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-secondary text-muted-foreground border-border'}`}>
-                                            {inv.status}
-                                        </Badge>
-                                    </TableCell>
-                                    <TableCell className="px-10 py-6 text-right font-normal text-sm text-foreground">
-                                        ${inv.amount.toFixed(2)}
-                                    </TableCell>
-                                    <TableCell className="px-10 py-6 text-right">
-                                        <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary">
-                                            <Download className="w-4 h-4" />
-                                        </Button>
-                                    </TableCell>
+                    <div className="overflow-x-auto">
+                        <Table>
+                            <TableHeader>
+                                <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
+                                    <TableHead className="px-6 md:px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Date</TableHead>
+                                    <TableHead className="px-6 md:px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Service</TableHead>
+                                    <TableHead className="px-6 md:px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
+                                    <TableHead className="px-6 md:px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Amount</TableHead>
+                                    <TableHead className="px-6 md:px-10 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Receipt</TableHead>
                                 </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
+                            </TableHeader>
+                            <TableBody>
+                                {invoices.map((inv) => (
+                                    <TableRow key={inv.id} className="hover:bg-secondary/10 border-b border-border transition-colors">
+                                        <TableCell className="px-6 md:px-10 py-6 text-sm text-foreground font-normal">{inv.date}</TableCell>
+                                        <TableCell className="px-6 md:px-10 py-6 text-sm font-normal text-foreground">
+                                            {inv.service}
+                                            <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1 font-normal">{inv.id}</div>
+                                        </TableCell>
+                                        <TableCell className="px-6 md:px-10 py-6 text-center">
+                                            <Badge variant="secondary" className={`font-normal rounded-lg px-2.5 py-1 ${inv.status === 'Paid' ? 'bg-primary/10 text-primary border-primary/20' : 'bg-secondary text-muted-foreground border-border'}`}>
+                                                {inv.status}
+                                            </Badge>
+                                        </TableCell>
+                                        <TableCell className="px-6 md:px-10 py-6 text-right font-normal text-sm text-foreground">
+                                            ${inv.amount.toFixed(2)}
+                                        </TableCell>
+                                        <TableCell className="px-6 md:px-10 py-6 text-right">
+                                            <Button variant="ghost" size="icon" className="h-9 w-9 rounded-xl text-muted-foreground hover:text-primary">
+                                                <Download className="w-4 h-4" />
+                                            </Button>
+                                        </TableCell>
+                                    </TableRow>
+                                ))}
+                            </TableBody>
+                        </Table>
+                    </div>
                 </CardContent>
             </Card>
         </div>

@@ -1,12 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
-  ArrowLeft,
   Home,
   RefreshCw,
   MapPin,
@@ -25,17 +23,18 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Settings, LogOut, LayoutDashboard, UserCheck } from 'lucide-react';
+import { User as UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle } from 'lucide-react';
 
 export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
   const pathname = usePathname();
   const { isLoggedIn, role, isSeller, sellerStatus, user, logout } = useAuthStore();
-  const isAdmin = role === 'admin';
+  const normalizedRole = role ? role.toUpperCase() : '';
+  const isAdmin = normalizedRole === 'ADMIN';
   const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'A');
-  const userRoleDisplay = role === 'admin' ? 'Super User' : (isSeller && sellerStatus === 'approved' ? 'Freelancer' : 'Client');
+  const userRoleDisplay = normalizedRole === 'ADMIN' ? 'Super User' : (isSeller && sellerStatus === 'APPROVED' ? 'Freelancer' : 'Client');
   const displayName = user?.name || 'User';
 
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
@@ -47,7 +46,11 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
 
   const handleNavigate = (path) => {
-    router.push(`/${path}`);
+    if (path === '' && normalizedRole === 'FREELANCER') {
+      router.push('/dashboard/freelancer');
+    } else {
+      router.push(`/${path}`);
+    }
   };
 
   const handleSearch = (value) => {
@@ -70,14 +73,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
         <div className="max-w-screen-2xl mx-auto flex items-center justify-start gap-8">
           {/* Navigation Icons Group */}
           <div className="flex items-center gap-6">
-            {/* <Button
-              variant="ghost"
-              size="icon"
-              onClick={() => router.back()}
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </Button> */}
+
 
             <Button
               variant="ghost"
@@ -140,15 +136,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           {/* Utility Buttons: Language & Support */}
           <div className="ml-auto flex items-center gap-6">
             {/* Admin Selector */}
-            {/* <Button
-              variant="ghost"
-              onClick={() => handleNavigate('admin')}
-              className="gap-2"
-              aria-label="Admin access"
-            >
-              <Globe className="w-4 h-4" />
-              <span className="text-sm font-normal">Admin</span>
-            </Button> */}
+
 
             {/* Support Button */}
             <Button
@@ -201,24 +189,6 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           <div className="flex items-center gap-6 w-full md:w-auto justify-end md:min-w-[200px]">
             {isLoggedIn ? (
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  {isSeller && sellerStatus === 'approved' ? (
-                    <Button
-                      onClick={() => router.push(isFreelancerView ? '/dashboard/client' : '/dashboard/freelancer')}
-                      className="bg-secondary hover:bg-secondary/90 text-secondary-foreground text-sm font-medium px-6 py-2.5 rounded-full shadow-sm h-auto transition-colors"
-                    >
-                      {isFreelancerView ? "Switch to Buying" : "Switch to Selling"}
-                    </Button>
-                  ) : !isAdmin && (
-                    <Button
-                      onClick={() => router.push('/become-seller')}
-                      className=""
-                    >
-                      Become a Seller
-                    </Button>
-                  )}
-                </div>
-
                 {/* Profile Section with Dropdown */}
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
@@ -245,45 +215,90 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                     <DropdownMenuSeparator className="bg-gray-50 mx-2" />
 
                     <div className="p-1 space-y-1">
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (isAdmin) router.push('/admin');
-                          else if (isFreelancerView) router.push('/dashboard/freelancer');
-                          else router.push('/dashboard/client');
-                        }}
-                        className=""
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600">
-                          <LayoutDashboard className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">Dashboard</span>
-                      </DropdownMenuItem>
+                      {/* CLIENT MENU */}
+                      {(normalizedRole === 'CLIENT' || normalizedRole === '' || !role) && !isAdmin && (
+                        <>
+                          <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 mr-2">
+                              <UserIcon className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Profile</span>
+                          </DropdownMenuItem>
 
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (isAdmin) router.push('/admin/settings');
-                          else if (isFreelancerView) router.push('/dashboard/freelancer/settings');
-                          else router.push('/dashboard/client/settings');
-                        }}
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600">
-                          <UserIcon className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">My Profile</span>
-                      </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-600 mr-2">
+                              <Settings className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Account Settings</span>
+                          </DropdownMenuItem>
 
-                      <DropdownMenuItem
-                        onClick={() => {
-                          if (isAdmin) router.push('/admin/settings');
-                          else if (isFreelancerView) router.push('/dashboard/freelancer/settings');
-                          else router.push('/dashboard/client/settings');
-                        }}
-                      >
-                        <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-600">
-                          <Settings className="w-4 h-4" />
-                        </div>
-                        <span className="text-sm font-medium">Settings</span>
-                      </DropdownMenuItem>
+                          <DropdownMenuItem onClick={() => router.push('/orders')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mr-2">
+                              <ShoppingBag className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">My Orders</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 mr-2">
+                              <MessageSquare className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Messages</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => { }} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 mr-2">
+                              <Languages className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Language</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mr-2">
+                              <HelpCircle className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Help & Support</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
+
+                      {/* FREELANCER & ADMIN MENU */}
+                      {(normalizedRole === 'FREELANCER' || isAdmin) && (
+                        <>
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (isAdmin) router.push('/admin');
+                              else router.push('/dashboard/freelancer');
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mr-2">
+                              <LayoutDashboard className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Dashboard</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => {
+                              if (isAdmin) router.push('/admin/settings');
+                              else router.push('/dashboard/freelancer/settings');
+                            }}
+                            className="cursor-pointer"
+                          >
+                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 mr-2">
+                              <UserIcon className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Profile</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mr-2">
+                              <HelpCircle className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Help & Support</span>
+                          </DropdownMenuItem>
+                        </>
+                      )}
                     </div>
 
                     <DropdownMenuSeparator className="bg-gray-50 mx-2" />
@@ -315,16 +330,23 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                   Log in
                 </Button>
                 <Button
-                  onClick={() => handleNavigate('signup')}
+                  onClick={() => router.push('/signup?role=1')}
+                  variant="ghost"
+                  className="text-sm font-medium text-foreground hover:text-muted-foreground hover:bg-muted px-4 py-2.5 rounded-full h-auto"
+                >
+                  Join as Freelancer
+                </Button>
+                <Button
+                  onClick={() => router.push('/signup?role=0')}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-2.5 rounded-full shadow-sm h-auto transition-colors"
                 >
-                  Sign up
+                  Join as Client
                 </Button>
               </>
             )}
           </div>
         </div>
-      </header>
-    </div>
+      </header >
+    </div >
   );
 }

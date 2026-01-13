@@ -27,24 +27,25 @@ export default function FreelancerSettings() {
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
 
+    // Fetch profile only if not logged in to avoid global loading loop
     useEffect(() => {
-        loadProfile();
-    }, []);
-
-    const loadProfile = async () => {
-        setIsLoadingProfile(true);
-        try {
-            await fetchProfile();
-            if (user) {
-                setName(user.name || '');
-                setEmail(user.email || '');
-            }
-        } catch (error) {
-            toast.error('Failed to load profile');
-        } finally {
+        if (!user) {
+            const loadData = async () => {
+                try {
+                    await fetchProfile();
+                } catch (error) {
+                    console.error('Failed to load profile');
+                } finally {
+                    setIsLoadingProfile(false);
+                }
+            };
+            loadData();
+        } else {
+         
             setIsLoadingProfile(false);
         }
-    };
+    }, []);
+
 
     useEffect(() => {
         if (user) {
@@ -122,16 +123,15 @@ export default function FreelancerSettings() {
                         { icon: <User />, label: 'Profile Info', tab: 'profile' },
                         { icon: <Shield />, label: 'Security', tab: 'security' },
                     ].map((item, i) => (
-                        <Button 
+                        <Button
                             key={i}
-                            variant="ghost" 
-                            size="lg" 
+                            variant="ghost"
+                            size="lg"
                             onClick={() => setActiveTab(item.tab)}
-                            className={`w-full flex items-center gap-4 cursor-pointer transition-all ${
-                                activeTab === item.tab 
-                                    ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20' 
-                                    : 'bg-card text-muted-foreground border border-border hover:bg-secondary/50'
-                            }`}
+                            className={`w-full flex items-center gap-4 cursor-pointer transition-all ${activeTab === item.tab
+                                ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/20'
+                                : 'bg-card text-muted-foreground border border-border hover:bg-secondary/50'
+                                }`}
                         >
                             {React.cloneElement(item.icon, { className: 'w-5 h-5', strokeWidth: 1.5 })}
                             <span className="text-base font-normal">{item.label}</span>
@@ -142,42 +142,42 @@ export default function FreelancerSettings() {
                 <Card className="md:col-span-2 border-none space-y-4 p-4 rounded-[2rem]">
                     {activeTab === 'profile' ? (
                         <>
-                    <div className="flex items-center gap-6 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
-                            <User className="w-6 h-6" />
-                        </div>
-                        <CardTitle className="text-xl font-normal">Personal Information</CardTitle>
-                    </div>
+                            <div className="flex items-center gap-6 mb-4">
+                                <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
+                                    <User className="w-6 h-6" />
+                                </div>
+                                <CardTitle className="text-xl font-normal">Personal Information</CardTitle>
+                            </div>
 
                             <form onSubmit={handleProfileUpdate}>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Display Name</label>
-                                        <Input 
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Display Name</label>
+                                        <Input
                                             value={name}
                                             onChange={(e) => setName(e.target.value)}
                                             disabled={isLoading}
-                                            className="h-12 bg-secondary/50 border-none rounded-xl" 
+                                            className="h-12 bg-secondary/50 border-none rounded-xl"
                                             required
                                         />
-                        </div>
-                        <div className="space-y-2">
-                            <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Email Address</label>
-                                        <Input 
+                                    </div>
+                                    <div className="space-y-2">
+                                        <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Email Address</label>
+                                        <Input
                                             type="email"
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
                                             disabled={isLoading}
-                                            className="h-12 bg-secondary/50 border-none rounded-xl" 
+                                            className="h-12 bg-secondary/50 border-none rounded-xl"
                                             required
                                         />
                                     </div>
                                 </div>
 
                                 <div className="pt-6 border-t border-border flex justify-end mt-4">
-                                    <Button 
+                                    <Button
                                         type="submit"
-                                        size="lg" 
+                                        size="lg"
                                         disabled={isLoading}
                                         className="bg-primary text-primary-foreground hover:bg-primary/90 shadow-primary/20"
                                     >
@@ -209,12 +209,12 @@ export default function FreelancerSettings() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Current Password</label>
                                         <div className="relative">
-                                            <Input 
+                                            <Input
                                                 type={showCurrentPassword ? 'text' : 'password'}
                                                 value={currentPassword}
                                                 onChange={(e) => setCurrentPassword(e.target.value)}
                                                 disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12" 
+                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
                                                 required
                                             />
                                             <button
@@ -229,12 +229,12 @@ export default function FreelancerSettings() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">New Password</label>
                                         <div className="relative">
-                                            <Input 
+                                            <Input
                                                 type={showNewPassword ? 'text' : 'password'}
                                                 value={newPassword}
                                                 onChange={(e) => setNewPassword(e.target.value)}
                                                 disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12" 
+                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
                                                 required
                                                 minLength={6}
                                             />
@@ -251,12 +251,12 @@ export default function FreelancerSettings() {
                                     <div className="space-y-2">
                                         <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Confirm New Password</label>
                                         <div className="relative">
-                                            <Input 
+                                            <Input
                                                 type={showConfirmPassword ? 'text' : 'password'}
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
                                                 disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12" 
+                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
                                                 required
                                                 minLength={6}
                                             />
@@ -267,14 +267,14 @@ export default function FreelancerSettings() {
                                             >
                                                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
-                        </div>
-                        </div>
-                    </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <div className="pt-6 border-t border-border flex justify-end mt-4">
-                                    <Button 
+                                    <Button
                                         type="submit"
-                                        size="lg" 
+                                        size="lg"
                                         disabled={isLoading}
                                         className="bg-primary text-primary-foreground hover:bg-primary/90"
                                     >
@@ -286,8 +286,8 @@ export default function FreelancerSettings() {
                                         ) : (
                                             'Change Password'
                                         )}
-                        </Button>
-                    </div>
+                                    </Button>
+                                </div>
                             </form>
                         </>
                     )}

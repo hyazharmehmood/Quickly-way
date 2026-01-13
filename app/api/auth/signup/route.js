@@ -6,7 +6,8 @@ import { HTTP_STATUS, USER_ROLES, SELLER_STATUS } from '@/lib/shared/constants';
 
 export async function POST(request) {
     try {
-        const { name, email, password } = await request.json();
+        const body = await request.json();
+        const { name, email, password } = body;
 
         // Check if user already exists
         const existingUser = await prisma.user.findUnique({
@@ -29,9 +30,9 @@ export async function POST(request) {
                 name,
                 email,
                 password: hashedPassword,
-                role: USER_ROLES.CLIENT, // Default role
-                isSeller: false,
-                sellerStatus: SELLER_STATUS.NONE,
+                role: body.role || USER_ROLES.CLIENT,
+                isSeller: body.isSeller || false,
+                sellerStatus: body.sellerStatus || SELLER_STATUS.NONE,
             },
         });
 

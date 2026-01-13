@@ -1,12 +1,23 @@
 "use client";
 
-import React, { useState } from 'react';
-import { Heart, Search, Grid, List as ListIcon } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import useAuthStore from '@/store/useAuthStore';
+import { Heart, Search, Grid, List as ListIcon, Loader2 } from 'lucide-react';
 import { ServiceCard } from '@/components/service/ServiceCard';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
 export default function ClientFavoritesPage() {
+    const { isLoggedIn, isLoading } = useAuthStore();
+    const router = useRouter();
+
+    useEffect(() => {
+        if (!isLoggedIn && !isLoading) {
+            router.push('/login');
+        }
+    }, [isLoggedIn, isLoading, router]);
+
     const [favorites] = useState([
         {
             id: 's1',
@@ -34,8 +45,16 @@ export default function ClientFavoritesPage() {
         }
     ]);
 
+    if (isLoading || !isLoggedIn) {
+        return (
+            <div className="flex h-[50vh] items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
+
     return (
-        <div className="animate-in fade-in duration-500 space-y-4">
+        <div className="container mx-auto py-8 px-4 md:px-6 animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">Saved Services</h2>

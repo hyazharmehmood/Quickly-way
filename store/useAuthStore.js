@@ -22,6 +22,7 @@ const useAuthStore = create(
             token: null,
             refreshToken: null,
             isLoggedIn: false,
+            isLoading: true, // Add loading state
             sellerStatus: 'none',
             isSeller: false,
             role: 'client',
@@ -29,13 +30,16 @@ const useAuthStore = create(
 
             setShowExpiryDialog: (show) => set({ showExpiryDialog: show }),
 
+            setLoading: (loading) => set({ isLoading: loading }),
+
             setUser: (user) => {
                 set({
                     user,
                     isLoggedIn: !!user,
                     sellerStatus: user?.sellerStatus || 'none',
                     isSeller: user?.isSeller || false,
-                    role: user?.role || 'client'
+                    role: user?.role || 'client',
+                    isLoading: false // Stop loading when user is set
                 });
                 if (user?.role) setCookie('role', user.role, 7);
             },
@@ -68,7 +72,8 @@ const useAuthStore = create(
                     sellerStatus: user.sellerStatus,
                     isSeller: user.isSeller,
                     role: user.role,
-                    showExpiryDialog: false
+                    showExpiryDialog: false,
+                    isLoading: false
                 });
                 localStorage.setItem('token', token);
                 localStorage.setItem('refreshToken', refreshToken);
@@ -159,6 +164,7 @@ const useAuthStore = create(
             },
 
             fetchProfile: async () => {
+                set({ isLoading: true });
                 try {
                     const response = await api.get('/auth/me');
                     const { user } = response.data;
@@ -167,10 +173,12 @@ const useAuthStore = create(
                         isLoggedIn: true,
                         sellerStatus: user.sellerStatus,
                         isSeller: user.isSeller,
-                        role: user.role
+                        role: user.role,
+                        isLoading: false
                     });
                     setCookie('role', user.role, 7);
                 } catch (error) {
+                    set({ isLoading: false }); // Ensure loading stops even on error
                     if (error.response?.status === 401) {
                         set({ showExpiryDialog: true });
                     }

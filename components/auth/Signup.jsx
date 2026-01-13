@@ -5,8 +5,10 @@ import { Eye, EyeOff, AlertCircle, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import useAuthStore from '@/store/useAuthStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
+
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const Signup = ({ onSignInClick, onPostServiceClick }) => {
     const [showPassword, setShowPassword] = useState(false);
@@ -20,6 +22,13 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
 
     const { signup } = useAuthStore();
     const router = useRouter();
+    const searchParams = useSearchParams();
+
+    // Initialize role from URL or default to CLIENT
+    const [selectedRole, setSelectedRole] = useState(() => {
+        const param = searchParams.get('role');
+        return param === '1' ? 'FREELANCER' : 'CLIENT';
+    });
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -28,7 +37,10 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
             await signup({
                 name: `${firstName} ${lastName}`,
                 email,
-                password
+                password,
+                role: selectedRole,
+                isSeller: selectedRole === 'FREELANCER',
+                sellerStatus: selectedRole === 'FREELANCER' ? 'APPROVED' : 'NONE'
             });
             toast.success("Account created successfully!");
             router.push('/');
@@ -74,6 +86,17 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
 
             {/* Form Container */}
             <div className="bg-card rounded-xl shadow-none">
+
+                {/* Role Switcher */}
+                <div className="mb-6">
+                    <Tabs value={selectedRole} onValueChange={setSelectedRole} className="w-full">
+                        <TabsList className="grid w-full grid-cols-2">
+                            <TabsTrigger value="CLIENT">Join as Client</TabsTrigger>
+                            <TabsTrigger value="FREELANCER">Join as Freelancer</TabsTrigger>
+                        </TabsList>
+                    </Tabs>
+                </div>
+
                 {/* Social Login Section */}
                 <div className="mb-4">
                     {/* <p className="text-center text-foreground text-base mb-6 px-4">
