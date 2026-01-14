@@ -40,7 +40,8 @@ export async function POST(request) {
         });
 
         // Send email
-        const resetURL = `${process.env.NEXT_PUBLIC_APP_URL}/reset-password/${resetToken}`;
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
+        const resetURL = `${appUrl}/reset-password/${resetToken}`;
 
         try {
             await sendPasswordResetEmail(user.email, resetURL, user.name);
