@@ -46,6 +46,14 @@ model User {
   bio             String?
   skills          String[]
   portfolio       String?
+  profileImage    String?
+  coverImage      String?
+  languages       String[]
+  location        String?
+  phoneNumber     String?
+  showEmail       Boolean  @default(false)
+  showMobile      Boolean  @default(false)
+  availability    Json?    // Default schedule template
   
   refreshToken    String?
   
@@ -60,6 +68,7 @@ model User {
   freelancerProjects Project[] @relation("FreelancerProjects")
   proposals          Proposal[]
   sellerApplication  SellerApplication?
+  services           Service[]
 }
 
 model Project {
@@ -113,3 +122,37 @@ model SellerApplication {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 }
+
+model Service {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  category        String?
+  subCategory     String?
+  
+  // Pricing
+  price           Float?
+  currency        String   @default("USD")
+  priceBreakdowns Json?    // Stores the array of packages
+  
+  // Media & Cover
+  coverType       String   @default("IMAGE") // "IMAGE" or "TEXT"
+  coverImage      String?  // URL if coverType is IMAGE (or use existing thumbnail/images[0])
+  coverText       String?  // Text if coverType is TEXT
+  coverColor      String?  // Hex color if coverType is TEXT
+  images          String[] // Cloudinary URLs
+  searchTags      String[] // Search tags/Positive keywords
+
+  // Settings
+  showEmail       Boolean  @default(false)
+  showMobile      Boolean  @default(false)
+  
+  // Relations
+  freelancerId    String
+  freelancer      User     @relation(fields: [freelancerId], references: [id])
+  
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+

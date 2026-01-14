@@ -183,6 +183,25 @@ const useAuthStore = create(
                         set({ showExpiryDialog: true });
                     }
                 }
+            },
+
+            refreshProfile: async () => {
+                try {
+                    const response = await api.get('/auth/me');
+                    const { user } = response.data;
+                    set({
+                        user,
+                        isLoggedIn: true,
+                        sellerStatus: user.sellerStatus,
+                        isSeller: user.isSeller,
+                        role: user.role,
+                    });
+                    setCookie('role', user.role, 7);
+                } catch (error) {
+                    if (error.response?.status === 401) {
+                        set({ showExpiryDialog: true });
+                    }
+                }
             }
         }),
         {

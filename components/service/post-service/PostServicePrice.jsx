@@ -6,12 +6,20 @@ const PostServicePrice = (props) => {
         priceStr, setPriceStr,
         selectedCurrency, setSelectedCurrency,
         priceBreakdowns, setPriceBreakdowns,
-        scheduleData, setScheduleData,
         paymentMethods, setPaymentMethods,
         availableForJob, setAvailableForJob,
         onBack, onSave, onCancel,
         defaultPaymentMethods, defaultPriceBreakdowns
     } = props;
+
+    const [expandedBreakdowns, setExpandedBreakdowns] = React.useState({});
+
+    const toggleExpand = (index) => {
+        setExpandedBreakdowns(prev => ({
+            ...prev,
+            [index]: !prev[index]
+        }));
+    };
 
     const handlePriceChange = (e) => {
         let numericValue = e.target.value.replace(/[^0-9]/g, '');
@@ -19,38 +27,20 @@ const PostServicePrice = (props) => {
         setPriceStr(numericValue);
     };
 
-    const handlePriceBreakdownChange = (index, value) => {
+    const handlePriceBreakdownChange = (index, field, value) => {
         setPriceBreakdowns(prev => {
             const newItems = [...prev];
-            newItems[index] = { ...newItems[index], text: value };
+            // Ensure object exists if we are dynamically adding but here we initialized it
+            if (!newItems[index]) newItems[index] = { id: `pb-${index}`, text: "", price: "", included: "" };
+
+            newItems[index] = { ...newItems[index], [field]: value };
             return newItems;
         });
     };
 
-    const handleScheduleChange = (index, field, value) => {
-        setScheduleData(prev => {
-            const newData = [...prev];
-            if (field === 'isClosed') {
-                newData[index] = { ...newData[index], isClosed: value, error: "" };
-            } else {
-                newData[index] = { ...newData[index], [field]: value };
-            }
-            return newData;
-        });
-    };
 
-    const generateTimeOptions = () => {
-        const times = [];
-        for (let i = 0; i < 24; i++) {
-            const hour = i;
-            const modifier = hour >= 12 ? 'PM' : 'AM';
-            let displayHour = hour % 12;
-            if (displayHour === 0) displayHour = 12;
-            times.push(`${displayHour.toString().padStart(2, '0')}:00 ${modifier}`);
-        }
-        return times;
-    };
-    const timeOptions = generateTimeOptions();
+
+
 
     const handlePaymentMethodsFocus = () => {
         if (!paymentMethods) {
@@ -97,75 +87,110 @@ const PostServicePrice = (props) => {
                     </div>
 
                     {/* Price Breakdown */}
-                    <div className="space-y-3">
+                    <div className="space-y-4">
                         <label className="block text-base font-medium text-gray-900">Price breakdown</label>
-                        <div className="border border-gray-200 rounded-xl overflow-hidden shadow-sm">
-                            {priceBreakdowns.map((item, index) => (
-                                <input
-                                    key={item.id}
-                                    type="text"
-                                    value={item.text}
-                                    onChange={(e) => handlePriceBreakdownChange(index, e.target.value)}
-                                    placeholder={defaultPriceBreakdowns[index]}
-                                    className={`w-full px-6 py-4 text-base text-gray-700 placeholder-gray-400 outline-none focus:bg-gray-50 transition-colors ${index !== priceBreakdowns.length - 1 ? 'border-b border-gray-100' : ''
-                                        }`}
-                                />
-                            ))}
+
+                        <div className="space-y-2">
+                            {priceBreakdowns.map((breakdown, index) => {
+                                const isExpanded = expandedBreakdowns[index];
+                                return (
+                                    <div key={breakdown.id || index} className="border border-gray-200 rounded-lg p-2 bg-gray-50/50 space-y-3 relative group">
+                                        <div className="flex gap-4">
+                                            <input
+                                                type="text"
+                                                value={breakdown.text || ""}
+                                                onChange={(e) => handlePriceBreakdownChange(index, 'text', e.target.value)}
+                                                placeholder="Package Name (e.g., Basic Logo Design)"
+                                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700 bg-white"
+                                            />
+                                            <div className="w-32 flex">
+                                                <div className="bg-gray-100 border border-gray-200 border-r-0 rounded-l-lg px-3 flex items-center text-sm text-gray-600 font-medium">
+                                                    {selectedCurrency}
+                                                </div>
+                                                <input
+                                                    type="text"
+                                                    value={breakdown.price || ""}
+                                                    onChange={(e) => {
+                                                        const val = e.target.value.replace(/[^0-9]/g, '');
+                                                        handlePriceBreakdownChange(index, 'price', val);
+                                                    }}
+                                                    placeholder="0"
+                                                    className="w-full px-3 py-3 border border-gray-200 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700 text-center"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* Toggle View Details */}
+                                        <div >
+                                            <button
+                                                type="button"
+                                                onClick={() => toggleExpand(index)}
+                                                className="flex items-center justify-between w-full gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
+                                            >
+                                                View details
+                                                <svg
+                                                    className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
+                                                    fill="none"
+                                                    stroke="currentColor"
+                                                    viewBox="0 0 24 24"
+                                                >
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 9l-7 7-7-7" />
+                                                </svg>
+                                            </button>
+                                        </div>
+
+                                        {isExpanded && (
+                                            <div className="relative animate-in slide-in-from-top-2 duration-200">
+                                                <label className="absolute -top-2.5 left-3 bg-[#FAFAFA] px-1 text-xs font-medium text-gray-500">
+                                                    Included
+                                                </label>
+                                                <textarea
+                                                    rows={3}
+                                                    value={breakdown.included || ""}
+                                                    onChange={(e) => handlePriceBreakdownChange(index, 'included', e.target.value)}
+                                                    placeholder="List what's included (e.g., 2 Revisions, Source File)..."
+                                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-sm text-gray-700 bg-white resize-none"
+                                                />
+                                            </div>
+                                        )}
+
+                                        {/* Delete Button */}
+                                        {priceBreakdowns.length > 1 && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    const newItems = priceBreakdowns.filter((_, i) => i !== index);
+                                                    setPriceBreakdowns(newItems);
+                                                }}
+                                                className="absolute -top-3 -right-3 bg-white border border-gray-200 text-gray-400 hover:text-red-500 rounded-full p-1.5 shadow-sm hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
+                                                title="Remove package"
+                                            >
+                                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                                            </button>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
+
+                        {/* Add New Button */}
+                        <button
+                            type="button"
+                            onClick={() => {
+                                setPriceBreakdowns([
+                                    ...priceBreakdowns,
+                                    { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
+                                ]);
+                            }}
+                            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
+                        >
+                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                            Add another price option
+                        </button>
                     </div>
                 </div>
 
-                {/* Working Hours Section */}
-                <div className="space-y-4">
-                    <label className="block text-base font-medium text-gray-900">Working hours</label>
 
-                    <div className="bg-white border border-gray-200 rounded-lg overflow-hidden">
-                        {scheduleData.map((item, index) => (
-                            <div key={item.day} className="flex items-center justify-between p-3 border-b border-gray-100 last:border-none hover:bg-gray-50 transition-colors">
-                                <div className="w-12 font-medium text-gray-700">{item.day}</div>
-
-                                {item.isClosed ? (
-                                    <div className="flex-1 flex justify-end">
-                                        <span className="text-gray-400 text-sm mr-4">Unavailable</span>
-                                    </div>
-                                ) : (
-                                    <div className="flex-1 flex items-center justify-end gap-2">
-                                        <div className="relative">
-                                            <select
-                                                value={item.startTime}
-                                                onChange={(e) => handleScheduleChange(index, 'startTime', e.target.value)}
-                                                className={`appearance-none bg-white border ${item.error ? 'border-red-500' : 'border-gray-200'} rounded py-1 pl-2 pr-6 text-sm focus:outline-none focus:border-green-500`}
-                                            >
-                                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                                            </select>
-                                        </div>
-                                        <span className="text-gray-400">-</span>
-                                        <div className="relative">
-                                            <select
-                                                value={item.endTime}
-                                                onChange={(e) => handleScheduleChange(index, 'endTime', e.target.value)}
-                                                className={`appearance-none bg-white border ${item.error ? 'border-red-500' : 'border-gray-200'} rounded py-1 pl-2 pr-6 text-sm focus:outline-none focus:border-green-500`}
-                                            >
-                                                {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
-                                            </select>
-                                        </div>
-                                    </div>
-                                )}
-
-                                <button
-                                    type="button"
-                                    onClick={() => handleScheduleChange(index, 'isClosed', !item.isClosed)}
-                                    className={`ml-4 w-10 h-6 rounded-full p-1 transition-colors ${!item.isClosed ? 'bg-green-500' : 'bg-gray-300'}`}
-                                >
-                                    <div className={`w-4 h-4 bg-white rounded-full shadow-sm transition-transform ${!item.isClosed ? 'translate-x-4' : 'translate-x-0'}`} />
-                                </button>
-                            </div>
-                        ))}
-                    </div>
-                    <div className="text-xs text-gray-500 text-right">
-                        Times are in your local timezone
-                    </div>
-                </div>
             </div>
 
             {/* Row 5: Payment Methods */}

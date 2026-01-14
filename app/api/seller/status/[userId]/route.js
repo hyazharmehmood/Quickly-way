@@ -1,23 +1,21 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
-import { SELLER_STATUS, HTTP_STATUS } from '@/lib/shared/constants';
+import { HTTP_STATUS } from '@/lib/shared/constants';
+import { getSellerStatus } from '@/lib/controllers/sellerController';
 
 export async function GET(request, { params }) {
     try {
         const { userId } = await params;
 
-        const application = await prisma.sellerApplication.findUnique({
-            where: { userId }
-        });
+        const result = await getSellerStatus(userId);
 
-        if (!application) {
+        if (!result.application) {
             return NextResponse.json(
-                { status: SELLER_STATUS.NONE },
+                { status: result.status },
                 { status: HTTP_STATUS.OK }
             );
         }
 
-        return NextResponse.json(application, { status: HTTP_STATUS.OK });
+        return NextResponse.json(result.application, { status: HTTP_STATUS.OK });
     } catch (error) {
         return NextResponse.json(
             { message: error.message || 'Internal Server Error' },

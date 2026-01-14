@@ -23,8 +23,8 @@ export default function CreateServicePage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <>
             <PostService onCancel={handleCancel} onSave={handleSave} />
-        </div>
+        </>
     );
 }

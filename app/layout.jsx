@@ -12,6 +12,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata = {
+  metadataBase: new URL('http://localhost:3000'),
   title: {
     default: 'Quicklyway | Modern Freelance Marketplace',
     template: '%s | Quicklyway'

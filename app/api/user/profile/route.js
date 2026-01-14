@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/utils/jwt';
 import { HTTP_STATUS } from '@/lib/shared/constants';
+import { updateUserProfile } from '@/lib/controllers/userController';
 
 export async function PUT(request) {
     try {
@@ -20,29 +20,10 @@ export async function PUT(request) {
             return NextResponse.json({ message: 'Invalid token' }, { status: HTTP_STATUS.UNAUTHORIZED });
         }
 
-        const { name, bio, skills, portfolio } = await request.json();
+        const body = await request.json();
 
-        // Update user
-        const updatedUser = await prisma.user.update({
-            where: { id: decoded.id },
-            data: {
-                name,
-                bio,
-                skills,     // Prisma handles array directly if configured or pass array
-                portfolio,
-            },
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                bio: true,
-                skills: true,
-                portfolio: true,
-                isSeller: true,
-                sellerStatus: true,
-            }
-        });
+        // Delegate to controller
+        const updatedUser = await updateUserProfile(decoded.id, body);
 
         return NextResponse.json(
             {

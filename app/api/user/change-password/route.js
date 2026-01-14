@@ -1,9 +1,8 @@
 import { NextResponse } from 'next/server';
 import { headers } from 'next/headers';
-import bcrypt from 'bcryptjs';
-import prisma from '@/lib/prisma';
 import { verifyToken } from '@/lib/utils/jwt';
 import { HTTP_STATUS } from '@/lib/shared/constants';
+import { changePassword } from '@/lib/controllers/authController';
 
 export async function PUT(request) {
     try {
@@ -28,28 +27,8 @@ export async function PUT(request) {
             );
         }
 
-        const user = await prisma.user.findUnique({
-            where: { id: decoded.id }
-        });
-
-        if (!user) {
-            return NextResponse.json({ message: 'User not found' }, { status: HTTP_STATUS.NOT_FOUND });
-        }
-
-        const isMatch = await bcrypt.compare(currentPassword, user.password);
-        if (!isMatch) {
-            return NextResponse.json(
-                { message: 'Incorrect current password.' },
-                { status: HTTP_STATUS.FORBIDDEN }
-            );
-        }
-
-        const hashedPassword = await bcrypt.hash(newPassword, 12);
-
-        await prisma.user.update({
-            where: { id: user.id },
-            data: { password: hashedPassword }
-        });
+        // Delegate to controller
+        await changePassword(decoded.id, currentPassword, newPassword);
 
         return NextResponse.json(
             { message: 'Password updated successfully.' },
@@ -58,6 +37,13 @@ export async function PUT(request) {
 
     } catch (error) {
         console.error('Change password error:', error);
+
+        if (error.message === 'User not found' || error.message === 'Incorrect current password.') {
+            // Map specific errors to status codes if needed, or stick to 500/400
+            if (error.message === 'User not found') return NextResponse.json({ message: error.message }, { status: HTTP_STATUS.NOT_FOUND });
+            if (error.message === 'Incorrect current password.') return NextResponse.json({ message: error.message }, { status: HTTP_STATUS.FORBIDDEN });
+        }
+
         return NextResponse.json(
             { message: error.message || 'Internal Server Error' },
             { status: HTTP_STATUS.INTERNAL_SERVER_ERROR }

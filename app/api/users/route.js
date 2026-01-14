@@ -1,21 +1,10 @@
 import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { HTTP_STATUS } from '@/lib/shared/constants';
+import { getAllUsers } from '@/lib/controllers/adminController';
 
 export async function GET(request) {
     try {
-        const users = await prisma.user.findMany({
-            select: {
-                id: true,
-                name: true,
-                email: true,
-                role: true,
-                isSeller: true,
-                sellerStatus: true,
-                createdAt: true,
-            }
-        });
-
+        const users = await getAllUsers();
         return NextResponse.json(users, { status: HTTP_STATUS.OK });
     } catch (error) {
         return NextResponse.json(

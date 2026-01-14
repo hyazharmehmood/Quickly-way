@@ -108,7 +108,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
     };
 
     return (
-        <div className="bg-[#f8faff] min-h-screen pb-12">
+        <div className="">
             <ContactModal
                 isOpen={showContactModal}
                 onClose={() => setShowContactModal(false)}
@@ -136,7 +136,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                         {/* Header Section - Box Theme */}
                         <Card className=" overflow-hidden relative">
-                            <CardContent className="p-8 md:p-10 flex flex-col md:flex-row gap-10">
+                            <CardContent className="p-6 md:p-8 flex flex-col md:flex-row gap-10">
                                 {/* Avatar */}
                                 <div className="flex-shrink-0">
                                     <div className="relative inline-block">
@@ -181,12 +181,12 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600"><MapPin className="w-4 h-4" /></div>
                                             <span>{service.provider.location}</span>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        {/* <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                                                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" /></svg>
                                             </div>
                                             <span>{service.provider.languages?.join(', ')}</span>
-                                        </div>
+                                        </div> */}
                                         <div className="flex items-center gap-3">
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600"><User className="w-4 h-4" /></div>
                                             <span>Member since {service.provider.memberSince}</span>
@@ -205,12 +205,12 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                             Contact me
                                         </Button>
 
-                                        <div className="flex items-center gap-2 font-bold text-lg">
+                                        {/* <div className="flex items-center gap-2 font-bold text-lg">
                                             <span className={`w-3 h-3 rounded-full ${service.provider.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}></span>
                                             <span className={`${service.provider.isOnline ? 'text-green-600' : 'text-gray-500'}`}>
                                                 {service.provider.isOnline ? 'Online' : 'Offline'}
                                             </span>
-                                        </div>
+                                        </div> */}
 
                                         <div className="flex items-center gap-2 text-lg text-gray-500 font-medium">
                                             <Clock className="w-5 h-5 text-gray-400" />
@@ -223,26 +223,35 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                         {/* Main Content Sections - Each in a Box */}
                         <div className="space-y-4">
-
-                            {/* Service Description Box */}
+{/* 
+                            Service Description Box
                             <Card className="">
                                 <CardContent className="p-10">
                                     <p className="text-xl text-gray-700 leading-relaxed font-normal">
                                         {service.description}
                                     </p>
                                 </CardContent>
-                            </Card>
+                            </Card> */}
 
                             {/* Gallery / Media Box */}
                             {service.galleryUrls && service.galleryUrls.length > 0 && (
                                 <Card className="">
-                                    <CardContent className="p-8">
+                                    <CardContent className="p-6">
                                         <div className="relative aspect-video rounded-3xl overflow-hidden bg-black group">
-                                            <img
-                                                src={service.galleryUrls[currentImageIndex]}
-                                                alt="Work sample"
-                                                className="w-full h-full object-cover opacity-90 transition-transform duration-700"
-                                            />
+                                            {/* Main Slide: Text vs Image */}
+                                            {service.coverType === 'TEXT' && currentImageIndex === 0 ? (
+                                                <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-10 text-center`}>
+                                                    <span className="text-white font-bold text-4xl md:text-5xl leading-tight line-clamp-4 break-words" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                                                        {service.coverText}
+                                                    </span>
+                                                </div>
+                                            ) : (
+                                                <img
+                                                    src={service.galleryUrls[currentImageIndex]}
+                                                    alt="Work sample"
+                                                    className="w-full h-full object-cover opacity-90 transition-transform duration-700"
+                                                />
+                                            )}
 
                                             {/* Arrows */}
                                             <button onClick={prevImage} className="absolute left-6 top-1/2 -translate-y-1/2 w-12 h-12 bg-white/20 hover:bg-white/40 rounded-full flex items-center justify-center text-white backdrop-blur-md transition-colors border border-white/20">
@@ -261,7 +270,15 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                                     onClick={() => setCurrentImageIndex(idx)}
                                                     className={`relative aspect-video rounded-2xl overflow-hidden border-2 transition-all ${currentImageIndex === idx ? 'border-[#10b981] scale-105 shadow-md' : 'border-transparent hover:border-gray-200'}`}
                                                 >
-                                                    <img src={url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                                                    {service.coverType === 'TEXT' && idx === 0 ? (
+                                                        <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-2 text-center`}>
+                                                            <span className="text-white font-bold text-[8px] leading-tight line-clamp-2">
+                                                                {service.coverText}
+                                                            </span>
+                                                        </div>
+                                                    ) : (
+                                                        <img src={url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover" />
+                                                    )}
                                                 </button>
                                             ))}
                                         </div>
@@ -271,21 +288,21 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {/* About Box */}
                             <Card className="">
-                                <CardContent className="p-10">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6">About</h3>
+                                <CardContent className="p-6">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-6">Description</h3>
                                     <p className="text-lg text-gray-700 leading-relaxed font-normal">
-                                        {service.bio}
+                                        {service.description}
                                     </p>
                                 </CardContent>
                             </Card>
 
                             {/* Skills Box */}
                             <Card className="">
-                                <CardContent className="p-10">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6">Skills</h3>
-                                    <div className="flex flex-wrap gap-3">
+                                <CardContent className="p-6">
+                                    <h3 className="text-xl font-bold text-gray-900 mb-4">Skills</h3>
+                                    <div className="flex flex-wrap gap-2">
                                         {service.skills?.map((skill, idx) => (
-                                            <Badge key={idx} variant="secondary" className="px-6 py-3 bg-gray-50 border border-gray-200 rounded-2xl text-lg text-gray-700 font-bold hover:bg-gray-100 h-auto">
+                                            <Badge key={idx} variant="secondary" className="px-6 py-2 bg-gray-50 border border-gray-200 rounded-xl text-lg text-gray-700 font-bold hover:bg-gray-100 h-auto">
                                                 {skill}
                                             </Badge>
                                         ))}
@@ -293,24 +310,16 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                 </CardContent>
                             </Card>
 
-                            {/* Expertise Box */}
-                            <Card className="">
-                                <CardContent className="p-10">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6">Expertise</h3>
-                                    <p className="text-lg text-gray-700 leading-relaxed font-normal italic">
-                                        {service.expertise}
-                                    </p>
-                                </CardContent>
-                            </Card>
+
 
                             {/* Languages Box */}
                             {service.provider.languages && service.provider.languages.length > 0 && (
                                 <Card className="">
-                                    <CardContent className="p-10">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-6">Languages</h3>
-                                        <div className="flex flex-wrap gap-4">
+                                    <CardContent className="p-6">
+                                        <h3 className="text-xl font-bold text-gray-900 mb-4">Languages</h3>
+                                        <div className="flex flex-wrap gap-2">
                                             {service.provider.languages.map((lang, idx) => (
-                                                <span key={idx} className="px-6 py-3 bg-[#10b981]/5 border border-[#10b981]/10 rounded-2xl text-lg text-[#10b981] font-bold">
+                                                <span key={idx} className="px-4 py-2 bg-[#10b981]/5 border border-[#10b981]/10 rounded-xl text-lg text-[#10b981] font-bold">
                                                     {lang}
                                                 </span>
                                             ))}
@@ -327,30 +336,64 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {/* Price Card Box */}
                             <Card className="">
-                                <CardContent className="p-8">
+                                <CardContent className="p-6">
                                     <h3 className="text-lg text-gray-500 mb-2 font-bold uppercase tracking-widest">Starting price</h3>
-                                    <div className="text-4xl font-black text-gray-900 mb-8 tracking-tight">
+                                    <div className="text-2xl font-black text-gray-900 mb-2 tracking-tight">
                                         {service.priceRange ? service.priceRange.split('-')[0].trim() : `$${service.price}`}
                                     </div>
 
                                     <ul className="space-y-4 text-lg text-gray-700 leading-relaxed font-medium mb-10 border-t border-gray-50 pt-8">
-                                        <li className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                            <span>4 SEO-optimized blog posts</span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                            <span>Keyword research included</span>
-                                        </li>
-                                        <li className="flex items-start gap-3">
-                                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                            <span>Meta descriptions & tags</span>
-                                        </li>
+                                        {service.priceBreakdowns && service.priceBreakdowns.length > 0 ? (
+                                            service.priceBreakdowns.map((item, idx) => {
+                                                let label = "Service Detail";
+                                                let subDetails = null;
+
+                                                if (typeof item === 'string') {
+                                                    // Try to parse if it looks like JSON
+                                                    if (item.trim().startsWith('{')) {
+                                                        try {
+                                                            const parsed = JSON.parse(item);
+                                                            label = parsed.text || parsed.item || parsed.feature || parsed.description || item;
+                                                            subDetails = parsed.included || null;
+                                                        } catch (e) {
+                                                            label = item;
+                                                        }
+                                                    } else {
+                                                        label = item;
+                                                    }
+                                                } else {
+                                                    label = item.text || item.item || item.feature || item.description || "Service Detail";
+                                                    subDetails = item.included || null;
+                                                }
+
+                                                return (
+                                                    <li key={idx} className="flex flex-col gap-2">
+                                                        <div className="flex items-start gap-3">
+                                                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                                                            <span className="font-bold text-gray-900">{label}</span>
+                                                        </div>
+                                                        {subDetails && (
+                                                            <div className="pl-8 text-base text-gray-600 whitespace-pre-wrap leading-snug">
+                                                                <span className="text-xs font-bold uppercase text-gray-400 block mb-1">Included:</span>
+                                                                {subDetails}
+                                                            </div>
+                                                        )}
+                                                    </li>
+                                                );
+                                            })
+                                        ) : (
+                                            <>
+                                                <li className="flex items-start gap-3">
+                                                    <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                                                    <span>Service Details Included</span>
+                                                </li>
+                                            </>
+                                        )}
                                     </ul>
 
-                                    <div className="text-lg text-gray-700 font-black mb-8 flex items-center gap-2">
+                                    {/* <div className="text-lg text-gray-700 font-black mb-8 flex items-center gap-2">
                                         <Clock className="w-5 h-5" /> Completion: 20 Days
-                                    </div>
+                                    </div> */}
 
                                     <Button
                                         onClick={() => setShowContactModal(true)}
@@ -362,23 +405,25 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                             </Card>
 
                             {/* Working Hours Box */}
-                            {service.workingHours && (
+                            {service.provider?.availability && (
                                 <Card className="">
-                                    <CardContent className="p-8">
+                                    <CardContent className="p-6">
                                         <div className="flex justify-between items-center mb-6">
                                             <h3 className="text-xl font-bold text-gray-900">Working hours</h3>
                                             <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-tighter">Live</span>
                                         </div>
 
                                         <div className="text-lg text-gray-500 font-medium mb-6">
-                                            Responds in {service.workingHours.responseTime}
+                                            Typical Response Time: <span className="text-gray-900">1 Hour</span>
                                         </div>
 
                                         <div className="space-y-3 text-[17px] text-gray-700 font-medium">
-                                            {service.workingHours.schedule.map((item, idx) => (
+                                            {service.provider.availability.map((item, idx) => (
                                                 <div key={idx} className="flex justify-between items-center p-2 rounded-xl hover:bg-gray-50 transition-colors">
-                                                    <span className="text-gray-500">{item.day}</span>
-                                                    <span className="text-right font-bold">{item.hours}</span>
+                                                    <span className={item.day === new Date().toLocaleDateString('en-US', { weekday: 'short' }) ? "text-[#10b981] font-bold" : "text-gray-500"}>{item.day}</span>
+                                                    <span className={`text-right ${item.isClosed ? 'text-red-400' : 'font-bold'}`}>
+                                                        {item.isClosed ? 'Closed' : `${item.startTime} - ${item.endTime}`}
+                                                    </span>
                                                 </div>
                                             ))}
                                         </div>
@@ -402,7 +447,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {/* Complaint Box */}
                             <Card className="">
-                                <CardContent className="p-8 flex items-center justify-center">
+                                <CardContent className="p-6 flex items-center justify-center">
                                     <Button
                                         variant="outline"
                                         onClick={() => setShowReportModal(true)}

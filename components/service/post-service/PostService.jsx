@@ -1,8 +1,12 @@
 import React, { useState } from 'react';
 import PostServiceInfo from './PostServiceInfo';
+import useAuthStore from '@/store/useAuthStore';
+import api from '@/utils/api';
 import PostServiceTitle from './PostServiceTitle';
 import PostServiceSkills from './PostServiceSkills';
 import PostServicePrice from './PostServicePrice';
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
+import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
 
 const DEFAULT_PRICE_BREAKDOWNS = [
     "Logo design $50 - $500",
@@ -14,8 +18,17 @@ const DEFAULT_PRICE_BREAKDOWNS = [
     "Website design $500 - $3000"
 ];
 
+const ALL_SKILLS = [
+    "Graphic Design", "Web Design", "Logo Design", "Branding", "Illustration",
+    "UI/UX Design", "3D Animation", "Video Editing", "Copywriting", "SEO",
+    "Digital Marketing", "Social Media Management", "Content Writing", "Translation",
+    "Web Development", "Mobile App Development", "Software Development", "Data Analysis",
+    "Project Management", "Virtual Assistant", "Customer Support", "Voice Over",
+    "Photography", "Videography", "Interior Design", "Fashion Design", "Music Production"
+];
+
 const DEFAULT_SKILLS = ["Adobe Illustrator", "Graphic Design", "3D Animation"];
-const DEFAULT_EXPERTISE = ["AI Graphic Design", "2d Animation", "Digital Storyboards"];
+
 const DEFAULT_LANGUAGES = [
     "English",
     "German Deutsch",
@@ -30,22 +43,7 @@ const DEFAULT_LANGUAGES = [
     "Urdu اردو",
 ];
 
-const ALL_WORLD_LANGUAGES = [
-    "Afrikaans", "Albanian Shqip", "Amharic አማርኛ", "Arabic العربية", "Armenian Հայերեն", "Assamese অসমীয়া", "Aymara Aymar aru", "Azerbaijani Azərbaycan dili",
-    "Bambara Bamanankan", "Basque Euskara", "Belarusian Беларуская", "Bengali বাংলা", "Bhojpuri भोजपुरी", "Bosnian Bosanski", "Bulgarian Български", "Burmese မြန်မာစာ",
-    "Catalan Català", "Cebuano Bisaya", "Chichewa Nyanja", "Chinese 中文", "Corsican Corsu", "Croatian Hrvatski", "Czech Čeština", "Danish Dansk", "Dhivehi ދِوهِ", "Dogri डोगरी", "Dutch Nederlands",
-    "English", "Esperanto Esperanto", "Estonian Eesti", "Ewe Eʋegbe", "Filipino Tagalog", "Finnish Suomi", "French Français", "Frisian Frysk", "Fulani Fulfulde",
-    "Galician Galego", "Georgian ქართული", "German Deutsch", "Greek Ελληνικά", "Guarani Avañe'ẽ", "Gujarati ગુજરાતી", "Haitian Creole Kreyòl Ayisyen", "Hausa Harshen Hausa", "Hawaiian ʻŌlelo Hawaiʻi", "Hebrew עברית", "Hindi हिन्दी",
-    "Hmong Hmoob", "Hungarian Magyar", "Icelandic Íslenska", "Igbo Asụsụ Igbo", "Ilocano Iloko", "Irish Gaeilge", "Italian Italiano", "Japanese 日本語", "Javanese Basa Jawa",
-    "Kannada ಕನ್ನಡ", "Kazakh Қазақ тілі", "Khmer ខ្មែរ", "Kinyarwanda Ikinyarwanda", "Konkani कोंकणी", "Korean 한국어", "Krio Krio", "Kurdish (Kurmanji) Kurmancî", "Kurdish (Sorani) سۆرانی",
-    "Kyrgyz Кыргызча", "Lao ລາວ", "Latin Latina", "Latvian Latviešu", "Lingala Lingála", "Lithuanian Lietuvių", "Luganda Luganda", "Luxembourgish Lëtzebuergesch", "Macedonian Македонски", "Maithili मैथिली",
-    "Malagasy Malagasy", "Malayalam മലയാളം", "Maltese Malti", "Maori Te Reo Māori", "Marathi मराठी", "Meiteilon (Manipuri) ꯃꯤꯇꯩꯂꯣꯟ", "Mizo Mizo ṭawng", "Mongolian Монгол",
-    "Myanmar (Burmese) မြันမာစာ", "Nepali नेपाली", "Norwegian Norsk", "Odia (Oriya) ଓଡ଼ିଆ", "Oromo Afaan Oromoo", "Pashto پښتو", "Persian فارسی", "Polish Polski", "Portuguese Português",
-    "Punjabi ਪੰਜਾਬੀ", "Quechua Runa Simi", "Romanian Română", "Russian Русский", "Samoan Gagana faʻa Sāmoa", "Sanskrit संस्कृतम्", "Scots Gaelic Gàidhlig", "Sepedi Sesotho sa Leboa", "Serbian Српски", "Sesotho Sesotho",
-    "Shona ChiShona", "Sindhi سنڌي", "Sinhala සිංහල", "Slovak Slovenčina", "Slovenian Slovenščina", "Somali Soomaaliga", "Spanish Español", "Sundanese Basa Sunda", "Swahili Kiswahili", "Swedish Svenska", "Tajik Тоҷикӣ",
-    "Tamil தமிழ்", "Tatar Татарча", "Telugu తెలుగు", "Thai ไทย", "Tigrinya ትግርኛ", "Tsonga Xitsonga", "Turkmen Türkmençe", "Twi Twi", "Ukrainian Українська", "Urdu اردو", "Uyghur ئۇيغۇرچە",
-    "Uzbek Oʻzbekcha", "Vietnamese Tiếng Việt", "Welsh Cymraeg", "Xhosa isiXhosa", "Yiddish ייִדיש", "Yoruba Yorùbá", "Zulu isiZulu"
-];
+// ALL_WORLD_LANGUAGES imported from constants
 
 const DEFAULT_PAYMENT_METHODS = "I accept payments via Cash, Check, Credit Card, Google Pay, PayPal, Samsung Pay, Apple Pay, Venmo, and Zelle.";
 
@@ -63,38 +61,6 @@ const BG_COLOR_MAP = {
     "bg-purple-600": "#9333ea"
 };
 
-// Initial start times only.
-const INITIAL_SCHEDULE_DATA = [
-    { day: "Mon", startTime: "08:00 AM", isClosed: false },
-    { day: "Tue", startTime: "08:00 AM", isClosed: false },
-    { day: "Wed", startTime: "08:00 AM", isClosed: false },
-    { day: "Thu", startTime: "08:00 AM", isClosed: false },
-    { day: "Fri", startTime: "08:00 AM", isClosed: false },
-    { day: "Sat", startTime: "08:00 AM", isClosed: false },
-    { day: "Sun", startTime: "08:00 AM", isClosed: true }
-];
-
-const getMinutes = (timeStr) => {
-    if (!timeStr) return 0;
-    const [time, modifier] = timeStr.split(' ');
-    let [hours, minutes] = time.split(':').map(Number);
-    if (hours === 12 && modifier === 'AM') hours = 0;
-    if (modifier === 'PM' && hours !== 12) hours += 12;
-    return hours * 60 + (minutes || 0);
-};
-
-const calculateEndTime = (startTime, durationHours) => {
-    if (!startTime) return "";
-    const startM = getMinutes(startTime);
-    const endM = (startM + durationHours * 60) % 1440;
-    const h = Math.floor(endM / 60);
-    const m = endM % 60;
-    const modifier = h >= 12 ? 'PM' : 'AM';
-    let displayH = h % 12;
-    if (displayH === 0) displayH = 12;
-    return `${displayH.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')} ${modifier}`;
-};
-
 // Helper function to generate an image from text - Adjusted to 1100x700 for 11/7 ratio
 const generateTextImage = (text, bgClass) => {
     const canvas = document.createElement('canvas');
@@ -107,185 +73,269 @@ const generateTextImage = (text, bgClass) => {
     ctx.fillStyle = BG_COLOR_MAP[bgClass] || "#000000";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-    // Configure Text
+    // Initial Font Setup
+    let fontSize = 90; // Starting larger
     ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 72px Inter, system-ui, sans-serif";
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
 
-    // Text Wrapping Logic
-    const words = text.split(' ');
-    let line = '';
-    const lines = [];
-    const maxWidth = 900;
-    const lineHeight = 90;
+    const maxWidth = 950;
+    const maxHeight = 560; // Padding from edges
 
-    for (let n = 0; n < words.length; n++) {
-        const testLine = line + words[n] + ' ';
-        const metrics = ctx.measureText(testLine);
-        const testWidth = metrics.width;
-        if (testWidth > maxWidth && n > 0) {
-            lines.push(line);
-            line = words[n] + ' ';
-        } else {
-            line = testLine;
+    // Smart Wrapping Helper
+    const wrapText = (txt, fontSz) => {
+        ctx.font = `bold ${fontSz}px Inter, system-ui, sans-serif`;
+        const words = txt.split(' ');
+        const lines = [];
+        let currentLine = words[0];
+
+        for (let i = 1; i < words.length; i++) {
+            const word = words[i];
+            const width = ctx.measureText(currentLine + " " + word).width;
+            if (width < maxWidth) {
+                currentLine += " " + word;
+            } else {
+                lines.push(currentLine);
+                currentLine = word;
+            }
         }
+        lines.push(currentLine);
+        return lines;
+    };
+
+    // Auto-scale font size
+    let lines = wrapText(text, fontSize);
+    let lineHeight = fontSize * 1.2;
+    let totalHeight = lines.length * lineHeight;
+
+    while ((totalHeight > maxHeight || lines.some(l => ctx.measureText(l).width > maxWidth)) && fontSize > 40) {
+        fontSize -= 5;
+        lines = wrapText(text, fontSize);
+        lineHeight = fontSize * 1.2;
+        totalHeight = lines.length * lineHeight;
     }
-    lines.push(line);
 
     // Draw Lines Centered
-    const totalHeight = lines.length * lineHeight;
     const startY = (canvas.height - totalHeight) / 2 + (lineHeight / 2);
 
+    ctx.font = `bold ${fontSize}px Inter, system-ui, sans-serif`;
     lines.forEach((l, i) => {
-        ctx.fillText(l.trim(), canvas.width / 2, startY + (i * lineHeight));
+        ctx.fillText(l.trim(), canvas.width / 2, startY + (i * lineHeight) - (lineHeight * 0.1)); // slight adjust
     });
 
     return canvas.toDataURL("image/png");
 };
 
-const PostService = ({ onCancel, onSave }) => {
+const PostService = ({ onCancel, onSave, initialData }) => {
     const [step, setStep] = useState(1);
 
-    // --- Step 1 State ---
-    const [displayName, setDisplayName] = useState("");
-    const [displayEmail, setDisplayEmail] = useState("");
-    const [mobile, setMobile] = useState("");
-    const [yearsExperience, setYearsExperience] = useState("");
-    const [location, setLocation] = useState("");
-    const [profileImage, setProfileImage] = useState(null);
-    const [coverImage, setCoverImage] = useState(null);
+    // --- Step 1 State (Title) ---
+    const [serviceTitle, setServiceTitle] = useState("");
+    const [aboutText, setAboutText] = useState("");
+
+    // --- Step 2 State (Images) ---
+    // Single source of truth: galleryImages. Cover is galleryImages[0] unless text mode.
     const [coverMode, setCoverMode] = useState('image');
     const [coverText, setCoverText] = useState("");
     const [coverBgColor, setCoverBgColor] = useState("bg-black");
-
-    // --- Step 2 State ---
-    const [serviceTitle, setServiceTitle] = useState("");
     const [galleryImages, setGalleryImages] = useState([null, null, null, null, null]);
-    const [aboutText, setAboutText] = useState("");
 
-    // --- Step 3 State ---
+    // Derived coverImage for passing to child (read-only mostly, updates go to galleryImages)
+    // Actually simplicity: Pass galleryImages to child. Child handles display.
+
+    // --- User State ---
+    const [user, setUser] = useState(null);
+
+    // --- Step 3, 4 State (existing) ---
     const [skills, setSkills] = useState(DEFAULT_SKILLS);
-    const [expertise, setExpertise] = useState(DEFAULT_EXPERTISE);
-    const [languages, setLanguages] = useState([]);
-
-    // --- Step 4 State ---
+    const [searchTags, setSearchTags] = useState([]);
     const [priceStr, setPriceStr] = useState("");
     const [selectedCurrency, setSelectedCurrency] = useState("USD");
-    const [priceBreakdowns, setPriceBreakdowns] = useState(
-        DEFAULT_PRICE_BREAKDOWNS.map((text, index) => ({ id: `pb-${index}`, text: "" }))
-    );
-    const [scheduleData, setScheduleData] = useState(() => {
-        return INITIAL_SCHEDULE_DATA.map(d => ({
-            ...d,
-            endTime: calculateEndTime(d.startTime, 10),
-            error: ""
-        }));
-    });
+    const [priceBreakdowns, setPriceBreakdowns] = useState([
+        { id: `pb-0`, text: "", price: "", included: "" }
+    ]);
     const [paymentMethods, setPaymentMethods] = useState("");
     const [availableForJob, setAvailableForJob] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
 
-    const handleSave = () => {
+    // Fetch User Data on Mount
+    React.useEffect(() => {
+        const fetchUserData = async () => {
+            try {
+                // Fetch profile to get availability and user ID
+                const response = await api.get('/auth/me');
+                const userData = response.data.user;
+                setUser(userData);
+            } catch (error) {
+                console.error("Failed to fetch user data", error);
+            }
+        };
+        fetchUserData();
+    }, []);
+
+    // Load Initial Data if Editing
+    React.useEffect(() => {
+        if (initialData) {
+            setServiceTitle(initialData.title || "");
+            setAboutText(initialData.description || "");
+
+            setCoverMode(initialData.coverType === 'TEXT' ? 'text' : 'image');
+            setCoverText(initialData.coverText || "");
+            setCoverBgColor(initialData.coverColor || "bg-black");
+
+            // Reconstruct gallery
+            // If coverType is TEXT, coverImage is null usually, images[] has gallery
+            // If coverType is IMAGE, coverImage is the main image
+            let images = [];
+            if (initialData.coverType === 'IMAGE' && initialData.coverImage) {
+                // Checking if coverImage is already in images array to avoid dupes would be good but
+                // for now let's trust the array structure or just populate from images
+                // Actually we defined images[0] as cover.
+                if (initialData.images && initialData.images.length > 0) {
+                    images = [...initialData.images];
+                } else {
+                    images = [initialData.coverImage];
+                }
+            } else {
+                images = initialData.images || [];
+            }
+
+            // Pad to 5 slots
+            while (images.length < 5) images.push(null);
+            setGalleryImages(images.slice(0, 5));
+
+            setSkills(initialData.freelancer?.skills || DEFAULT_SKILLS);
+            setSearchTags(initialData.searchTags || []);
+
+            setPriceStr(initialData.price?.toString() || "");
+            setSelectedCurrency(initialData.currency || "USD");
+
+            if (initialData.priceBreakdowns && Array.isArray(initialData.priceBreakdowns)) {
+                setPriceBreakdowns(initialData.priceBreakdowns);
+            }
+
+            setAvailableForJob(initialData.freelancer?.availableForJob || false); // If this exists
+        }
+    }, [initialData]);
+
+    const handleSave = async (e) => {
+        if (e) e.preventDefault();
+
         if (!priceStr) {
             alert("Please fill in price");
             return;
         }
 
-        const providerId = `p-${Date.now()}`;
-        const newProvider = {
-            id: providerId,
-            name: displayName,
-            avatarUrl: profileImage || "https://images.unsplash.com/photo-1511367461989-f85a21fda167?w=300&h=300&fit=crop",
-            location: location || "Unknown Location",
-            isOnline: true,
-            languages: languages,
-            memberSince: new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
-        };
+        setIsSubmitting(true);
 
-        const formattedSchedule = scheduleData.map(item => ({
-            day: item.day,
-            hours: item.isClosed ? "Unavailable" : `${item.startTime}–${item.endTime}`
-        }));
+        try {
+            // 1. Upload Images
+            const { uploadToCloudinary } = await import('@/utils/cloudinary');
 
-        // Determine the final thumbnail URL
-        let finalThumbnail = "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=1100&h=700&fit=crop";
+            // Upload all gallery images first
+            const uploadedGallery = await Promise.all(galleryImages.map(async (img) => {
+                if (!img) return null;
+                if (img.startsWith('data:')) return await uploadToCloudinary(img);
+                return img;
+            }));
 
-        if (coverMode === 'image' && coverImage) {
-            finalThumbnail = coverImage;
-        } else if (coverMode === 'text' && coverText) {
-            // Generate image from text
-            finalThumbnail = generateTextImage(coverText, coverBgColor);
+            const validImages = uploadedGallery.filter(Boolean);
+
+            let uploadedCoverImage = null;
+            // Generate canvas image if text mode
+            if (coverMode === 'text' && coverText) {
+                const canvasDataUrl = generateTextImage(coverText, coverBgColor);
+                uploadedCoverImage = await uploadToCloudinary(canvasDataUrl);
+            } else if (coverMode === 'image') {
+                // Use the first image from the uploaded gallery as the cover
+                if (validImages.length > 0) {
+                    uploadedCoverImage = validImages[0];
+                }
+            }
+
+            // 2. Prepare Payload
+            const payload = {
+                // Cover Data
+                coverType: coverMode === 'image' ? 'IMAGE' : 'TEXT',
+                coverImage: uploadedCoverImage,
+                coverText: coverMode === 'text' ? coverText : null,
+                coverColor: coverMode === 'text' ? coverBgColor : null,
+
+                title: serviceTitle,
+                description: aboutText,
+                category: "Logo Design", // TODO: Make dynamic if needed
+                subCategory: "", // TODO: Add sub category input
+
+                price: parseFloat(priceStr),
+                currency: selectedCurrency,
+                priceBreakdowns,
+                // Working hours removed - using user profile availability
+
+                images: validImages,
+                searchTags, // Add tags to payload
+                skills, // Add skills to payload for user profile update
+
+                showEmail: user?.showEmail || false,
+                showMobile: user?.showMobile || false,
+            };
+            console.log("payload", payload);
+            // 3. Send to API (POST or PUT)
+            const url = initialData ? `/api/services/${initialData.id}` : '/api/services';
+            const method = initialData ? 'PUT' : 'POST';
+
+            const response = await fetch(url, {
+                method: method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+
+            if (!response.ok) {
+                throw new Error('Failed to create service');
+            }
+
+            const data = await response.json();
+
+            // 4. Cleanup / Redirect
+            if (onSave) onSave(data);
+
+        } catch (error) {
+            console.error("Error creating service:", error);
+            alert("Failed to create service. Please try again.");
+        } finally {
+            setIsSubmitting(false);
         }
-
-        const newService = {
-            id: `s-${Date.now()}`,
-            provider: newProvider,
-            title: serviceTitle,
-            description: aboutText,
-            thumbnailUrl: finalThumbnail,
-            rating: 5.0,
-            reviewCount: 0,
-            price: parseInt(priceStr) || 0,
-            category: "Logo Design",
-            priceRange: `${selectedCurrency} ${priceStr}`,
-            hires: 0,
-            yearsExperience: parseInt(yearsExperience) || 1,
-            bio: aboutText,
-            skills: skills,
-            expertise: expertise.join(', '),
-            galleryUrls: galleryImages.filter(img => img !== null),
-            reviewsList: [],
-            workingHours: {
-                timezone: "UTC",
-                responseTime: "1 Hour",
-                schedule: formattedSchedule
-            },
-            paymentMethods: [paymentMethods],
-            isAvailableForEmployment: availableForJob
-        };
-
-        onSave(newService);
     };
 
     return (
-        <div className="bg-gray-50 min-h-screen py-8">
-            <div className="max-w-4xl mx-auto bg-white rounded-xl shadow-sm border border-gray-100 p-6 md:p-10">
-
+        <Card className="border-none shadow-none">
+            <CardContent className="">
                 {step === 1 && (
-                    <PostServiceInfo
-                        displayName={displayName} setDisplayName={setDisplayName}
-                        displayEmail={displayEmail} setDisplayEmail={setDisplayEmail}
-                        mobile={mobile} setMobile={setMobile}
-                        yearsExperience={yearsExperience} setYearsExperience={setYearsExperience}
-                        location={location} setLocation={setLocation}
-                        profileImage={profileImage} setProfileImage={setProfileImage}
-                        coverImage={coverImage} setCoverImage={setCoverImage}
-                        coverMode={coverMode} setCoverMode={setCoverMode}
-                        coverText={coverText} setCoverText={setCoverText}
-                        coverBgColor={coverBgColor} setCoverBgColor={setCoverBgColor}
+                    <PostServiceTitle
+                        serviceTitle={serviceTitle} setServiceTitle={setServiceTitle}
+                        aboutText={aboutText} setAboutText={setAboutText}
                         onNext={() => setStep(2)}
                     />
                 )}
 
                 {step === 2 && (
-                    <PostServiceTitle
-                        serviceTitle={serviceTitle} setServiceTitle={setServiceTitle}
+                    <PostServiceInfo
+                        coverMode={coverMode} setCoverMode={setCoverMode}
+                        coverText={coverText} setCoverText={setCoverText}
+                        coverBgColor={coverBgColor} setCoverBgColor={setCoverBgColor}
                         galleryImages={galleryImages} setGalleryImages={setGalleryImages}
-                        aboutText={aboutText} setAboutText={setAboutText}
-                        onBack={() => setStep(1)}
                         onNext={() => setStep(3)}
+                        onBack={() => setStep(1)}
                     />
                 )}
 
                 {step === 3 && (
                     <PostServiceSkills
                         skills={skills} setSkills={setSkills}
-                        expertise={expertise} setExpertise={setExpertise}
-                        languages={languages} setLanguages={setLanguages}
                         defaultLanguages={DEFAULT_LANGUAGES}
                         allWorldLanguages={ALL_WORLD_LANGUAGES}
                         defaultSkills={DEFAULT_SKILLS}
-                        defaultExpertise={DEFAULT_EXPERTISE}
+                        allSkills={ALL_SKILLS}
+                        searchTags={searchTags} setSearchTags={setSearchTags}
                         onBack={() => setStep(2)}
                         onNext={() => setStep(4)}
                     />
@@ -296,7 +346,6 @@ const PostService = ({ onCancel, onSave }) => {
                         priceStr={priceStr} setPriceStr={setPriceStr}
                         selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency}
                         priceBreakdowns={priceBreakdowns} setPriceBreakdowns={setPriceBreakdowns}
-                        scheduleData={scheduleData} setScheduleData={setScheduleData}
                         paymentMethods={paymentMethods} setPaymentMethods={setPaymentMethods}
                         availableForJob={availableForJob} setAvailableForJob={setAvailableForJob}
                         defaultPaymentMethods={DEFAULT_PAYMENT_METHODS}
@@ -306,8 +355,8 @@ const PostService = ({ onCancel, onSave }) => {
                         onCancel={onCancel}
                     />
                 )}
-            </div>
-        </div>
+            </CardContent>
+        </Card>
     );
 };
 

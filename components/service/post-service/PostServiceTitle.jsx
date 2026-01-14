@@ -4,16 +4,13 @@ import { Camera, AlertCircle } from 'lucide-react';
 const PostServiceTitle = (props) => {
     const {
         serviceTitle, setServiceTitle,
-        galleryImages, setGalleryImages,
         aboutText, setAboutText,
         onBack, onNext
     } = props;
 
     const [serviceTitleError, setServiceTitleError] = useState("");
     const [aboutError, setAboutError] = useState("");
-    const galleryInputRef = useRef(null);
     const titleTextareaRef = useRef(null);
-    const [activeGalleryIndex, setActiveGalleryIndex] = useState(0);
 
     // Auto-resize service title textarea to accommodate wrapping text
     useEffect(() => {
@@ -37,21 +34,7 @@ const PostServiceTitle = (props) => {
         return "";
     };
 
-    const handleGalleryImageUpload = (e) => {
-        if (e.target.files && e.target.files[0]) {
-            const file = e.target.files[0];
-            const imageUrl = URL.createObjectURL(file);
-            const newImages = [...galleryImages];
-            newImages[activeGalleryIndex] = imageUrl;
-            setGalleryImages(newImages);
-            e.target.value = '';
-        }
-    };
 
-    const triggerGalleryUpload = (index) => {
-        setActiveGalleryIndex(index);
-        galleryInputRef.current?.click();
-    };
 
     const handleNextClick = () => {
         const titleErr = validateServiceTitle(serviceTitle);
@@ -110,33 +93,7 @@ const PostServiceTitle = (props) => {
                 </div>
             </div>
 
-            {/* Upload Images Row */}
-            <div className="mb-8 space-y-1.5">
-                <label className="block text-base font-medium text-gray-900">Upload Images</label>
-                <input
-                    type="file"
-                    ref={galleryInputRef}
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleGalleryImageUpload}
-                />
-                <div className="flex gap-4 overflow-x-auto pb-2">
-                    {galleryImages.map((img, idx) => (
-                        <button
-                            key={idx}
-                            type="button"
-                            onClick={() => triggerGalleryUpload(idx)}
-                            className="w-20 h-20 md:w-24 md:h-24 flex-shrink-0 border border-gray-200 rounded-xl flex items-center justify-center hover:bg-gray-50 text-gray-400 overflow-hidden relative cursor-pointer"
-                        >
-                            {img ? (
-                                <img src={img} alt={`Gallery ${idx}`} className="w-full h-full object-cover" />
-                            ) : (
-                                <Camera className="w-6 h-6" />
-                            )}
-                        </button>
-                    ))}
-                </div>
-            </div>
+
 
             {/* About */}
             <div className="mb-6 space-y-1.5">

@@ -17,16 +17,24 @@ export function ServiceCard({ service }) {
   const reviewCount = service.reviewCount || service.reviews;
 
   return (
-    <Link href={`/service/${service.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-1">
+    <Link href={`/services/${service.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-1">
       <Card className="">
         {/* Media Container - Changed aspect ratio to 11/7 to match editor (220/140) */}
         <div className="relative aspect-[11/7] overflow-hidden rounded-xl bg-black">
-          <Image
-            src={thumbnailUrl}
-            alt={service.title || service.description}
-            fill
-            className="object-contain transition-transform duration-500 group-hover:scale-105"
-          />
+          {service.coverType === 'TEXT' ? (
+            <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-6 text-center`}>
+              <span className="text-white font-bold text-2xl leading-tight line-clamp-4 break-words" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                {service.coverText}
+              </span>
+            </div>
+          ) : (
+            <Image
+              src={service.coverImage || thumbnailUrl}
+              alt={service.title || service.description}
+              fill
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
+            />
+          )}
         </div>
 
         {/* Content */}
