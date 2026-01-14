@@ -144,12 +144,12 @@ export default function FreelancerServicesPage() {
                                     <Link href={`/dashboard/freelancer/services/${service.id}/edit`}>
                                         <DropdownMenuItem className="cursor-pointer">
                                             <Edit2 className="mr-2 h-4 w-4" />
-                                            <span>Edit</span>   
+                                            <span className="text-primary">Edit</span>   
                                         </DropdownMenuItem>
                                     </Link>
                                     <DropdownMenuItem className="text-red-600 cursor-pointer">
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                        <span>Delete</span> 
+                                        <span className="text-red-600">Delete</span> 
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>
