@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { toast } from 'sonner';
 import PostServiceInfo from './PostServiceInfo';
 import useAuthStore from '@/store/useAuthStore';
 import api from '@/utils/api';
@@ -222,7 +223,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
         if (e) e.preventDefault();
 
         if (!priceStr) {
-            alert("Please fill in price");
+            toast.error("Please fill in price");
             return;
         }
 
@@ -280,27 +281,23 @@ const PostService = ({ onCancel, onSave, initialData }) => {
             };
             console.log("payload", payload);
             // 3. Send to API (POST or PUT)
-            const url = initialData ? `/api/services/${initialData.id}` : '/api/services';
-            const method = initialData ? 'PUT' : 'POST';
-
-            const response = await fetch(url, {
-                method: method,
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-
-            if (!response.ok) {
-                throw new Error('Failed to create service');
+            let response;
+            if (initialData) {
+                // Update existing service
+                response = await api.put(`/services/${initialData.id}`, payload);
+            } else {
+                // Create new service
+                response = await api.post('/services', payload);
             }
 
-            const data = await response.json();
+            const data = response.data;
 
             // 4. Cleanup / Redirect
             if (onSave) onSave(data);
 
         } catch (error) {
             console.error("Error creating service:", error);
-            alert("Failed to create service. Please try again.");
+            toast.error("Failed to create service. Please try again.");
         } finally {
             setIsSubmitting(false);
         }
@@ -353,6 +350,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                         onBack={() => setStep(3)}
                         onSave={handleSave}
                         onCancel={onCancel}
+                        isLoading={isSubmitting}
                     />
                 )}
             </CardContent>

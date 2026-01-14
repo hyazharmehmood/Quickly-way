@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import PostService from '@/components/service/post-service/PostService';
 import { useRouter, useParams } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function EditServicePage() {
     const router = useRouter();
@@ -19,7 +20,7 @@ export default function EditServicePage() {
                 const response = await fetch(`/api/services/${id}`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(">>>>",data);
+                    console.log(">>>>", data);
                     setService(data);
                 } else {
                     console.error("Failed to fetch service");
@@ -38,6 +39,7 @@ export default function EditServicePage() {
     }, [id]);
 
     const handleSave = () => {
+        toast.success("Service updated successfully!");
         router.push('/dashboard/freelancer/services');
     };
 

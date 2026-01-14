@@ -77,10 +77,11 @@ const jsonLd = {
 
 import { AuthInitializer } from '@/components/auth/AuthInitializer';
 import { GlobalHeader } from '@/components/layout/GlobalHeader';
+import { Toaster } from '@/components/ui/sonner';
 
 export default function RootLayout({ children }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} font-sans`}>
         <script
           type="application/ld+json"
@@ -89,6 +90,7 @@ export default function RootLayout({ children }) {
         <AuthInitializer>
           <GlobalHeader />
           {children}
+          <Toaster />
         </AuthInitializer>
       </body>
     </html>

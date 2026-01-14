@@ -2,7 +2,7 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 export function ServiceCard({ service }) {
@@ -42,13 +42,19 @@ export function ServiceCard({ service }) {
 
           {/* Provider Header */}
           <div className="flex items-start gap-3 mb-3">
-            <Image
-              src={provider.avatarUrl}
-              alt={provider.name}
-              width={40}
-              height={40}
-              className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0"
-            />
+            {provider.avatarUrl ? (
+              <Image
+                src={provider.avatarUrl}
+                alt={provider.name}
+                width={40}
+                height={40}
+                className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                <User className="w-5 h-5 text-gray-500" />
+              </div>
+            )}
             <div className="flex flex-col">
               <h3 className="text-base font-bold text-gray-900 leading-tight">
                 {provider.name}

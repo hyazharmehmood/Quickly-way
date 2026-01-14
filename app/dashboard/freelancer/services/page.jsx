@@ -43,7 +43,7 @@ export default function FreelancerServicesPage() {
                         coverColor: service.coverColor,
                         coverImage: service.coverImage,
 
-                        profileImage: service.freelancer?.profileImage || 'https://randomuser.me/api/portraits/men/32.jpg',
+                        profileImage: service.freelancer?.profileImage,
                         name: service.freelancer?.name || 'Freelancer',
                         location: 'Remote' // Default
                     }));
@@ -136,7 +136,7 @@ export default function FreelancerServicesPage() {
                         <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="icon" className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white rounded-full backdrop-blur-sm">
+                                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full backdrop-blur-sm">
                                         <MoreVertical className="h-4 w-4" />
                                     </Button>
                                 </DropdownMenuTrigger>
@@ -144,12 +144,12 @@ export default function FreelancerServicesPage() {
                                     <Link href={`/dashboard/freelancer/services/${service.id}/edit`}>
                                         <DropdownMenuItem className="cursor-pointer">
                                             <Edit2 className="mr-2 h-4 w-4" />
-                                          
+                                            <span>Edit</span>   
                                         </DropdownMenuItem>
                                     </Link>
                                     <DropdownMenuItem className="text-red-600 cursor-pointer">
                                         <Trash2 className="mr-2 h-4 w-4" />
-                                      
+                                        <span>Delete</span> 
                                     </DropdownMenuItem>
                                 </DropdownMenuContent>
                             </DropdownMenu>

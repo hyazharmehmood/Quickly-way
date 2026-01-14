@@ -1,5 +1,6 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CURRENCIES } from '@/utils/constants';
+import { Loader2 } from 'lucide-react';
 
 const PostServicePrice = (props) => {
     const {
@@ -9,10 +10,11 @@ const PostServicePrice = (props) => {
         paymentMethods, setPaymentMethods,
         availableForJob, setAvailableForJob,
         onBack, onSave, onCancel,
-        defaultPaymentMethods, defaultPriceBreakdowns
+        defaultPaymentMethods, defaultPriceBreakdowns,
+        isLoading
     } = props;
 
-    const [expandedBreakdowns, setExpandedBreakdowns] = React.useState({});
+    const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
 
     const toggleExpand = (index) => {
         setExpandedBreakdowns(prev => ({
@@ -235,9 +237,17 @@ const PostServicePrice = (props) => {
                 <button
                     type="submit"
                     onClick={onSave}
-                    className="flex-1 py-3.5 bg-[#10b981] text-white rounded-full font-bold hover:bg-green-600 transition-colors shadow-sm"
+                    disabled={isLoading}
+                    className="flex-1 py-3.5 bg-[#10b981] text-white rounded-full font-bold hover:bg-green-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
                 >
-                    Save Service
+                    {isLoading ? (
+                        <>
+                            <Loader2 className="w-5 h-5 animate-spin" />
+                            Saving...
+                        </>
+                    ) : (
+                        "Save Service"
+                    )}
                 </button>
             </div>
         </div>
