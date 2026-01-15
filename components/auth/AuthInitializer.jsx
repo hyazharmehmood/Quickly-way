@@ -3,9 +3,14 @@
 import { useEffect } from 'react';
 import useAuthStore from '@/store/useAuthStore';
 import { SessionExpiryDialog } from './SessionExpiryDialog';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
 export function AuthInitializer({ children }) {
-    const { fetchProfile, setLoading } = useAuthStore();
+    const { fetchProfile, setLoading, isLoggedIn } = useAuthStore();
+    
+    // Initialize global socket connection ONLY when user is logged in
+    // This prevents interference with login API calls
+    const { socket } = useGlobalSocket();
 
     useEffect(() => {
         const token = localStorage.getItem('token');

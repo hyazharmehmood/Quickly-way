@@ -7,7 +7,7 @@ export async function POST(request) {
         const { email, password } = await request.json();
 
         const result = await loginUser(email, password);
-
+console.log('result', result);
         return NextResponse.json(result, { status: HTTP_STATUS.OK });
     } catch (error) {
         console.error('Login error:', error);

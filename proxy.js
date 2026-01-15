@@ -27,7 +27,14 @@ export function proxy(request) {
         }
     }
 
-    // 3. Redirect logged-in users away from /login and /signup
+    // 3. Protect Messages Route
+    if (pathname.startsWith('/messages')) {
+        if (!token) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+    }
+
+    // 4. Redirect logged-in users away from /login and /signup
     if (pathname === '/login' || pathname === '/signup') {
         if (token) {
             if (role === 'ADMIN') {
@@ -42,5 +49,5 @@ export function proxy(request) {
 
 // Config to match only relevant paths
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/login', '/signup'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup'],
 };

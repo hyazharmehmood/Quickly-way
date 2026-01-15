@@ -18,6 +18,7 @@ export async function GET(request, { params }) {
                 bio: true,
                 skills: true,
                 portfolio: true,
+                profileImage: true,
                 createdAt: true,
             }
         });
