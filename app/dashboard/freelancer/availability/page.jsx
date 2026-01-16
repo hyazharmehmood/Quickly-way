@@ -1,11 +1,20 @@
 "use client";
 
 import React, { useState } from 'react';
+import dynamicImport from 'next/dynamic';
 import { Clock, Calendar, ShieldCheck, Save, Coffee, Moon, Sun } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
+
+// Dynamically import Switch to prevent SSR issues
+const Switch = dynamicImport(
+    () => import("@/components/ui/switch").then(mod => ({ default: mod.Switch })),
+    { ssr: false }
+);
+
+// Prevent static generation - this page requires client-side state
+export const dynamic = 'force-dynamic';
 
 export default function FreelancerAvailabilityPage() {
     const [isOnline, setIsOnline] = useState(true);
