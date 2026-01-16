@@ -13,9 +13,8 @@ const Switch = dynamicImport(
     { ssr: false, loading: () => <div className="w-10 h-6" /> }
 );
 
-// Prevent static generation - this page requires client-side state
-// Note: This export works in client components in Next.js 13+
-export const dynamic = 'force-dynamic';
+// This page requires client-side state
+// Using dynamic imports with ssr: false to prevent build-time analysis
 
 export default function FreelancerAvailabilityPage() {
     const [mounted, setMounted] = useState(false);

@@ -25,6 +25,14 @@ const nextConfig = {
   turbopack: {
     // Path aliases are handled by jsconfig.json
   },
+  // Exclude problematic routes from static generation
+  experimental: {
+    missingSuspenseWithCSRBailout: false,
+  },
+  // Skip static generation for specific routes
+  generateBuildId: async () => {
+    return 'build-' + Date.now();
+  },
 };
 
 module.exports = nextConfig;

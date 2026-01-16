@@ -17,8 +17,8 @@ const SellerStatusCard = dynamicImport(
     { ssr: false, loading: () => <Loader2 className="h-8 w-8 animate-spin text-primary" /> }
 );
 
-// Prevent static generation - this page requires client-side state
-export const dynamic = 'force-dynamic';
+// This page requires client-side state
+// Using dynamic imports with ssr: false to prevent build-time analysis
 
 export default function BecomeSellerPage() {
     const router = useRouter();
