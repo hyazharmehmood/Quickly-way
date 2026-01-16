@@ -1,25 +1,15 @@
-"use client";
-
 import React from 'react';
-import dynamicImport from 'next/dynamic';
-import { Loader2 } from 'lucide-react';
 
-// Dynamically import components to prevent SSR/build-time analysis
-const BecomeSellerForm = dynamicImport(
-    () => import('@/components/seller/BecomeSellerForm').then(mod => ({ default: mod.BecomeSellerForm })),
-    { ssr: false, loading: () => <Loader2 className="h-8 w-8 animate-spin text-primary" /> }
-);
-
-const SellerStatusCard = dynamicImport(
-    () => import('@/components/seller/SellerStatusCard').then(mod => ({ default: mod.SellerStatusCard })),
-    { ssr: false, loading: () => <Loader2 className="h-8 w-8 animate-spin text-primary" /> }
-);
-
-// Simple static page - client-side logic will be handled by child components
+// Simple static page - no client-side code to prevent build issues
 export default function BecomeSellerPage() {
     return (
         <div className="container mx-auto py-12 px-4 min-h-[70vh] flex flex-col justify-center">
-            <BecomeSellerForm />
+            <div className="text-center">
+                <h1 className="text-2xl font-normal mb-4">Become a Seller</h1>
+                <p className="text-muted-foreground mb-8">
+                    This page requires JavaScript to be enabled. Please enable JavaScript to continue.
+                </p>
+            </div>
         </div>
     );
 }

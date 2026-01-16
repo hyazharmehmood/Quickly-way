@@ -15,24 +15,22 @@ export default function GlobalError({ error, reset }) {
         }}>
           <h1 style={{ fontSize: '24px', marginBottom: '16px' }}>Something went wrong!</h1>
           <p style={{ marginBottom: '24px', color: '#666' }}>
-            An error occurred. Please try again.
+            An error occurred. Please refresh the page.
           </p>
-          {typeof window !== 'undefined' && (
-            <button
-              onClick={reset}
-              style={{
-                padding: '12px 24px',
-                backgroundColor: '#0070f3',
-                color: 'white',
-                border: 'none',
-                borderRadius: '8px',
-                cursor: 'pointer',
-                fontSize: '16px'
-              }}
-            >
-              Try again
-            </button>
-          )}
+          <button
+            onClick={() => typeof window !== 'undefined' && window.location.reload()}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: '#0070f3',
+              color: 'white',
+              border: 'none',
+              borderRadius: '8px',
+              cursor: 'pointer',
+              fontSize: '16px'
+            }}
+          >
+            Refresh Page
+          </button>
         </div>
       </body>
     </html>
