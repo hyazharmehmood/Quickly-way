@@ -118,6 +118,12 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
                 conversationId: orderConversationId,
                 content: contractMessage,
               });
+              
+              // Emit order update to trigger OrderCard display
+              socket.emit('order:created', {
+                order: order,
+                conversationId: orderConversationId,
+              });
             } catch (error) {
               console.error('Error sending contract message:', error);
             }
@@ -158,20 +164,6 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
           <DialogDescription className="text-gray-500 text-sm mb-4">
             Send a contract proposal to the client
           </DialogDescription>
-          {existingOrder && existingOrder.status === 'PENDING_ACCEPTANCE' && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-3 mb-4">
-              <p className="text-sm text-yellow-800">
-                ⚠️ A pending contract already exists. Creating a new contract will cancel the previous one.
-              </p>
-            </div>
-          )}
-          {existingOrder && existingOrder.status !== 'PENDING_ACCEPTANCE' && existingOrder.status !== 'CANCELLED' && (
-            <div className="bg-red-50 border border-red-200 rounded-xl p-3 mb-4">
-              <p className="text-sm text-red-800">
-                ❌ An active order already exists for this conversation. Please complete or cancel the existing order first.
-              </p>
-            </div>
-          )}
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -309,9 +301,9 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
             <Button
               type="submit"
               className="flex-1 rounded-xl bg-[#10b981] hover:bg-[#059669]"
-              disabled={loading || !selectedServiceId || services.length === 0 || (existingOrder && existingOrder.status !== 'PENDING_ACCEPTANCE' && existingOrder.status !== 'CANCELLED')}
+              disabled={loading || !selectedServiceId || services.length === 0}
             >
-              {loading ? 'Creating...' : existingOrder && existingOrder.status === 'PENDING_ACCEPTANCE' ? 'Replace Contract' : 'Send Contract'}
+              {loading ? 'Creating...' : 'Send Contract'}
             </Button>
           </div>
         </form>

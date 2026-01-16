@@ -57,7 +57,7 @@ const STATUS_CONFIG = {
   },
   COMPLETED: {
     label: 'COMPLETED',
-    color: 'bg-green-600',
+    color: 'bg-green-500',
     textColor: 'text-white',
   },
   CANCELLED: {
@@ -192,26 +192,26 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
     <Card className="p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm">
       {/* Header: Status Badge and Price */}
       <div className="flex items-start justify-between mb-4">
-        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-3 py-1 rounded-full text-xs font-bold uppercase`}>
+        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-3 py-1.5 rounded-full text-xs font-bold uppercase`}>
           {statusConfig.label}
         </Badge>
         <div className="text-right">
-          <div className="text-3xl font-bold text-gray-900">
+          <div className="text-3xl font-bold text-blue-900">
             {order.currency || 'USD'} {order.price?.toFixed(0) || '0'}
           </div>
         </div>
       </div>
 
       {/* Service Title */}
-      <h3 className="text-xl font-bold text-gray-900 mb-3 leading-tight">
+      <h3 className="text-xl font-bold text-blue-900 mb-3 leading-tight">
         {serviceTitle}
       </h3>
 
       {/* Due Date */}
       {deliveryDate && (
-        <div className="flex items-center gap-2 text-gray-600 mb-4">
+        <div className="flex items-center gap-2 text-blue-900 mb-4">
           <Clock className="h-4 w-4" />
-          <span className="text-sm">Due {deliveryDate}</span>
+          <span className="text-sm font-medium">Due {deliveryDate}</span>
         </div>
       )}
 
@@ -324,17 +324,23 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
           </AlertDialog>
         )}
 
-        {/* View Order Button - Always visible */}
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => router.push(`/orders/${order.id}`)}
-          className="bg-green-500 hover:bg-green-600 text-white border-0"
-        >
-          <Eye className="h-4 w-4 mr-1" />
-          View Order
-        </Button>
       </div>
+      
+      {/* View Order Button - Always show at bottom (like image) */}
+      <Button
+        size="sm"
+        onClick={() => {
+          if (role === 'FREELANCER') {
+            router.push(`/dashboard/freelancer/orders`);
+          } else {
+            router.push(`/orders/${order.id}`);
+          }
+        }}
+        className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg mt-4"
+      >
+        <Eye className="h-4 w-4 mr-2" />
+        View Order
+      </Button>
     </Card>
   );
 }

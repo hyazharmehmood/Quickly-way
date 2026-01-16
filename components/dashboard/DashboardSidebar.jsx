@@ -37,7 +37,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
     };
 
     return (
-        <aside className={`${isOpen ? 'w-64' : 'w-20'} bg-card border-r border-border transition-all duration-300 flex flex-col z-[70] h-screen sticky top-0`}>
+        <aside className={`${isOpen ? 'w-64' : 'w-20'} bg-card border-r border-border transition-all duration-300 flex flex-col h-screen sticky top-0`}>
             {/* Logo area */}
             <div className="p-6 flex items-center justify-between h-20">
                 <div className="flex items-center gap-4">

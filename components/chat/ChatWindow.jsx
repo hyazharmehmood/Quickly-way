@@ -2,6 +2,12 @@
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { Send, Loader2, ArrowLeft, Phone, Video, Star, MoreVertical, FileText } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -537,21 +543,25 @@ export function ChatWindow({ conversation, onBack }) {
             {/* <Button variant="ghost" size="icon" className="h-9 w-9">
               <Star className="h-4 w-4" />
             </Button> */}
-            {/* Create Contract Button (Freelancer only) */}
-            {role === 'FREELANCER'&& (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setShowCreateContractModal(true)}
-                className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
-              >
-                <FileText className="h-4 w-4 mr-1" />
-                Create Contract
-              </Button>
-            )}
-            <Button variant="ghost" size="icon" className="h-9 w-9">
-              <MoreVertical className="h-4 w-4" />
-            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="h-9 w-9">
+                  <MoreVertical className="h-4 w-4" />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-48">
+                {role === 'FREELANCER' && (
+                  <DropdownMenuItem
+                    onClick={() => setShowCreateContractModal(true)}
+                    className="cursor-pointer"
+                  >
+                    <FileText className="h-4 w-4 mr-2" />
+                    Create Contract
+                  </DropdownMenuItem>
+                )}
+                {/* Add more menu items here if needed */}
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
       </div>
@@ -617,26 +627,33 @@ export function ChatWindow({ conversation, onBack }) {
               const isOptimistic = message.id?.startsWith('temp-');
               
               // Check if this is the contract creation message (contains contract details)
-              // Contract message is sent by freelancer (not the current user)
-              const isContractMessage = !isOwnMessage && (
+              // Contract message can be from freelancer (when freelancer views) or from freelancer (when client views)
+              const isContractMessage = (
                 message.content?.includes('Contract Created') || 
                 message.content?.includes('📋 Contract') ||
                 message.content?.includes('Order Number')
               );
               
-              // Show order card right after the contract message
-              const showOrderCardAfter = isContractMessage && order;
+              // Show order card after contract message
+              // For freelancer: show if message is contract message (they sent it)
+              // For client: show if message is contract message from freelancer
+              const isFreelancerContractMessage = role === 'FREELANCER' && isContractMessage && isOwnMessage;
+              const isClientContractMessage = role === 'CLIENT' && isContractMessage && !isOwnMessage;
+              const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && order;
               
               return (
                 <React.Fragment key={message.id}>
-                  <ChatBubble
-                    message={message}
-                    isOwnMessage={isOwnMessage}
-                    isOptimistic={isOptimistic}
-                    showAvatar={true}
-                    showName={!isOwnMessage}
-                  />
-                  {/* Show Order Card after contract message from freelancer */}
+                  {/* Hide contract message text, show only OrderCard */}
+                  {!isContractMessage && (
+                    <ChatBubble
+                      message={message}
+                      isOwnMessage={isOwnMessage}
+                      isOptimistic={isOptimistic}
+                      showAvatar={true}
+                      showName={!isOwnMessage}
+                    />
+                  )}
+                  {/* Show Order Card instead of contract message text */}
                   {showOrderCardAfter && (
                     <div className="flex justify-center my-4">
                       <div className="w-full max-w-md">
@@ -655,12 +672,16 @@ export function ChatWindow({ conversation, onBack }) {
               );
             })}
             {/* Show order card at the end if order exists but no contract message found in messages */}
-            {order && !messages.some((msg, idx) => {
-              const isContractMsg = (msg.content?.includes('Contract Created') || 
-                                     msg.content?.includes('📋 Contract') ||
-                                     msg.content?.includes('Order Number')) && 
-                                    msg.senderId !== user?.id;
-              return isContractMsg;
+            {order && !messages.some((msg) => {
+              const isContractMsg = msg.content?.includes('Contract Created') || 
+                                   msg.content?.includes('📋 Contract') ||
+                                   msg.content?.includes('Order Number');
+              // Check if contract message exists for current user's role
+              if (role === 'FREELANCER') {
+                return isContractMsg && msg.senderId === user?.id;
+              } else {
+                return isContractMsg && msg.senderId !== user?.id;
+              }
             }) && (
               <div className="flex justify-center my-4">
                 <div className="w-full max-w-md">
