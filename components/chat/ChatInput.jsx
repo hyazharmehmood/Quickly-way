@@ -1,7 +1,7 @@
 "use client";
 
 import React from 'react';
-import { ArrowRight, Paperclip, Send, Loader2 } from "lucide-react";
+import { ArrowRight, Paperclip, Send, Loader2, Image, Smile } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { useAutoResizeTextarea } from "@/hooks/use-auto-resize-textarea";
@@ -67,7 +67,7 @@ export function ChatInput({
 
             <div className="flex h-14 items-center rounded-b-xl bg-transparent">
               <div className="absolute right-3 bottom-3 left-3 flex w-[calc(100%-24px)] items-center justify-between">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1">
                   <label
                     aria-label="Attach file"
                     className={cn(
@@ -79,6 +79,29 @@ export function ChatInput({
                     <input className="hidden" type="file" disabled={disabled} />
                     <Paperclip className="h-4 w-4 transition-colors" />
                   </label>
+                  <label
+                    aria-label="Attach image"
+                    className={cn(
+                      "cursor-pointer rounded-lg bg-transparent p-2",
+                      "hover:bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0",
+                      "text-muted-foreground hover:text-foreground",
+                      disabled && "cursor-not-allowed opacity-50"
+                    )}>
+                    <input className="hidden" type="file" accept="image/*" disabled={disabled} />
+                    <Image className="h-4 w-4 transition-colors" />
+                  </label>
+                  <button
+                    aria-label="Add emoji"
+                    className={cn(
+                      "cursor-pointer rounded-lg bg-transparent p-2",
+                      "hover:bg-secondary/50 focus-visible:ring-1 focus-visible:ring-primary focus-visible:ring-offset-0",
+                      "text-muted-foreground hover:text-foreground",
+                      disabled && "cursor-not-allowed opacity-50"
+                    )}
+                    disabled={disabled}
+                  >
+                    <Smile className="h-4 w-4 transition-colors" />
+                  </button>
                 </div>
                 <button
                   aria-label="Send message"

@@ -15,7 +15,8 @@ export default function MessagesPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-primary" />
             </div>
         }>
-            <MessagesContent />
+            <div className="px-4 py-2"><MessagesContent /></div>
+            
         </Suspense>
     );
 }

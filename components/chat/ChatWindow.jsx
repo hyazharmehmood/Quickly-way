@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Loader2, ArrowLeft } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, Phone, Video, Star, MoreVertical } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -280,7 +280,7 @@ export function ChatWindow({ conversation, onBack }) {
     // Add message immediately to UI
     setMessages((prev) => [...prev, optimisticMessage]);
     setMessageContent('');
-    setSending(true);
+    // setSending(true);
     scrollToBottom();
 
     // Stop typing indicator immediately
@@ -325,7 +325,7 @@ export function ChatWindow({ conversation, onBack }) {
     // Set debounce to stop typing after 1 second of inactivity
     typingDebounceRef.current = setTimeout(() => {
       stopTyping();
-    }, 1000);
+    }, 500);
   }, [socket, isConnected, conversation?.id]);
 
   const stopTyping = useCallback(() => {
@@ -356,12 +356,12 @@ export function ChatWindow({ conversation, onBack }) {
 
   if (!conversation) {
     return (
-      <Card className="hidden md:flex flex-1 rounded-2xl md:rounded-[2.5rem] border-border bg-card flex-col items-center justify-center shadow-sm relative overflow-hidden h-screen">
+      <div className="hidden md:flex flex-1 flex-col items-center justify-center relative overflow-hidden h-full">
         <div className="absolute inset-0 bg-secondary/10 opacity-50 pattern-grid"></div>
         <div className="relative z-10 flex flex-col items-center text-center max-w-sm">
           <p className="text-muted-foreground font-normal mt-2">Select a conversation to start chatting</p>
         </div>
-      </Card>
+      </div>
     );
   }
 
@@ -369,31 +369,49 @@ export function ChatWindow({ conversation, onBack }) {
   const hasConversation = !!conversation.id;
 
   return (
-    <Card className="flex-1 rounded-2xl md:rounded-[2.5rem] border-border bg-card flex flex-col shadow-sm overflow-hidden h-[calc(100vh-9.5rem)] max-w-full min-w-0">
+    <div className="flex-1 flex flex-col overflow-hidden h-full">
       {/* Header */}
-      <div className="p-4 md:p-6 border-b border-border flex items-center gap-3">
-        <Button
-          variant="ghost"
-          size="icon"
-          className="md:hidden"
-          onClick={onBack}
-        >
-          <ArrowLeft className="h-5 w-5" />
-        </Button>
-        <Avatar className="h-10 w-10">
-          <AvatarImage src={otherUser?.profileImage} alt={otherUser?.name} />
-          <AvatarFallback>
-            {otherUser?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </AvatarFallback>
-        </Avatar>
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <p className="font-medium">{otherUser?.name || 'Unknown User'}</p>
-            {otherUser?.id && <UserStatus userId={otherUser.id} size="sm" />}
+      <div className="p-4 md:p-6 border-b border-border">
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="md:hidden"
+            onClick={onBack}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <Avatar className="h-10 w-10">
+            <AvatarImage src={otherUser?.profileImage} alt={otherUser?.name} />
+            <AvatarFallback>
+              {otherUser?.name?.charAt(0)?.toUpperCase() || 'U'}
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2">
+              <p className="font-medium truncate">{otherUser?.name || 'Unknown User'}</p>
+              {otherUser?.id && <UserStatus userId={otherUser.id} size="sm" />}
+            </div>
+            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+              <span>Online</span>
+              <span>•</span>
+              <span>Local time: {moment().format('HH:mm')}</span>
+            </div>
           </div>
-          <p className="text-xs text-muted-foreground">
-            {otherUser?.role || 'User'}
-          </p>
+          <div className="flex items-center gap-1">
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Phone className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Video className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <Star className="h-4 w-4" />
+            </Button>
+            <Button variant="ghost" size="icon" className="h-9 w-9">
+              <MoreVertical className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -476,8 +494,11 @@ export function ChatWindow({ conversation, onBack }) {
           disabled={sending || !isConnected || !otherUser?.id}
           sending={sending}
         />
+        {/* <p className="text-xs text-muted-foreground mt-2 text-center">
+          Press Enter to send. Shift + Enter for new line.
+        </p> */}
         {!isConnected && (
-          <div className="flex items-center gap-2 mt-2">
+          <div className="flex items-center gap-2 mt-2 justify-center">
             <div className="h-2 w-2 bg-yellow-500 rounded-full animate-pulse"></div>
             <p className="text-xs text-muted-foreground">
               {connectionError ? `Connection error: ${connectionError}` : 'Reconnecting...'}
@@ -485,6 +506,6 @@ export function ChatWindow({ conversation, onBack }) {
           </div>
         )}
       </div>
-    </Card>
+    </div>
   );
 }

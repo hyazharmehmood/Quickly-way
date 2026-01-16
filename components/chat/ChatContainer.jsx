@@ -130,16 +130,19 @@ export function ChatContainer() {
   }, [conversationIdFromUrl, otherUserIdFromUrl, socket, isConnected, selectedConversation?.id]);
 
   return (
-    <div className=" animate-in fade-in duration-500 flex flex-col md:flex-row gap-3 md:gap-4 ">
-      <div className={`${showChatWindow ? 'hidden md:block' : 'block'} w-full md:w-80 flex-shrink-0`}>
+    <Card className="animate-in rounded-2xl md:rounded-[2.5rem] fade-in duration-500 flex flex-col md:flex-row border-border bg-card shadow-sm overflow-hidden h-[calc(100vh-9.5rem)]">
+      {/* Left Sidebar - Inbox */}
+      <div className={`${showChatWindow ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-shrink-0 border-r border-border flex-col`}>
         <ChatList
           onSelectConversation={handleSelectConversation}
           selectedConversationId={selectedConversation?.id}
         />
       </div>
-      <div className={`${showChatWindow ? 'block' : 'hidden md:flex'} flex-1 min-w-0 overflow-hidden`}>
+      
+      {/* Right Pane - Chat Window */}
+      <div className={`${showChatWindow ? 'flex' : 'hidden md:flex'} flex-1 min-w-0 flex-col`}>
         {isLoadingConversation ? (
-          <Card className="flex-1 rounded-2xl md:rounded-[2.5rem] border-border bg-card flex flex-col shadow-sm overflow-hidden h-[calc(100vh-9.5rem)] max-w-full min-w-0">
+          <div className="flex-1 flex flex-col overflow-hidden">
             {/* Header Skeleton */}
             <div className="p-4 md:p-6 border-b border-border flex items-center gap-3">
               <Skeleton className="h-10 w-10 rounded-full" />
@@ -149,7 +152,7 @@ export function ChatContainer() {
               </div>
             </div>
             {/* Messages Skeleton */}
-            <div className="flex-1 p-4 space-y-4">
+            <div className="flex-1 p-4 space-y-4 overflow-y-auto">
               {[...Array(4)].map((_, index) => (
                 <div key={index} className="flex gap-2">
                   <Skeleton className="h-8 w-8 rounded-full" />
@@ -167,7 +170,7 @@ export function ChatContainer() {
                 <Skeleton className="h-[60px] w-[60px] rounded-md" />
               </div>
             </div>
-          </Card>
+          </div>
         ) : (
           <ChatWindow
             conversation={selectedConversation}
@@ -175,6 +178,6 @@ export function ChatContainer() {
           />
         )}
       </div>
-    </div>
+    </Card>
   );
 }

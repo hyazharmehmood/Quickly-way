@@ -7,6 +7,145 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+model User {
+  id                       String                    @id @default(uuid())
+  name                     String
+  email                    String                    @unique
+  password                 String
+  role                     UserRole                  @default(CLIENT)
+  isSeller                 Boolean                   @default(false)
+  sellerStatus             SellerStatus              @default(NONE)
+  bio                      String?
+  skills                   String[]
+  portfolio                String?
+  refreshToken             String?
+  passwordResetToken       String?
+  passwordResetExpires     DateTime?
+  createdAt                DateTime                  @default(now())
+  updatedAt                DateTime                  @updatedAt
+  coverImage               String?
+  languages                String[]
+  profileImage             String?
+  availability             Json?
+  location                 String?
+  phoneNumber              String?
+  showEmail                Boolean                   @default(false)
+  showMobile               Boolean                   @default(false)
+  conversationParticipants ConversationParticipant[] @relation("ConversationParticipants")
+  messages                 Message[]
+  clientProjects           Project[]                 @relation("ClientProjects")
+  freelancerProjects       Project[]                 @relation("FreelancerProjects")
+  proposals                Proposal[]
+  sellerApplication        SellerApplication?
+  services                 Service[]
+}
+
+model Project {
+  id           String        @id @default(uuid())
+  title        String
+  description  String
+  budget       Float
+  deadline     DateTime?
+  status       ProjectStatus @default(OPEN)
+  clientId     String
+  freelancerId String?
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+  client       User          @relation("ClientProjects", fields: [clientId], references: [id])
+  freelancer   User?         @relation("FreelancerProjects", fields: [freelancerId], references: [id])
+  proposals    Proposal[]
+}
+
+model Proposal {
+  id           String         @id @default(uuid())
+  bidAmount    Float
+  coverLetter  String
+  status       ProposalStatus @default(PENDING)
+  projectId    String
+  freelancerId String
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+  freelancer   User           @relation(fields: [freelancerId], references: [id])
+  project      Project        @relation(fields: [projectId], references: [id])
+}
+
+model SellerApplication {
+  id              String       @id @default(uuid())
+  fullName        String
+  skills          String[]
+  bio             String?
+  portfolio       String?
+  status          SellerStatus @default(PENDING)
+  rejectionReason String?
+  userId          String       @unique
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+  user            User         @relation(fields: [userId], references: [id])
+}
+
+model Service {
+  id              String   @id @default(uuid())
+  title           String
+  description     String
+  category        String?
+  subCategory     String?
+  price           Float?
+  currency        String   @default("USD")
+  priceBreakdowns Json?
+  images          String[]
+  showEmail       Boolean  @default(false)
+  showMobile      Boolean  @default(false)
+  freelancerId    String
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  coverColor      String?
+  coverImage      String?
+  coverText       String?
+  coverType       String   @default("IMAGE")
+  searchTags      String[]
+  freelancer      User     @relation(fields: [freelancerId], references: [id])
+}
+
+model Conversation {
+  id              String                    @id @default(uuid())
+  createdAt       DateTime                  @default(now())
+  updatedAt       DateTime                  @updatedAt
+  lastMessageAt   DateTime?
+  lastMessageText String?
+  lastSenderId    String?
+  participants    ConversationParticipant[]
+  messages        Message[]
+
+  @@index([lastMessageAt])
+}
+
+model ConversationParticipant {
+  id             String       @id @default(uuid())
+  conversationId String
+  userId         String
+  joinedAt       DateTime     @default(now())
+  lastReadAt     DateTime?
+  unreadCount    Int          @default(0)
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  user           User         @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([conversationId, userId])
+  @@index([userId])
+  @@index([conversationId])
+}
+
+model Message {
+  id             String       @id @default(uuid())
+  content        String
+  senderId       String
+  conversationId String
+  createdAt      DateTime     @default(now())
+  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  sender         User         @relation(fields: [senderId], references: [id])
+
+  @@index([conversationId, createdAt])
+}
+
 enum UserRole {
   CLIENT
   FREELANCER
@@ -32,181 +171,3 @@ enum ProposalStatus {
   ACCEPTED
   REJECTED
 }
-
-model User {
-  id              String   @id @default(uuid())
-  name            String
-  email           String   @unique
-  password        String
-  role            UserRole @default(CLIENT)
-  isSeller        Boolean  @default(false)
-  sellerStatus    SellerStatus @default(NONE)
-  
-  // Profile fields (optional in Mongoose, keep optional here)
-  bio             String?
-  skills          String[]
-  portfolio       String?
-  profileImage    String?
-  coverImage      String?
-  languages       String[]
-  location        String?
-  phoneNumber     String?
-  showEmail       Boolean  @default(false)
-  showMobile      Boolean  @default(false)
-  availability    Json?    // Default schedule template
-  
-  refreshToken    String?
-  
-  passwordResetToken   String?
-  passwordResetExpires DateTime?
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-
-  // Relations
-  clientProjects     Project[] @relation("ClientProjects")
-  freelancerProjects Project[] @relation("FreelancerProjects")
-  proposals          Proposal[]
-  sellerApplication  SellerApplication?
-  services           Service[]
-  conversationParticipants ConversationParticipant[] @relation("ConversationParticipants")
-  messages           Message[]
-  seenMessages       MessageSeen[]
-}
-
-model Project {
-  id          String        @id @default(uuid())
-  title       String
-  description String
-  budget      Float
-  deadline    DateTime?
-  status      ProjectStatus @default(OPEN)
-  
-  clientId    String
-  client      User   @relation("ClientProjects", fields: [clientId], references: [id])
-  
-  freelancerId String?
-  freelancer   User?   @relation("FreelancerProjects", fields: [freelancerId], references: [id])
-  
-  proposals    Proposal[]
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model Proposal {
-  id          String         @id @default(uuid())
-  bidAmount   Float
-  coverLetter String
-  status      ProposalStatus @default(PENDING)
-  
-  projectId   String
-  project     Project @relation(fields: [projectId], references: [id])
-  
-  freelancerId String
-  freelancer   User    @relation(fields: [freelancerId], references: [id])
-  
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-}
-
-model SellerApplication {
-  id              String       @id @default(uuid())
-  fullName        String
-  skills          String[]
-  bio             String?
-  portfolio       String?
-  status          SellerStatus @default(PENDING)
-  rejectionReason String?
-  
-  userId          String       @unique
-  user            User         @relation(fields: [userId], references: [id])
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model Service {
-  id              String   @id @default(uuid())
-  title           String
-  description     String
-  category        String?
-  subCategory     String?
-  
-  // Pricing
-  price           Float?
-  currency        String   @default("USD")
-  priceBreakdowns Json?    // Stores the array of packages
-  
-  // Media & Cover
-  coverType       String   @default("IMAGE") // "IMAGE" or "TEXT"
-  coverImage      String?  // URL if coverType is IMAGE (or use existing thumbnail/images[0])
-  coverText       String?  // Text if coverType is TEXT
-  coverColor      String?  // Hex color if coverType is TEXT
-  images          String[] // Cloudinary URLs
-  searchTags      String[] // Search tags/Positive keywords
-
-  // Settings
-  showEmail       Boolean  @default(false)
-  showMobile      Boolean  @default(false)
-  
-  // Relations
-  freelancerId    String
-  freelancer      User     @relation(fields: [freelancerId], references: [id])
-  
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-}
-
-model Conversation {
-  id            String   @id @default(uuid())
-  participants  ConversationParticipant[]
-  lastMessage   Message? @relation("LastMessage", fields: [lastMessageId], references: [id])
-  lastMessageId String?  @unique
-  createdAt     DateTime @default(now())
-  updatedAt     DateTime @updatedAt
-  
-  messages      Message[] @relation("Messages")
-}
-
-model ConversationParticipant {
-  id             String   @id @default(uuid())
-  conversationId String
-  conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-  userId         String
-  user           User     @relation("ConversationParticipants", fields: [userId], references: [id], onDelete: Cascade)
-  joinedAt       DateTime @default(now())
-  
-  @@unique([conversationId, userId])
-  @@index([userId])
-  @@index([conversationId])
-}
-
-model Message {
-  id             String   @id @default(uuid())
-  content        String
-  senderId       String
-  sender         User     @relation(fields: [senderId], references: [id])
-  conversationId String
-  conversation   Conversation @relation("Messages", fields: [conversationId], references: [id], onDelete: Cascade)
-  isRead         Boolean  @default(false)
-  seenBy         MessageSeen[]
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
-  
-  // Relation for lastMessage in Conversation
-  ConversationLastMessage Conversation? @relation("LastMessage")
-}
-
-model MessageSeen {
-  id         String   @id @default(uuid())
-  messageId  String
-  message    Message  @relation(fields: [messageId], references: [id], onDelete: Cascade)
-  userId     String
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  seenAt     DateTime @default(now())
-  
-  @@unique([messageId, userId])
-}
-
-
