@@ -7,7 +7,7 @@ export function GlobalHeader() {
     const pathname = usePathname();
     const isDashboard = pathname.startsWith('/dashboard');
     const isAuthPage = pathname === '/login' || pathname === '/signup';
-    const isAdminPage = pathname === '/admin';
+    const isAdminPage =  pathname.startsWith('/admin');
 
     if (isDashboard || isAuthPage || isAdminPage) {
         return null;

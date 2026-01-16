@@ -578,33 +578,6 @@ export function ChatWindow({ conversation, onBack }) {
 
       {/* Messages */}
       <ScrollArea className="flex-1 p-4 overflow-y-auto overflow-x-hidden" ref={scrollAreaRef}>
-        {/* Order Card */}
-        {conversation?.id && (
-          <div className="mb-4">
-            {loadingOrder ? (
-              <div className="animate-pulse">
-                <div className="h-32 bg-secondary rounded-lg"></div>
-              </div>
-            ) : order ? (
-              <OrderCard
-                order={order}
-                conversationId={conversation.id}
-                onOrderUpdate={(updatedOrder) => {
-                  console.log('Order updated:', updatedOrder);
-                  setOrder(updatedOrder);
-                }}
-              />
-            ) : (
-              // Show debug info in development
-              process.env.NODE_ENV === 'development' && (
-                <div className="text-xs text-muted-foreground p-2 bg-secondary/50 rounded">
-                  No order found for conversation {conversation.id}
-                </div>
-              )
-            )}
-          </div>
-        )}
-
         {loading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, index) => {
@@ -639,21 +612,69 @@ export function ChatWindow({ conversation, onBack }) {
           </div>
         ) : (
           <div className="space-y-4 w-full min-w-0">
-            {messages.map((message) => {
+            {messages.map((message, index) => {
               const isOwnMessage = message.senderId === user?.id;
               const isOptimistic = message.id?.startsWith('temp-');
               
+              // Check if this is the contract creation message (contains contract details)
+              // Contract message is sent by freelancer (not the current user)
+              const isContractMessage = !isOwnMessage && (
+                message.content?.includes('Contract Created') || 
+                message.content?.includes('📋 Contract') ||
+                message.content?.includes('Order Number')
+              );
+              
+              // Show order card right after the contract message
+              const showOrderCardAfter = isContractMessage && order;
+              
               return (
-                <ChatBubble
-                  key={message.id}
-                  message={message}
-                  isOwnMessage={isOwnMessage}
-                  isOptimistic={isOptimistic}
-                  showAvatar={true}
-                  showName={!isOwnMessage}
-                />
+                <React.Fragment key={message.id}>
+                  <ChatBubble
+                    message={message}
+                    isOwnMessage={isOwnMessage}
+                    isOptimistic={isOptimistic}
+                    showAvatar={true}
+                    showName={!isOwnMessage}
+                  />
+                  {/* Show Order Card after contract message from freelancer */}
+                  {showOrderCardAfter && (
+                    <div className="flex justify-center my-4">
+                      <div className="w-full max-w-md">
+                        <OrderCard
+                          order={order}
+                          conversationId={conversation.id}
+                          onOrderUpdate={(updatedOrder) => {
+                            console.log('Order updated:', updatedOrder);
+                            setOrder(updatedOrder);
+                          }}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </React.Fragment>
               );
             })}
+            {/* Show order card at the end if order exists but no contract message found in messages */}
+            {order && !messages.some((msg, idx) => {
+              const isContractMsg = (msg.content?.includes('Contract Created') || 
+                                     msg.content?.includes('📋 Contract') ||
+                                     msg.content?.includes('Order Number')) && 
+                                    msg.senderId !== user?.id;
+              return isContractMsg;
+            }) && (
+              <div className="flex justify-center my-4">
+                <div className="w-full max-w-md">
+                  <OrderCard
+                    order={order}
+                    conversationId={conversation.id}
+                    onOrderUpdate={(updatedOrder) => {
+                      console.log('Order updated:', updatedOrder);
+                      setOrder(updatedOrder);
+                    }}
+                  />
+                </div>
+              </div>
+            )}
             {typingUsers.length > 0 && (
               <div className="flex justify-start">
                 <div className="bg-secondary text-secondary-foreground rounded-2xl p-3">
