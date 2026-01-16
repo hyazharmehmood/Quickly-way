@@ -1,16 +1,28 @@
 "use client";
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { BecomeSellerForm } from '@/components/seller/BecomeSellerForm';
 import { SellerStatusCard } from '@/components/seller/SellerStatusCard';
 import useAuthStore from '@/store/useAuthStore';
+import { Loader2 } from 'lucide-react';
+
+// This page requires client-side state (Zustand store)
+// The mounted check ensures it doesn't run during SSR
 
 export default function BecomeSellerPage() {
     const router = useRouter();
+    const [mounted, setMounted] = useState(false);
     const { sellerStatus, user, updateSellerStatus, role, isLoggedIn } = useAuthStore();
 
+    // Ensure component is mounted before accessing client-side store
     useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (!mounted) return;
+        
         // Only allow clients who are logged in
         if (!isLoggedIn) {
             router.push('/login');
@@ -21,11 +33,20 @@ export default function BecomeSellerPage() {
             // If they are already a seller (freelancer) or admin, they shouldn't be here
             // but we can handle the "already a seller" state in the UI below
         }
-    }, [isLoggedIn, role, router]);
+    }, [mounted, isLoggedIn, role, router]);
 
     const handleRetry = () => {
         updateSellerStatus('none');
     };
+
+    // Show loading state during SSR and initial mount
+    if (!mounted) {
+        return (
+            <div className="container mx-auto py-12 px-4 min-h-[70vh] flex items-center justify-center">
+                <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            </div>
+        );
+    }
 
     if (!isLoggedIn) return null;
 
