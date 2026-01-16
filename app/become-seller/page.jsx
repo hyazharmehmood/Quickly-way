@@ -1,21 +1,24 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
 // Dynamically import components to prevent SSR/build-time analysis
-const BecomeSellerForm = dynamic(
+const BecomeSellerForm = dynamicImport(
     () => import('@/components/seller/BecomeSellerForm').then(mod => ({ default: mod.BecomeSellerForm })),
-    { ssr: false }
+    { ssr: false, loading: () => <Loader2 className="h-8 w-8 animate-spin text-primary" /> }
 );
 
-const SellerStatusCard = dynamic(
+const SellerStatusCard = dynamicImport(
     () => import('@/components/seller/SellerStatusCard').then(mod => ({ default: mod.SellerStatusCard })),
-    { ssr: false }
+    { ssr: false, loading: () => <Loader2 className="h-8 w-8 animate-spin text-primary" /> }
 );
+
+// Prevent static generation - this page requires client-side state
+export const dynamic = 'force-dynamic';
 
 export default function BecomeSellerPage() {
     const router = useRouter();
