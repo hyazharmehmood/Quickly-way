@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Loader2, ArrowLeft, Phone, Video, Star, MoreVertical } from 'lucide-react';
+import { Send, Loader2, ArrowLeft, Phone, Video, Star, MoreVertical, FileText } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
@@ -12,7 +12,9 @@ import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { UserStatus } from './UserStatus';
 import { ChatInput } from './ChatInput';
-import { ChatBubble } from './ChatBubble';  
+import { ChatBubble } from './ChatBubble';
+import { OrderCard } from './OrderCard';
+import CreateContractModal from './CreateContractModal';  
 
 export function ChatWindow({ conversation, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -21,12 +23,17 @@ export function ChatWindow({ conversation, onBack }) {
   const [messageContent, setMessageContent] = useState('');
   const [typingUsers, setTypingUsers] = useState([]);
   const [connectionError, setConnectionError] = useState(null);
+  const [order, setOrder] = useState(null);
+  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [showCreateContractModal, setShowCreateContractModal] = useState(false);
+  const [service, setService] = useState(null);
   const messagesEndRef = useRef(null);
   const scrollAreaRef = useRef(null);
   const typingDebounceRef = useRef(null);
   const isTypingRef = useRef(false);
   const { socket, isConnected } = useGlobalSocket();
   const { user } = useAuthStore();
+  const role = user?.role?.toUpperCase();
 
   useEffect(() => {
     if (!conversation) return;
@@ -56,6 +63,13 @@ export function ChatWindow({ conversation, onBack }) {
       setLoading(false);
     }
 
+    // Fetch order for this conversation
+    if (socket && isConnected && conversationId) {
+      fetchOrder(conversationId);
+    } else {
+      setOrder(null);
+    }
+
     return () => {
       if (socket && isConnected) {
         if (conversationId) {
@@ -66,6 +80,121 @@ export function ChatWindow({ conversation, onBack }) {
       }
     };
   }, [conversation?.id, conversation?.otherParticipant?.id, socket, isConnected]);
+
+  // Fallback: Fetch order via REST API
+  const fetchOrderViaAPI = useCallback(async (conversationId) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setLoadingOrder(false);
+        return;
+      }
+
+      const response = await fetch(`/api/orders/conversation/${conversationId}`, {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+        },
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        console.log('Order fetched via API:', data);
+        if (data.success && data.order) {
+          setOrder(data.order);
+        } else {
+          setOrder(null);
+        }
+      } else {
+        // No order found is OK (404)
+        if (response.status === 404) {
+          console.log('No order found for this conversation');
+          setOrder(null);
+        } else {
+          console.error('API error fetching order:', response.status);
+          setOrder(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching order via API:', error);
+      setOrder(null);
+    } finally {
+      setLoadingOrder(false);
+    }
+  }, []);
+
+  // Fetch order by conversation ID
+  const fetchOrder = useCallback(async (conversationId) => {
+    if (!conversationId) {
+      setOrder(null);
+      return;
+    }
+
+    setLoadingOrder(true);
+    let orderFetched = false;
+    
+    // Try Socket.IO first
+    if (socket && isConnected) {
+      try {
+        socket.emit('get_order_by_conversation', { conversationId });
+
+        const handleOrderFetched = (data) => {
+          if (orderFetched) return; // Prevent duplicate calls
+          orderFetched = true;
+          console.log('Order fetched via Socket.IO:', data);
+          if (data.order) {
+            setOrder(data.order);
+          } else {
+            setOrder(null);
+          }
+          setLoadingOrder(false);
+        };
+
+        const handleError = (error) => {
+          if (orderFetched) return;
+          console.error('Socket error fetching order:', error);
+          // Fallback to API
+          fetchOrderViaAPI(conversationId);
+        };
+
+        socket.once('order:fetched', handleOrderFetched);
+        socket.once('error', handleError);
+        
+        // Timeout after 3 seconds, fallback to API
+        setTimeout(() => {
+          if (!orderFetched) {
+            console.log('Socket timeout, falling back to API');
+            orderFetched = true;
+            fetchOrderViaAPI(conversationId);
+          }
+        }, 3000);
+      } catch (error) {
+        console.error('Error in socket fetch:', error);
+        if (!orderFetched) {
+          fetchOrderViaAPI(conversationId);
+        }
+      }
+    } else {
+      // Socket not available, use API directly
+      fetchOrderViaAPI(conversationId);
+    }
+  }, [socket, isConnected, fetchOrderViaAPI]);
+
+  // Listen for order updates via Socket.IO
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleOrderUpdate = (data) => {
+      if (data.order && data.order.conversationId === conversation?.id) {
+        setOrder(data.order);
+      }
+    };
+
+    socket.on('order:updated', handleOrderUpdate);
+
+    return () => {
+      socket.off('order:updated', handleOrderUpdate);
+    };
+  }, [socket, isConnected, conversation?.id]);
 
   useEffect(() => {
     if (!socket || !isConnected) return;
@@ -399,15 +528,27 @@ export function ChatWindow({ conversation, onBack }) {
             </div>
           </div>
           <div className="flex items-center gap-1">
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            {/* <Button variant="ghost" size="icon" className="h-9 w-9">
               <Phone className="h-4 w-4" />
             </Button>
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <Video className="h-4 w-4" />
-            </Button>
-            <Button variant="ghost" size="icon" className="h-9 w-9">
+            </Button> */}
+            {/* <Button variant="ghost" size="icon" className="h-9 w-9">
               <Star className="h-4 w-4" />
-            </Button>
+            </Button> */}
+            {/* Create Contract Button (Freelancer only) */}
+            {role === 'FREELANCER'&& (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateContractModal(true)}
+                className="bg-green-50 border-green-200 text-green-700 hover:bg-green-100"
+              >
+                <FileText className="h-4 w-4 mr-1" />
+                Create Contract
+              </Button>
+            )}
             <Button variant="ghost" size="icon" className="h-9 w-9">
               <MoreVertical className="h-4 w-4" />
             </Button>
@@ -415,8 +556,55 @@ export function ChatWindow({ conversation, onBack }) {
         </div>
       </div>
 
+      {/* Create Contract Modal */}
+      {role === 'FREELANCER' && otherUser && (
+        <CreateContractModal
+          isOpen={showCreateContractModal}
+          onClose={() => setShowCreateContractModal(false)}
+          service={null}
+          conversationId={conversation?.id}
+          clientId={otherUser?.id}
+          existingOrder={order}
+          onContractCreated={(newOrder) => {
+            setOrder(newOrder);
+            setShowCreateContractModal(false);
+            // Refresh order to get full details
+            if (conversation?.id) {
+              fetchOrder(conversation.id);
+            }
+          }}
+        />
+      )}
+
       {/* Messages */}
       <ScrollArea className="flex-1 p-4 overflow-y-auto overflow-x-hidden" ref={scrollAreaRef}>
+        {/* Order Card */}
+        {conversation?.id && (
+          <div className="mb-4">
+            {loadingOrder ? (
+              <div className="animate-pulse">
+                <div className="h-32 bg-secondary rounded-lg"></div>
+              </div>
+            ) : order ? (
+              <OrderCard
+                order={order}
+                conversationId={conversation.id}
+                onOrderUpdate={(updatedOrder) => {
+                  console.log('Order updated:', updatedOrder);
+                  setOrder(updatedOrder);
+                }}
+              />
+            ) : (
+              // Show debug info in development
+              process.env.NODE_ENV === 'development' && (
+                <div className="text-xs text-muted-foreground p-2 bg-secondary/50 rounded">
+                  No order found for conversation {conversation.id}
+                </div>
+              )
+            )}
+          </div>
+        )}
+
         {loading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, index) => {

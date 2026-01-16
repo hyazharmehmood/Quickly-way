@@ -300,7 +300,7 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
         <div className="relative mb-4">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
-            placeholder="Search conversations..."
+            placeholder="Search by name"
             className="pl-10 h-10 bg-secondary/50 border-none rounded-xl"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}

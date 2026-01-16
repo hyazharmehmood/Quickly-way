@@ -127,6 +127,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                 onSubmit={handleSubmitReview}
             />
 
+
             <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 pt-8">
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-6">
@@ -397,7 +398,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                                     <Button
                                         onClick={() => setShowContactModal(true)}
-                                        className="w-full"
+                                        className="w-full bg-[#10b981] hover:bg-[#059669]"
                                     >
                                         Contact me
                                     </Button>

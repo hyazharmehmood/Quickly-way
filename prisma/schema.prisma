@@ -38,6 +38,11 @@ model User {
   proposals                Proposal[]
   sellerApplication        SellerApplication?
   services                 Service[]
+  clientOrders             Order[]                   @relation("ClientOrders")
+  freelancerOrders         Order[]                   @relation("FreelancerOrders")
+  orderEvents              OrderEvent[]
+  disputes                 Dispute[]                 @relation("DisputeClient")
+  disputesAsFreelancer     Dispute[]                 @relation("DisputeFreelancer")
 }
 
 model Project {
@@ -104,6 +109,7 @@ model Service {
   coverType       String   @default("IMAGE")
   searchTags      String[]
   freelancer      User     @relation(fields: [freelancerId], references: [id])
+  orders          Order[]
 }
 
 model Conversation {
@@ -115,6 +121,7 @@ model Conversation {
   lastSenderId    String?
   participants    ConversationParticipant[]
   messages        Message[]
+  orders          Order[]
 
   @@index([lastMessageAt])
 }
@@ -170,4 +177,179 @@ enum ProposalStatus {
   PENDING
   ACCEPTED
   REJECTED
+}
+
+// Order & Contract Models
+model Order {
+  id                    String            @id @default(uuid())
+  orderNumber           String            @unique // Human-readable order number (e.g., ORD-2024-001)
+  serviceId             String
+  clientId              String
+  freelancerId          String
+  conversationId        String?           // Link to conversation if exists
+  status                OrderStatus       @default(PENDING_ACCEPTANCE)
+  price                 Float
+  currency              String            @default("USD")
+  deliveryTime          Int               // Days for delivery
+  revisionsIncluded     Int               @default(0)
+  revisionsUsed         Int               @default(0)
+  deliveryDate          DateTime?         // Expected delivery date
+  completedAt           DateTime?
+  cancelledAt           DateTime?
+  cancellationReason    String?
+  cancelledBy           String?           // User ID who cancelled
+  clientIpAddress       String?           // IP address when order created
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  service               Service           @relation(fields: [serviceId], references: [id])
+  client                User              @relation("ClientOrders", fields: [clientId], references: [id])
+  freelancer            User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
+  conversation          Conversation?     @relation(fields: [conversationId], references: [id])
+  contract              Contract?
+  deliverables          OrderDeliverable[]
+  events                OrderEvent[]
+  disputes              Dispute[]
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([conversationId])
+  @@index([orderNumber])
+}
+
+model Contract {
+  id                    String            @id @default(uuid())
+  orderId               String            @unique
+  serviceTitle          String
+  serviceDescription    String
+  scopeOfWork           String            // Detailed scope
+  price                 Float
+  currency              String            @default("USD")
+  deliveryTime          Int               // Days
+  revisionsIncluded     Int               @default(0)
+  cancellationPolicy    String            // Terms for cancellation
+  status                ContractStatus    @default(PENDING_ACCEPTANCE)
+  clientAcceptedAt      DateTime?
+  freelancerAcceptedAt  DateTime?
+  clientIpAddress       String?           // IP when client created
+  freelancerIpAddress   String?           // IP when freelancer accepted
+  rejectionReason       String?
+  rejectedAt            DateTime?
+  rejectedBy            String?           // User ID
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([status])
+}
+
+model OrderDeliverable {
+  id                    String            @id @default(uuid())
+  orderId               String
+  type                  DeliverableType   @default(FILE)
+  fileUrl               String?           // For FILE type
+  message               String?           // Delivery message
+  isRevision            Boolean           @default(false)
+  revisionNumber        Int?              // Which revision (1, 2, 3...)
+  deliveredAt           DateTime          @default(now())
+  acceptedAt            DateTime?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+  
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+
+  @@index([orderId])
+  @@index([deliveredAt])
+}
+
+model OrderEvent {
+  id                    String            @id @default(uuid())
+  orderId               String
+  userId                String            // User who performed the action
+  eventType             OrderEventType
+  description           String?           // Human-readable description
+  metadata              Json?             // Additional data (IP, reason, etc.)
+  createdAt             DateTime          @default(now())
+  
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  user                  User              @relation(fields: [userId], references: [id])
+
+  @@index([orderId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+model Dispute {
+  id                    String            @id @default(uuid())
+  orderId               String
+  clientId              String
+  freelancerId          String
+  reason                String
+  description           String
+  status                DisputeStatus     @default(OPEN)
+  adminResolution       String?           // Admin's resolution text
+  resolvedBy            String?           // Admin user ID
+  resolvedAt            DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  client                User              @relation("DisputeClient", fields: [clientId], references: [id])
+  freelancer            User              @relation("DisputeFreelancer", fields: [freelancerId], references: [id])
+
+  @@index([orderId])
+  @@index([status])
+  @@index([clientId])
+  @@index([freelancerId])
+}
+
+enum OrderStatus {
+  PENDING_ACCEPTANCE
+  IN_PROGRESS
+  DELIVERED
+  REVISION_REQUESTED
+  COMPLETED
+  CANCELLED
+  DISPUTED
+}
+
+enum ContractStatus {
+  PENDING_ACCEPTANCE
+  ACTIVE
+  REJECTED
+  CANCELLED
+}
+
+enum DeliverableType {
+  FILE
+  MESSAGE
+  LINK
+}
+
+enum OrderEventType {
+  ORDER_CREATED
+  CONTRACT_ACCEPTED
+  CONTRACT_REJECTED
+  ORDER_IN_PROGRESS
+  DELIVERY_SUBMITTED
+  DELIVERY_ACCEPTED
+  REVISION_REQUESTED
+  ORDER_COMPLETED
+  ORDER_CANCELLED
+  DISPUTE_OPENED
+  DISPUTE_RESOLVED
+  STATUS_CHANGED
+}
+
+enum DisputeStatus {
+  OPEN
+  IN_REVIEW
+  RESOLVED
+  CLOSED
 }
