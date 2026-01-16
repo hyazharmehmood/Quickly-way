@@ -13,6 +13,10 @@ const Switch = dynamicImport(
     { ssr: false, loading: () => <div className="w-10 h-6" /> }
 );
 
+// Prevent static generation - this page requires client-side state
+// Note: This export works in client components in Next.js 13+
+export const dynamic = 'force-dynamic';
+
 export default function FreelancerAvailabilityPage() {
     const [mounted, setMounted] = useState(false);
     const [isOnline, setIsOnline] = useState(true);
@@ -36,6 +40,7 @@ export default function FreelancerAvailabilityPage() {
         );
     }
 
+    // Define workingHours after mounted check to prevent SSR evaluation
     const workingHours = [
         { day: 'Monday', hours: '09:00 AM - 06:00 PM', active: true },
         { day: 'Tuesday', hours: '09:00 AM - 06:00 PM', active: true },
