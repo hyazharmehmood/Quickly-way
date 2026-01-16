@@ -20,11 +20,11 @@ export default function sitemap() {
             changeFrequency: 'monthly',
             priority: 0.8,
         },
-        {
-            url: `${baseUrl}/become-seller`,
-            lastModified: new Date(),
-            changeFrequency: 'weekly',
-            priority: 0.9,
-        },
+        // {
+        //     url: `${baseUrl}/become-seller`,
+        //     lastModified: new Date(),
+        //     changeFrequency: 'weekly',
+        //     priority: 0.9,
+        // },
     ];
 }
