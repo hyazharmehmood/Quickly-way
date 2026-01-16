@@ -1,18 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import dynamic from "next/dynamic";
 import { Clock, Calendar, ShieldCheck, Save, Moon, Sun } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
-// Import Switch dynamically to avoid SSR issues
-const Switch = dynamic(() => import("@/components/ui/switch").then(mod => mod.Switch), { ssr: false });
+// Import Switch dynamically to avoid SSR issues with loading fallback
+const Switch = dynamic(
+  () => import("@/components/ui/switch").then(mod => mod.Switch),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="w-9 h-5 rounded-full bg-input animate-pulse" />
+    ),
+  }
+);
 
 export default function FreelancerAvailabilityPage() {
   const [isOnline, setIsOnline] = useState(true);
   const [vacationMode, setVacationMode] = useState(false);
+  const [isMounted, setIsMounted] = useState(false);
+
+  // Ensure component only renders on client
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   const workingHours = [
     { day: "Monday", hours: "09:00 AM - 06:00 PM", active: true },
@@ -23,6 +37,17 @@ export default function FreelancerAvailabilityPage() {
     { day: "Saturday", hours: "Closed", active: false },
     { day: "Sunday", hours: "Closed", active: false },
   ];
+
+  // Show loading skeleton during SSR/static generation
+  if (!isMounted) {
+    return (
+      <div className="animate-in fade-in duration-500 space-y-4">
+        <div className="flex items-center justify-center min-h-[400px]">
+          <div className="text-muted-foreground">Loading...</div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="animate-in fade-in duration-500 space-y-4">
