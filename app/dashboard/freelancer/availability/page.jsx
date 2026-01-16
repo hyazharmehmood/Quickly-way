@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import dynamicImport from 'next/dynamic';
 import { Clock, Calendar, ShieldCheck, Save, Coffee, Moon, Sun } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,15 +10,31 @@ import { Badge } from "@/components/ui/badge";
 // Dynamically import Switch to prevent SSR issues
 const Switch = dynamicImport(
     () => import("@/components/ui/switch").then(mod => ({ default: mod.Switch })),
-    { ssr: false }
+    { ssr: false, loading: () => <div className="w-10 h-6" /> }
 );
 
-// Prevent static generation - this page requires client-side state
-export const dynamic = 'force-dynamic';
-
 export default function FreelancerAvailabilityPage() {
+    const [mounted, setMounted] = useState(false);
     const [isOnline, setIsOnline] = useState(true);
     const [vacationMode, setVacationMode] = useState(false);
+
+    // Ensure component is mounted before rendering
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    // Show loading state during SSR
+    if (!mounted) {
+        return (
+            <div className="animate-in fade-in duration-500 space-y-4">
+                <div className="h-20 bg-card rounded-2xl animate-pulse" />
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    <div className="h-96 bg-card rounded-2xl animate-pulse" />
+                    <div className="h-96 bg-card rounded-2xl animate-pulse" />
+                </div>
+            </div>
+        );
+    }
 
     const workingHours = [
         { day: 'Monday', hours: '09:00 AM - 06:00 PM', active: true },
