@@ -74,6 +74,7 @@ export default function BecomeSellerPage() {
             </div>
         );
     }
+    
 
     return (
         <div className="container mx-auto py-12 px-4 min-h-[70vh] flex flex-col justify-center">
