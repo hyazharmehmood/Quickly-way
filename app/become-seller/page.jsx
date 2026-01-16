@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState, Suspense } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
+import React, { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { BecomeSellerForm } from '@/components/seller/BecomeSellerForm';
 import { SellerStatusCard } from '@/components/seller/SellerStatusCard';
 import useAuthStore from '@/store/useAuthStore';
 import { Loader2 } from 'lucide-react';
 
-// Force dynamic rendering - prevent static generation
+// Prevent static generation - this page requires client-side state
 export const dynamic = 'force-dynamic';
 
-function BecomeSellerContent() {
+export default function BecomeSellerPage() {
     const router = useRouter();
     const [mounted, setMounted] = useState(false);
     const { sellerStatus, user, updateSellerStatus, role, isLoggedIn } = useAuthStore();
@@ -89,30 +89,5 @@ function BecomeSellerContent() {
                 </div>
             )}
         </div>
-    );
-}
-
-export default function BecomeSellerPage() {
-    // Use searchParams to force dynamic rendering (prevents static generation)
-    // This ensures the page is never statically generated
-    const searchParams = useSearchParams();
-    
-    // Runtime check to ensure we're in browser
-    if (typeof window === 'undefined') {
-        return (
-            <div className="container mx-auto py-12 px-4 min-h-[70vh] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        );
-    }
-    
-    return (
-        <Suspense fallback={
-            <div className="container mx-auto py-12 px-4 min-h-[70vh] flex items-center justify-center">
-                <Loader2 className="h-8 w-8 animate-spin text-primary" />
-            </div>
-        }>
-            <BecomeSellerContent />
-        </Suspense>
     );
 }
