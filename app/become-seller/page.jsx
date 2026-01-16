@@ -9,7 +9,6 @@ import { Loader2 } from 'lucide-react';
 
 // Force dynamic rendering - prevent static generation
 export const dynamic = 'force-dynamic';
-export const revalidate = 0;
 
 function BecomeSellerContent() {
     const router = useRouter();
