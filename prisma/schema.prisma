@@ -116,7 +116,7 @@ model Conversation {
   id              String                    @id @default(uuid())
   createdAt       DateTime                  @default(now())
   updatedAt       DateTime                  @updatedAt
-  lastMessageAt   DateTime?
+  lastMessageAt   DateTime?                 // Use this for conversation ordering (not updatedAt)
   lastMessageText String?
   lastSenderId    String?
   participants    ConversationParticipant[]
@@ -124,6 +124,7 @@ model Conversation {
   orders          Order[]
 
   @@index([lastMessageAt])
+  @@index([updatedAt])
 }
 
 model ConversationParticipant {
@@ -147,10 +148,14 @@ model Message {
   senderId       String
   conversationId String
   createdAt      DateTime     @default(now())
+  deliveredAt    DateTime?    // When message was delivered to recipient's device
+  seenAt         DateTime?    // When message was seen/read by recipient (from ConversationParticipant.lastReadAt)
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User         @relation(fields: [senderId], references: [id])
 
   @@index([conversationId, createdAt])
+  @@index([deliveredAt])
+  @@index([seenAt])
 }
 
 enum UserRole {

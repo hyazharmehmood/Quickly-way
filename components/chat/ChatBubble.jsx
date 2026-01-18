@@ -53,13 +53,31 @@ export function ChatBubble({
           </p>
         </div>
         
-        <p className={cn(
-          "text-xs text-muted-foreground px-1 text-right",
-          isOptimistic && "opacity-70"
+        <div className={cn(
+          "flex items-center gap-1 px-1",
+          isOwnMessage ? "justify-end" : "justify-start"
         )}>
-          {moment(message.createdAt).format('HH:mm A')}
-          {isOptimistic && ' (sending...)'}
-        </p>
+          <p className={cn(
+            "text-xs text-muted-foreground",
+            isOptimistic && "opacity-70"
+          )}>
+            {moment(message.createdAt).format('HH:mm A')}
+            {isOptimistic && ' (sending...)'}
+          </p>
+          {/* WhatsApp-style ticks for own messages */}
+          {isOwnMessage && !isOptimistic && (
+            <span className={cn(
+              "text-xs inline-flex items-center",
+              message.seenAt 
+                ? "text-blue-500" // Double blue tick (seen)
+                : message.deliveredAt 
+                  ? "text-muted-foreground" // Double tick (delivered)
+                  : "text-muted-foreground/50" // Single tick (sent)
+            )}>
+              {message.seenAt || message.deliveredAt ? '✓✓' : '✓'}
+            </span>
+          )}
+        </div>
       </div>
       
       {isOwnMessage && showAvatar && (
