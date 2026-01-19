@@ -4,6 +4,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { MapPin, Star, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
+import { UserStatus } from '@/components/chat/UserStatus';
 
 export function ServiceCard({ service }) {
   // Handle potentially missing nested data if the API structure varies
@@ -42,19 +43,27 @@ export function ServiceCard({ service }) {
 
           {/* Provider Header */}
           <div className="flex items-start gap-3 mb-3">
-            {provider.avatarUrl ? (
-              <Image
-                src={provider.avatarUrl}
-                alt={provider.name}
-                width={40}
-                height={40}
-                className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0"
-              />
-            ) : (
-              <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
-                <User className="w-5 h-5 text-gray-500" />
-              </div>
-            )}
+            <div className="relative flex-shrink-0">
+              {provider.avatarUrl ? (
+                <Image
+                  src={provider.avatarUrl}
+                  alt={provider.name}
+                  width={40}
+                  height={40}
+                  className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0"
+                />
+              ) : (
+                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
+                  <User className="w-5 h-5 text-gray-500" />
+                </div>
+              )}
+              {/* Online Status Indicator */}
+              {service.freelancerId && (
+                <div className="absolute -bottom-0.5 -right-0.5">
+                  <UserStatus userId={service.freelancerId} size="sm" />
+                </div>
+              )}
+            </div>
             <div className="flex flex-col">
               <h3 className="text-base font-bold text-gray-900 leading-tight">
                 {provider.name}

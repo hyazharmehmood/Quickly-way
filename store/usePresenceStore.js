@@ -23,22 +23,14 @@ const usePresenceStore = create((set, get) => ({
     set({ onlineUsers: map });
   },
 
-  // Get user status
+  // Get user status - only online or offline (no active status)
   getUserStatus: (userId, currentUserId) => {
     const { onlineUsers } = get();
     const user = onlineUsers.get(userId);
     
-    if (!user) {
-      return 'offline'; // ⚫ Offline
-    }
-
-    // User is online AND chatting with me
-    if (user.chattingWith === currentUserId) {
-      return 'online'; // 🟢 Online
-    }
-
-    // User is online but not chatting with me
-    return 'active'; // 🟡 Active
+    // If user is in onlineUsers map, they are online (socket connected)
+    // If not in map, they are offline (socket disconnected)
+    return user ? 'online' : 'offline';
   },
 
   // Check if user is online

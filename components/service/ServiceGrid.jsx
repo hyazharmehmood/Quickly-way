@@ -20,6 +20,7 @@ export function ServiceGrid({onServiceClick, onClearFilters }) {
           // Transform data to match ServiceCard expectation
           const transformed = data.map(svc => ({
             ...svc,
+            freelancerId: svc.freelancerId || svc.freelancer?.id, // Add freelancerId for online status
             provider: {
               name: svc.freelancer?.name || "Freelancer",
               avatarUrl: svc.freelancer?.profileImage,

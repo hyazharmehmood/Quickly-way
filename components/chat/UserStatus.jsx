@@ -8,9 +8,8 @@ import useAuthStore from '@/store/useAuthStore';
 /**
  * UserStatus component - Shows user online status
  * Status logic:
- * - 🟢 Online: User online AND chatting with me
- * - 🟡 Active: User online only
- * - ⚫ Offline: User not online
+ * - 🟢 Online: User socket is connected (logged in and connected)
+ * - ⚫ Offline: User socket is disconnected (logged out or disconnected)
  */
 export function UserStatus({ userId, showLabel = false, size = 'sm' }) {
   const { getUserStatus } = usePresenceStore();
@@ -23,11 +22,6 @@ export function UserStatus({ userId, showLabel = false, size = 'sm' }) {
       color: 'bg-green-500',
       label: 'Online',
       icon: '🟢',
-    },
-    active: {
-      color: 'bg-yellow-500',
-      label: 'Active',
-      icon: '🟡',
     },
     offline: {
       color: 'bg-gray-400',

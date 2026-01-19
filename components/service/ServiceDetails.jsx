@@ -21,6 +21,7 @@ import SubmitReviewModal from './modals/SubmitReviewModal';
 
 // Components
 import { ServiceCard } from './ServiceCard'; // For the "More from..." section
+import { UserStatus } from '@/components/chat/UserStatus'; // For online status
 
 // Helper (simple mapping for demo)
 const getTimezoneFromLocation = (location) => {
@@ -146,8 +147,11 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                             alt={service.provider.name}
                                             className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
                                         />
-                                        {service.provider.isOnline && (
-                                            <span className="absolute bottom-5 right-5 w-5 h-5 bg-green-500 border-4 border-white rounded-full"></span>
+                                        {/* Online Status Indicator */}
+                                        {service.freelancerId && (
+                                            <div className="absolute bottom-2 right-2">
+                                                <UserStatus userId={service.freelancerId} size="md" />
+                                            </div>
                                         )}
                                     </div>
                                 </div>

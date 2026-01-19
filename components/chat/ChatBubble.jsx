@@ -65,7 +65,7 @@ export function ChatBubble({
             {isOptimistic && ' (sending...)'}
           </p>
           {/* WhatsApp-style ticks for own messages */}
-          {isOwnMessage && !isOptimistic && (
+          {/* {isOwnMessage && !isOptimistic && (
             <span className={cn(
               "text-xs inline-flex items-center",
               message.seenAt 
@@ -76,7 +76,7 @@ export function ChatBubble({
             )}>
               {message.seenAt || message.deliveredAt ? '✓✓' : '✓'}
             </span>
-          )}
+          )} */}
         </div>
       </div>
       
