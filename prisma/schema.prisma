@@ -147,6 +147,9 @@ model Message {
   content        String
   senderId       String
   conversationId String
+  type           String       @default("text") // "text", "image", "video", "file"
+  attachmentUrl  String?      // URL for images, videos, or files
+  attachmentName String?      // Original filename
   createdAt      DateTime     @default(now())
   deliveredAt    DateTime?    // When message was delivered to recipient's device
   seenAt         DateTime?    // When message was seen/read by recipient (from ConversationParticipant.lastReadAt)

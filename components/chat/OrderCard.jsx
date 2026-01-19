@@ -80,10 +80,39 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
   const [rejectionReason, setRejectionReason] = useState('');
   const [showRevisionDialog, setShowRevisionDialog] = useState(false);
   const [revisionReason, setRevisionReason] = useState('');
-
+console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrderUpdate);
   if (!order) return null;
 
-  const statusConfig = STATUS_CONFIG[order.status] || STATUS_CONFIG.PENDING_ACCEPTANCE;
+  // Ensure we're using the order status, not contract status
+  // For new contracts created by freelancer, status should be PENDING_ACCEPTANCE
+  // If status is missing, undefined, or null, default to PENDING_ACCEPTANCE
+  // Also handle case where status might be a number (enum) instead of string
+  let orderStatus = order.status;
+  
+  // Handle enum values - convert to string if needed
+  if (typeof orderStatus === 'number') {
+    const statusMap = ['PENDING_ACCEPTANCE', 'IN_PROGRESS', 'DELIVERED', 'REVISION_REQUESTED', 'COMPLETED', 'CANCELLED', 'DISPUTED'];
+    orderStatus = statusMap[orderStatus] || 'PENDING_ACCEPTANCE';
+  }
+  
+  // If status is missing, undefined, null, or empty string, default to PENDING_ACCEPTANCE
+  if (!orderStatus || orderStatus === '' || !STATUS_CONFIG[orderStatus]) {
+    orderStatus = 'PENDING_ACCEPTANCE';
+  }
+  
+  // Debug log to help identify status issues (only in development)
+  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
+    console.log('OrderCard - Order Status Debug:', {
+      orderId: order.id,
+      rawStatus: order.status,
+      orderStatus,
+      contractStatus: order.contract?.status,
+      hasStatusConfig: !!STATUS_CONFIG[orderStatus],
+    });
+  }
+  
+  // Get status config - should always have a valid config now
+  const statusConfig = STATUS_CONFIG[orderStatus] || STATUS_CONFIG.PENDING_ACCEPTANCE;
   const isClient = role === 'CLIENT';
   const isFreelancer = role === 'FREELANCER';
   const isClientOrder = order.clientId === user?.id;
@@ -181,152 +210,164 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
     }
   };
 
-  // Check if user can perform actions
-  const canAccept = isClient && isClientOrder && order.status === 'PENDING_ACCEPTANCE';
-  const canReject = isClient && isClientOrder && order.status === 'PENDING_ACCEPTANCE';
-  const canComplete = isClient && isClientOrder && order.status === 'DELIVERED';
-  const canRequestRevision = isClient && isClientOrder && order.status === 'DELIVERED' && 
+  // Check if user can perform actions - use orderStatus variable
+  const canAccept = isClient && isClientOrder && orderStatus === 'PENDING_ACCEPTANCE';
+  const canReject = isClient && isClientOrder && orderStatus === 'PENDING_ACCEPTANCE';
+  const canComplete = isClient && isClientOrder && orderStatus === 'DELIVERED';
+  const canRequestRevision = isClient && isClientOrder && orderStatus === 'DELIVERED' && 
                             (order.revisionsUsed || 0) < (order.revisionsIncluded || 0);
 
   return (
-    <Card className="p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm">
+    <Card className="p-4 sm:p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm w-full max-w-full">
       {/* Header: Status Badge and Price */}
-      <div className="flex items-start justify-between mb-4">
-        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-3 py-1.5 rounded-full text-xs font-bold uppercase`}>
+      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
+        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0`}>
           {statusConfig.label}
         </Badge>
-        <div className="text-right">
-          <div className="text-3xl font-bold text-blue-900">
+        <div className="text-right flex-shrink-0">
+          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">
             {order.currency || 'USD'} {order.price?.toFixed(0) || '0'}
           </div>
         </div>
       </div>
 
       {/* Service Title */}
-      <h3 className="text-xl font-bold text-blue-900 mb-3 leading-tight">
+      <h3 className="text-lg sm:text-xl font-bold text-blue-900 mb-2 sm:mb-3 leading-tight break-words">
         {serviceTitle}
       </h3>
 
       {/* Due Date */}
       {deliveryDate && (
-        <div className="flex items-center gap-2 text-blue-900 mb-4">
-          <Clock className="h-4 w-4" />
-          <span className="text-sm font-medium">Due {deliveryDate}</span>
+        <div className="flex items-center gap-2 text-blue-900 mb-3 sm:mb-4">
+          <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
+          <span className="text-xs sm:text-sm font-medium">Due {deliveryDate}</span>
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex gap-2 mt-4">
-        {canAccept && (
-          <Button
-            size="sm"
-            onClick={handleAccept}
-            disabled={isLoading}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-          >
-            <CheckCircle2 className="h-4 w-4 mr-1" />
-            Accept Contract
-          </Button>
-        )}
+      {/* Action Buttons - Show Accept and Reject side by side for PENDING_ACCEPTANCE */}
+      {(canAccept || canReject) && (
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          {canAccept && (
+            <Button
+              size="sm"
+              onClick={handleAccept}
+              disabled={isLoading}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm sm:text-base"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Accept Contract</span>
+              <span className="sm:hidden">Accept</span>
+            </Button>
+          )}
 
-        {canReject && (
-          <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
-            <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isLoading}
-                className="flex-1 border-red-300 text-red-600 hover:bg-red-50"
-              >
-                <XCircle className="h-4 w-4 mr-1" />
-                Reject
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Reject Contract</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Please provide a reason for rejecting this contract.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="py-4">
-                <Textarea
-                  placeholder="Reason for rejection..."
-                  value={rejectionReason}
-                  onChange={(e) => setRejectionReason(e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleReject}
-                  disabled={!rejectionReason.trim() || isLoading}
-                  className="bg-destructive text-destructive-foreground"
+          {canReject && (
+            <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isLoading}
+                  className="flex-1 border-red-300 text-red-600 hover:bg-red-50 text-sm sm:text-base"
                 >
-                  Reject Contract
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
+                  <XCircle className="h-4 w-4 mr-1 sm:mr-2" />
+                  Reject
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-[95vw] sm:max-w-lg mx-4">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Reject Contract</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Please provide a reason for rejecting this contract.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4">
+                  <Textarea
+                    placeholder="Reason for rejection..."
+                    value={rejectionReason}
+                    onChange={(e) => setRejectionReason(e.target.value)}
+                    rows={3}
+                    className="w-full"
+                  />
+                </div>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleReject}
+                    disabled={!rejectionReason.trim() || isLoading}
+                    className="w-full sm:w-auto bg-destructive text-destructive-foreground"
+                  >
+                    Reject Contract
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+      )}
 
-        {canComplete && (
-          <Button
-            size="sm"
-            onClick={handleComplete}
-            disabled={isLoading}
-            className="flex-1 bg-green-500 hover:bg-green-600 text-white"
-          >
-            <CheckCircle2 className="h-4 w-4 mr-1" />
-            Accept & Complete
-          </Button>
-        )}
+      {/* Other Action Buttons */}
+      {(canComplete || canRequestRevision) && (
+        <div className="flex flex-col sm:flex-row gap-2 mt-4">
+          {canComplete && (
+            <Button
+              size="sm"
+              onClick={handleComplete}
+              disabled={isLoading}
+              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm sm:text-base"
+            >
+              <CheckCircle2 className="h-4 w-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Accept & Complete</span>
+              <span className="sm:hidden">Complete</span>
+            </Button>
+          )}
 
-        {canRequestRevision && (
-          <AlertDialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
-            <AlertDialogTrigger asChild>
-              <Button
-                size="sm"
-                variant="outline"
-                disabled={isLoading}
-                className="flex-1"
-              >
-                <RefreshCw className="h-4 w-4 mr-1" />
-                Request Revision
-              </Button>
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>Request Revision</AlertDialogTitle>
-                <AlertDialogDescription>
-                  Please describe what changes you need.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <div className="py-4">
-                <Textarea
-                  placeholder="What changes do you need?"
-                  value={revisionReason}
-                  onChange={(e) => setRevisionReason(e.target.value)}
-                  rows={3}
-                />
-              </div>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancel</AlertDialogCancel>
-                <AlertDialogAction
-                  onClick={handleRequestRevision}
-                  disabled={!revisionReason.trim() || isLoading}
+          {canRequestRevision && (
+            <AlertDialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
+              <AlertDialogTrigger asChild>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={isLoading}
+                  className="flex-1 text-sm sm:text-base"
                 >
-                  Request Revision
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        )}
-
-      </div>
+                  <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
+                  <span className="hidden sm:inline">Request Revision</span>
+                  <span className="sm:hidden">Revision</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent className="max-w-[95vw] sm:max-w-lg mx-4">
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Request Revision</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Please describe what changes you need.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <div className="py-4">
+                  <Textarea
+                    placeholder="What changes do you need?"
+                    value={revisionReason}
+                    onChange={(e) => setRevisionReason(e.target.value)}
+                    rows={3}
+                    className="w-full"
+                  />
+                </div>
+                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
+                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleRequestRevision}
+                    disabled={!revisionReason.trim() || isLoading}
+                    className="w-full sm:w-auto"
+                  >
+                    Request Revision
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          )}
+        </div>
+      )}
       
-      {/* View Order Button - Always show at bottom (like image) */}
+      {/* View Order Button - Always show at bottom */}
       <Button
         size="sm"
         onClick={() => {
@@ -336,7 +377,7 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
             router.push(`/orders/${order.id}`);
           }
         }}
-        className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg mt-4"
+        className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg mt-4 text-sm sm:text-base"
       >
         <Eye className="h-4 w-4 mr-2" />
         View Order

@@ -21,6 +21,7 @@ import { ChatInput } from './ChatInput';
 import { ChatBubble } from './ChatBubble';
 import { OrderCard } from './OrderCard';
 import CreateContractModal from './CreateContractModal';  
+import { ImageGallery } from './ImageGallery';  
 
 export function ChatWindow({ conversation, onBack }) {
   const [messages, setMessages] = useState([]);
@@ -33,6 +34,7 @@ export function ChatWindow({ conversation, onBack }) {
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [showCreateContractModal, setShowCreateContractModal] = useState(false);
   const [service, setService] = useState(null);
+  const [uploadingFile, setUploadingFile] = useState(false);
   const messagesEndRef = useRef(null);
   const scrollAreaRef = useRef(null);
   const typingDebounceRef = useRef(null);
@@ -213,15 +215,18 @@ export function ChatWindow({ conversation, onBack }) {
           const exists = prev.some((msg) => msg.id === data.message.id);
           if (exists) return prev;
           
-          // Replace optimistic message with real message if content matches
+          // Replace optimistic message with real message if content or attachment matches
           const optimisticIndex = prev.findIndex(
-            (msg) => msg.id?.startsWith('temp-') && msg.content === data.message.content && msg.senderId === data.message.senderId
+            (msg) => msg.id?.startsWith('temp-') && 
+            msg.senderId === data.message.senderId &&
+            (msg.content === data.message.content || 
+             (msg.attachmentUrl && msg.attachmentUrl === data.message.attachmentUrl))
           );
           
           if (optimisticIndex !== -1) {
-            // Replace optimistic message with real one
+            // Replace optimistic message with real one (remove isOptimistic flag)
             const updated = [...prev];
-            updated[optimisticIndex] = data.message;
+            updated[optimisticIndex] = { ...data.message, isOptimistic: false };
             return updated;
           }
           
@@ -319,10 +324,127 @@ export function ChatWindow({ conversation, onBack }) {
     };
   };
 
+  const handleFileSelect = async (file, type) => {
+    // Legacy single file handler - kept for backward compatibility
+    // This will be replaced by handleFilesChange
+  };
+
+  const handleFilesChange = async (fileItems) => {
+    if (!socket || !isConnected || uploadingFile || fileItems.length === 0) return;
+    
+    setUploadingFile(true);
+    try {
+      const { uploadToCloudinary } = await import('@/utils/cloudinary');
+      const otherUserId = conversation?.otherParticipant?.id;
+      
+      // Upload all files
+      const uploadPromises = fileItems.map(async (fileItem) => {
+        const resourceType = fileItem.type === 'video' ? 'video' : fileItem.type === 'image' ? 'image' : 'raw';
+        const fileUrl = await uploadToCloudinary(fileItem.file, resourceType);
+        return {
+          ...fileItem,
+          fileUrl,
+        };
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
+      
+      // Create optimistic messages for immediate display
+      const optimisticMessages = uploadedFiles.map((fileItem, index) => ({
+        id: `temp-${Date.now()}-${index}`,
+        content: fileItem.file.name || '',
+        type: fileItem.type,
+        attachmentUrl: fileItem.fileUrl,
+        attachmentName: fileItem.file.name,
+        senderId: user.id,
+        conversationId: conversation?.id || 'temp',
+        isRead: false,
+        isOptimistic: true,
+        createdAt: new Date().toISOString(),
+        sender: {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          profileImage: user.profileImage,
+        },
+        seenBy: [],
+      }));
+
+      // Add optimistic messages immediately
+      if (conversation?.id) {
+        setMessages((prev) => [...prev, ...optimisticMessages]);
+        scrollToBottom();
+      }
+
+      // If no conversation exists yet, create it first
+      if (!conversation?.id && otherUserId) {
+        socket.emit('create_conversation', { otherUserId });
+        
+        const handleConversationCreated = (data) => {
+          if (data.conversation) {
+            // Update optimistic messages with real conversation ID
+            setMessages((prev) => prev.map(msg => {
+              const optimisticMsg = optimisticMessages.find(om => om.id === msg.id);
+              return optimisticMsg 
+                ? { ...msg, conversationId: data.conversation.id }
+                : msg;
+            }));
+            
+            // Send all messages with attachments
+            uploadedFiles.forEach((fileItem) => {
+              socket.emit('send_message', {
+                conversationId: data.conversation.id,
+                content: fileItem.file.name || '',
+                type: fileItem.type,
+                attachmentUrl: fileItem.fileUrl,
+                attachmentName: fileItem.file.name,
+              });
+            });
+          }
+          socket.off('conversation:created', handleConversationCreated);
+          socket.off('error', handleError);
+        };
+        
+        const handleError = (error) => {
+          console.error('Error creating conversation:', error);
+          // Remove optimistic messages on error
+          setMessages((prev) => prev.filter(msg => 
+            !optimisticMessages.some(om => om.id === msg.id)
+          ));
+          socket.off('conversation:created', handleConversationCreated);
+          socket.off('error', handleError);
+        };
+        
+        socket.once('conversation:created', handleConversationCreated);
+        socket.once('error', handleError);
+      } else if (conversation?.id) {
+        // Send all messages with attachments
+        uploadedFiles.forEach((fileItem) => {
+          socket.emit('send_message', {
+            conversationId: conversation.id,
+            content: fileItem.file.name || '',
+            type: fileItem.type,
+            attachmentUrl: fileItem.fileUrl,
+            attachmentName: fileItem.file.name,
+          });
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading files:', error);
+      alert('Failed to upload files. Please try again.');
+      // Remove optimistic messages on error
+      if (conversation?.id) {
+        setMessages((prev) => prev.filter(msg => !msg.id?.startsWith('temp-')));
+      }
+    } finally {
+      setUploadingFile(false);
+    }
+  };
+
   const handleSendMessage = async (e) => {
     e.preventDefault();
     
-    if (!messageContent.trim() || !socket || !isConnected || sending) return;
+    if ((!messageContent.trim() && !e.fileData) || !socket || !isConnected || sending) return;
 
     const content = messageContent.trim();
     const otherUserId = conversation?.otherParticipant?.id;
@@ -343,6 +465,7 @@ export function ChatWindow({ conversation, onBack }) {
             senderId: user.id,
             conversationId: data.conversation.id,
             isRead: false,
+            isOptimistic: true, // Mark as optimistic
             createdAt: new Date().toISOString(),
             sender: {
               id: user.id,
@@ -402,6 +525,7 @@ export function ChatWindow({ conversation, onBack }) {
       senderId: user.id,
       conversationId: conversation.id,
       isRead: false,
+      isOptimistic: true, // Mark as optimistic
       createdAt: new Date().toISOString(),
       sender: {
         id: user.id,
@@ -622,55 +746,138 @@ export function ChatWindow({ conversation, onBack }) {
           </div>
         ) : (
           <div className="space-y-4 w-full min-w-0">
-            {messages.map((message, index) => {
-              const isOwnMessage = message.senderId === user?.id;
-              const isOptimistic = message.id?.startsWith('temp-');
+            {(() => {
+              // Group consecutive image messages from the same sender
+              const groupedMessages = [];
+              let currentGroup = null;
               
-              // Check if this is the contract creation message (contains contract details)
-              // Contract message can be from freelancer (when freelancer views) or from freelancer (when client views)
-              const isContractMessage = (
-                message.content?.includes('Contract Created') || 
-                message.content?.includes('📋 Contract') ||
-                message.content?.includes('Order Number')
-              );
+              messages.forEach((message, index) => {
+                const isOwnMessage = message.senderId === user?.id;
+                const isImageMessage = message.type === 'image' && message.attachmentUrl;
+                const prevMessage = index > 0 ? messages[index - 1] : null;
+                
+                // Check if previous message in current group is also an image from same sender
+                const isConsecutiveImage = 
+                  isImageMessage && 
+                  currentGroup &&
+                  currentGroup.type === 'image-group' &&
+                  currentGroup.isOwnMessage === isOwnMessage &&
+                  currentGroup.messages.length > 0;
+                
+                if (isConsecutiveImage) {
+                  // Add to current group
+                  currentGroup.messages.push(message);
+                } else {
+                  // Start new group
+                  if (currentGroup) {
+                    groupedMessages.push(currentGroup);
+                  }
+                  currentGroup = {
+                    type: isImageMessage ? 'image-group' : 'single',
+                    messages: [message],
+                    isOwnMessage,
+                  };
+                }
+              });
               
-              // Show order card after contract message
-              // For freelancer: show if message is contract message (they sent it)
-              // For client: show if message is contract message from freelancer
-              const isFreelancerContractMessage = role === 'FREELANCER' && isContractMessage && isOwnMessage;
-              const isClientContractMessage = role === 'CLIENT' && isContractMessage && !isOwnMessage;
-              const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && order;
+              // Add last group
+              if (currentGroup) {
+                groupedMessages.push(currentGroup);
+              }
               
-              return (
-                <React.Fragment key={message.id}>
-                  {/* Hide contract message text, show only OrderCard */}
-                  {!isContractMessage && (
-                    <ChatBubble
-                      message={message}
-                      isOwnMessage={isOwnMessage}
-                      isOptimistic={isOptimistic}
-                      showAvatar={true}
-                      showName={!isOwnMessage}
-                    />
-                  )}
-                  {/* Show Order Card instead of contract message text */}
-                  {showOrderCardAfter && (
-                    <div className="flex justify-center my-4">
-                      <div className="w-full max-w-md">
-                        <OrderCard
-                          order={order}
-                          conversationId={conversation.id}
-                          onOrderUpdate={(updatedOrder) => {
-                            console.log('Order updated:', updatedOrder);
-                            setOrder(updatedOrder);
-                          }}
-                        />
+              return groupedMessages.map((group, groupIndex) => {
+                const firstMessage = group.messages[0];
+                const isOwnMessage = firstMessage.senderId === user?.id;
+                const isOptimistic = firstMessage.id?.startsWith('temp-');
+                
+                // Check if this is the contract creation message
+                const isContractMessage = (
+                  firstMessage.content?.includes('Contract Created') || 
+                  firstMessage.content?.includes('📋 Contract') ||
+                  firstMessage.content?.includes('Order Number')
+                );
+                
+                // Show order card after contract message
+                const isFreelancerContractMessage = role === 'FREELANCER' && isContractMessage && isOwnMessage;
+                const isClientContractMessage = role === 'CLIENT' && isContractMessage && !isOwnMessage;
+                const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && order;
+                
+                return (
+                  <React.Fragment key={`group-${groupIndex}-${firstMessage.id}`}>
+                    {!isContractMessage && (
+                      <>
+                        {group.type === 'image-group' && group.messages.length > 1 ? (
+                          // Render image gallery for multiple consecutive images
+                          <div className={isOwnMessage ? "flex justify-end" : "flex justify-start"}>
+                            <div className={isOwnMessage ? "flex items-end gap-2 max-w-[70%]" : "flex items-end gap-2 max-w-[70%]"}>
+                              {!isOwnMessage && (
+                                <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                  <AvatarImage src={firstMessage.sender?.profileImage} alt={firstMessage.sender?.name} />
+                                  <AvatarFallback>
+                                    {firstMessage.sender?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                              <div className="flex flex-col gap-1">
+                                {!isOwnMessage && (
+                                  <p className="text-xs font-medium text-muted-foreground px-1">
+                                    {firstMessage.sender?.name || 'Unknown'}
+                                  </p>
+                                )}
+                                <div className={`
+                                  ${isOwnMessage ? 'bg-primary text-primary-foreground rounded-r-lg rounded-tl-lg' : 'bg-secondary text-secondary-foreground rounded-l-lg rounded-tr-lg'}
+                                  ${isOptimistic ? 'opacity-70' : ''}
+                                  p-0 overflow-hidden
+                                `}>
+                                  <ImageGallery images={group.messages} isOwnMessage={isOwnMessage} />
+                                </div>
+                                <div className={isOwnMessage ? "flex justify-end px-1" : "flex justify-start px-1"}>
+                                  <p className={`text-xs text-muted-foreground ${isOptimistic ? 'opacity-70' : ''}`}>
+                                    {moment(firstMessage.createdAt).format('HH:mm A')}
+                                  </p>
+                                </div>
+                              </div>
+                              {isOwnMessage && (
+                                <Avatar className="h-8 w-8 flex-shrink-0 mt-1">
+                                  <AvatarImage src={firstMessage.sender?.profileImage} alt={firstMessage.sender?.name} />
+                                  <AvatarFallback>
+                                    {firstMessage.sender?.name?.charAt(0)?.toUpperCase() || 'U'}
+                                  </AvatarFallback>
+                                </Avatar>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          // Render single message or single image
+                          <ChatBubble
+                            message={firstMessage}
+                            isOwnMessage={isOwnMessage}
+                            isOptimistic={firstMessage.isOptimistic || isOptimistic}
+                            showAvatar={true}
+                            showName={!isOwnMessage}
+                          />
+                        )}
+                      </>
+                    )}
+                    {/* Show Order Card instead of contract message text */}
+                    {showOrderCardAfter && (
+                      <div className="flex justify-center my-4">
+                        <div className="w-full max-w-md">
+                          <OrderCard
+                            order={order}
+                            conversationId={conversation.id}
+                            onOrderUpdate={(updatedOrder) => {
+                              console.log('Order updated:', updatedOrder);
+                              setOrder(updatedOrder);
+                            }}
+                          />
+                        </div>
                       </div>
-                    </div>
-                  )}
-                </React.Fragment>
-              );
-            })}
+                    )}
+                  </React.Fragment>
+                );
+              });
+            })()}
             {/* Show order card at the end if order exists but no contract message found in messages */}
             {order && !messages.some((msg) => {
               const isContractMsg = msg.content?.includes('Contract Created') || 
@@ -720,9 +927,11 @@ export function ChatWindow({ conversation, onBack }) {
           }}
           onSend={handleSendMessage}
           onBlur={stopTyping}
+          onFileSelect={handleFileSelect}
+          onFilesChange={handleFilesChange}
           placeholder={hasConversation ? "Type a message..." : "Type your first message..."}
-          disabled={sending || !isConnected || !otherUser?.id}
-          sending={sending}
+          disabled={sending || uploadingFile || !isConnected || !otherUser?.id}
+          sending={sending || uploadingFile}
         />
         {/* <p className="text-xs text-muted-foreground mt-2 text-center">
           Press Enter to send. Shift + Enter for new line.

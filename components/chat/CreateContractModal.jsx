@@ -155,27 +155,28 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-lg rounded-[2.5rem] overflow-y-auto max-h-[90vh] p-6 border-none shadow-2xl bg-white">
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-lg rounded-2xl sm:rounded-[2.5rem] overflow-y-auto max-h-[95vh] sm:max-h-[90vh] p-4 sm:p-6 border-none shadow-2xl bg-white mx-2 sm:mx-0">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-xl font-bold text-gray-900 mt-4 flex items-center justify-center gap-2">
-            <FileText className="w-5 h-5" />
+          <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mt-2 sm:mt-4 flex items-center justify-center gap-2">
+            <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             Create Contract
           </DialogTitle>
-          <DialogDescription className="text-gray-500 text-sm mb-4">
+          <DialogDescription className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4">
             Send a contract proposal to the client
           </DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
           {/* Service Selection */}
           {loadingServices ? (
-            <div className="bg-gray-50 rounded-2xl p-4 border border-gray-100">
-              <div className="text-sm text-gray-500">Loading services...</div>
+            <div className="bg-gray-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-gray-100">
+              <div className="text-xs sm:text-sm text-gray-500">Loading services...</div>
             </div>
           ) : services.length > 0 ? (
             <div className="space-y-2">
-              <Label htmlFor="serviceSelect">Select Service</Label>
+              <Label htmlFor="serviceSelect" className="text-sm sm:text-base">Select Service</Label>
               <select
+                id="serviceSelect"
                 value={selectedServiceId}
                 onChange={(e) => {
                   const serviceId = e.target.value;
@@ -189,7 +190,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
                     }));
                   }
                 }}
-                className="w-full rounded-xl border border-gray-200 p-2 bg-white"
+                className="w-full rounded-lg sm:rounded-xl border border-gray-200 p-2 sm:p-2.5 bg-white text-sm sm:text-base"
                 required
               >
                 {services.map((svc) => (
@@ -200,8 +201,8 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
               </select>
             </div>
           ) : (
-            <div className="bg-yellow-50 rounded-2xl p-4 border border-yellow-200">
-              <div className="text-sm text-yellow-700">
+            <div className="bg-yellow-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-yellow-200">
+              <div className="text-xs sm:text-sm text-yellow-700">
                 No services found. Please create a service first to send contracts.
               </div>
             </div>
@@ -209,8 +210,8 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
 
           {/* Price */}
           <div className="space-y-2">
-            <Label htmlFor="price" className="flex items-center gap-2">
-              <DollarSign className="w-4 h-4" />
+            <Label htmlFor="price" className="flex items-center gap-2 text-sm sm:text-base">
+              <DollarSign className="w-3 h-3 sm:w-4 sm:h-4" />
               Price ({service?.currency || 'USD'})
             </Label>
             <Input
@@ -221,28 +222,28 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
               value={formData.price}
               onChange={(e) => setFormData({ ...formData, price: e.target.value })}
               required
-              className="rounded-xl"
+              className="rounded-lg sm:rounded-xl text-sm sm:text-base"
             />
           </div>
 
           {/* Scope of Work */}
           <div className="space-y-2">
-            <Label htmlFor="scopeOfWork">Scope of Work</Label>
+            <Label htmlFor="scopeOfWork" className="text-sm sm:text-base">Scope of Work</Label>
             <Textarea
               id="scopeOfWork"
               value={formData.scopeOfWork}
               onChange={(e) => setFormData({ ...formData, scopeOfWork: e.target.value })}
               rows={4}
               required
-              className="rounded-xl"
+              className="rounded-lg sm:rounded-xl text-sm sm:text-base"
               placeholder="Describe what you will deliver..."
             />
           </div>
 
           {/* Delivery Time */}
           <div className="space-y-2">
-            <Label htmlFor="deliveryTime" className="flex items-center gap-2">
-              <Calendar className="w-4 h-4" />
+            <Label htmlFor="deliveryTime" className="flex items-center gap-2 text-sm sm:text-base">
+              <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
               Delivery Time (Days)
             </Label>
             <Input
@@ -253,14 +254,14 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
               value={formData.deliveryTime}
               onChange={(e) => setFormData({ ...formData, deliveryTime: e.target.value })}
               required
-              className="rounded-xl"
+              className="rounded-lg sm:rounded-xl text-sm sm:text-base"
             />
           </div>
 
           {/* Revisions Included */}
           <div className="space-y-2">
-            <Label htmlFor="revisionsIncluded" className="flex items-center gap-2">
-              <RefreshCw className="w-4 h-4" />
+            <Label htmlFor="revisionsIncluded" className="flex items-center gap-2 text-sm sm:text-base">
+              <RefreshCw className="w-3 h-3 sm:w-4 sm:h-4" />
               Revisions Included
             </Label>
             <Input
@@ -271,36 +272,36 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
               value={formData.revisionsIncluded}
               onChange={(e) => setFormData({ ...formData, revisionsIncluded: e.target.value })}
               required
-              className="rounded-xl"
+              className="rounded-lg sm:rounded-xl text-sm sm:text-base"
             />
           </div>
 
           {/* Cancellation Policy */}
           <div className="space-y-2">
-            <Label htmlFor="cancellationPolicy">Cancellation Policy</Label>
+            <Label htmlFor="cancellationPolicy" className="text-sm sm:text-base">Cancellation Policy</Label>
             <Textarea
               id="cancellationPolicy"
               value={formData.cancellationPolicy}
               onChange={(e) => setFormData({ ...formData, cancellationPolicy: e.target.value })}
               rows={3}
-              className="rounded-xl"
+              className="rounded-lg sm:rounded-xl text-sm sm:text-base"
             />
           </div>
 
           {/* Actions */}
-          <div className="flex gap-3 pt-4">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-3 sm:pt-4">
             <Button
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1 rounded-xl"
+              className="flex-1 rounded-lg sm:rounded-xl text-sm sm:text-base"
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 rounded-xl bg-[#10b981] hover:bg-[#059669]"
+              className="flex-1 rounded-lg sm:rounded-xl bg-[#10b981] hover:bg-[#059669] text-sm sm:text-base"
               disabled={loading || !selectedServiceId || services.length === 0}
             >
               {loading ? 'Creating...' : 'Send Contract'}

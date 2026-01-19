@@ -1,17 +1,20 @@
 "use client";
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { Paperclip, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/utils";
 import moment from 'moment';
 
 export function ChatBubble({
   message,
   isOwnMessage,
-  isOptimistic = false,
+  isOptimistic,
   showAvatar = true,
   showName = true,
 }) {
+  // Check if message is optimistic (either from prop or message property)
+  const isOptimisticMessage = isOptimistic !== undefined ? isOptimistic : message.isOptimistic;
   return (
     <div
       className={cn(
@@ -40,17 +43,82 @@ export function ChatBubble({
         
         <div
           className={cn(
-            " px-4 py-2.5 shadow-sm",
-            "overflow-hidden",
+            "shadow-sm overflow-hidden",
             isOwnMessage
               ? "bg-primary rounded-r-lg rounded-tl-lg text-primary-foreground"
               : "bg-secondary rounded-l-lg rounded-tr-lg text-secondary-foreground",
-            isOptimistic && "opacity-70"
+            isOptimisticMessage && "opacity-70",
+            // Remove padding for images/videos, add for text
+            (message.type === 'image' || message.type === 'video') ? "p-0" : "px-4 py-2.5"
           )}
         >
-          <p className="text-sm whitespace-pre-wrap break-words break-all overflow-wrap-anywhere word-break-break-all hyphens-auto">
-            {message.content}
-          </p>
+          {/* Image Attachment - WhatsApp Style */}
+          {message.type === 'image' && message.attachmentUrl && (
+            <div className="relative group">
+              <img
+                src={message.attachmentUrl}
+                alt={message.content || 'Image'}
+                className="w-full h-auto object-cover cursor-pointer"
+                loading="lazy"
+                onClick={() => {
+                  // Open image in full screen (can be enhanced with a modal)
+                  window.open(message.attachmentUrl, '_blank');
+                }}
+              />
+              {/* Text overlay on image if content exists */}
+              {message.content && message.content.trim() && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
+                  <p className="text-sm whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Video Attachment */}
+          {message.type === 'video' && message.attachmentUrl && (
+            <div className="relative">
+              <video
+                src={message.attachmentUrl}
+                controls
+                className="w-full h-auto"
+                preload="metadata"
+              >
+                Your browser does not support the video tag.
+              </video>
+              {/* Text overlay on video if content exists */}
+              {message.content && message.content.trim() && (
+                <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
+                  <p className="text-sm whitespace-pre-wrap break-words">
+                    {message.content}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* File Attachment */}
+          {message.type === 'file' && message.attachmentUrl && (
+            <div className="mb-2 flex items-center gap-2 p-2 bg-black/10 rounded-lg">
+              <Paperclip className="h-4 w-4" />
+              <a
+                href={message.attachmentUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm underline truncate flex-1"
+              >
+                {message.attachmentName || 'Download file'}
+              </a>
+            </div>
+          )}
+          
+          {/* Text Content (only if not image/video or if image/video has no content) */}
+          {message.type === 'text' && message.content && (
+            <p className="text-sm whitespace-pre-wrap break-words break-all overflow-wrap-anywhere word-break-break-all hyphens-auto">
+              {message.content}
+            </p>
+          )}
         </div>
         
         <div className={cn(
@@ -59,10 +127,9 @@ export function ChatBubble({
         )}>
           <p className={cn(
             "text-xs text-muted-foreground",
-            isOptimistic && "opacity-70"
+            isOptimisticMessage && "opacity-70"
           )}>
             {moment(message.createdAt).format('HH:mm A')}
-            {isOptimistic && ' (sending...)'}
           </p>
           {/* WhatsApp-style ticks for own messages */}
           {/* {isOwnMessage && !isOptimistic && (
