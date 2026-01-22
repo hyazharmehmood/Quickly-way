@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as offerService from '@/lib/services/offerService';
 
 /**
- * GET /api/orders/conversation/[conversationId] - Get order by conversation ID
+ * GET /api/offers/conversation/[conversationId] - Get offers by conversation ID
  */
 export async function GET(request, { params }) {
   try {
-    // Next.js 16: params is a Promise, must await
     const { conversationId } = await params;
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -40,21 +39,21 @@ export async function GET(request, { params }) {
       );
     }
 
-    const orders = await orderService.getOrdersByConversationId(
+    const offers = await offerService.getOffersByConversationId(
       conversationId,
       user.id
     );
 
     return NextResponse.json({
       success: true,
-      orders,
-      count: orders.length,
+      offers,
+      count: offers.length,
     });
 
   } catch (error) {
-    console.error('Error fetching order by conversation:', error);
+    console.error('Error fetching offers by conversation:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch order' },
+      { error: error.message || 'Failed to fetch offers' },
       { status: 500 }
     );
   }

@@ -40,6 +40,8 @@ model User {
   services                 Service[]
   clientOrders             Order[]                   @relation("ClientOrders")
   freelancerOrders         Order[]                   @relation("FreelancerOrders")
+  clientOffers             Offer[]                   @relation("ClientOffers")
+  freelancerOffers         Offer[]                   @relation("FreelancerOffers")
   orderEvents              OrderEvent[]
   disputes                 Dispute[]                 @relation("DisputeClient")
   disputesAsFreelancer     Dispute[]                 @relation("DisputeFreelancer")
@@ -110,6 +112,7 @@ model Service {
   searchTags      String[]
   freelancer      User     @relation(fields: [freelancerId], references: [id])
   orders          Order[]
+  offers          Offer[]
 }
 
 model Conversation {
@@ -122,6 +125,7 @@ model Conversation {
   participants    ConversationParticipant[]
   messages        Message[]
   orders          Order[]
+  offers          Offer[]
 
   @@index([lastMessageAt])
   @@index([updatedAt])
@@ -187,6 +191,44 @@ enum ProposalStatus {
   REJECTED
 }
 
+// Offer Model (Fiverr-like: Freelancer sends offer, Client accepts/rejects, then Order is created)
+model Offer {
+  id                    String            @id @default(uuid())
+  serviceId             String
+  clientId              String
+  freelancerId          String
+  conversationId        String?           // Link to conversation
+  status                OfferStatus       @default(PENDING)
+  price                 Float
+  currency              String            @default("USD")
+  deliveryTime          Int               // Days for delivery
+  revisionsIncluded     Int               @default(0)
+  scopeOfWork           String            // Detailed scope
+  cancellationPolicy    String?           // Terms for cancellation
+  serviceTitle          String            // Service title at time of offer
+  serviceDescription    String?          // Service description at time of offer
+  rejectionReason       String?
+  rejectedAt            DateTime?
+  acceptedAt            DateTime?
+  orderId               String?           @unique // If accepted, link to created order (one-to-one)
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  // Relations
+  service               Service           @relation(fields: [serviceId], references: [id])
+  client                User              @relation("ClientOffers", fields: [clientId], references: [id])
+  freelancer            User              @relation("FreelancerOffers", fields: [freelancerId], references: [id])
+  conversation          Conversation?     @relation(fields: [conversationId], references: [id])
+  order                 Order?            @relation(fields: [orderId], references: [id])
+
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([conversationId])
+  @@index([orderId])
+}
+
 // Order & Contract Models
 model Order {
   id                    String            @id @default(uuid())
@@ -195,6 +237,7 @@ model Order {
   clientId              String
   freelancerId          String
   conversationId        String?           // Link to conversation if exists
+  offerId               String?           // If order created from offer
   status                OrderStatus       @default(PENDING_ACCEPTANCE)
   price                 Float
   currency              String            @default("USD")
@@ -215,6 +258,7 @@ model Order {
   client                User              @relation("ClientOrders", fields: [clientId], references: [id])
   freelancer            User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
   conversation          Conversation?     @relation(fields: [conversationId], references: [id])
+  offer                 Offer?            @relation // Reverse relation - Offer owns the relation via orderId
   contract              Contract?
   deliverables          OrderDeliverable[]
   events                OrderEvent[]
@@ -360,4 +404,11 @@ enum DisputeStatus {
   IN_REVIEW
   RESOLVED
   CLOSED
+}
+
+enum OfferStatus {
+  PENDING
+  ACCEPTED
+  REJECTED
+  EXPIRED
 }

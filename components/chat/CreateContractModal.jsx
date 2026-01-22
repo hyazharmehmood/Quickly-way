@@ -18,7 +18,7 @@ import api from '@/utils/api';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
-const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientId, onContractCreated, existingOrder }) => {
+const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientId, onContractCreated, existingOrder, existingOffer }) => {
   const { user } = useAuthStore();
   const { socket, isConnected } = useGlobalSocket();
   const [loading, setLoading] = useState(false);
@@ -84,7 +84,8 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
 
     setLoading(true);
     try {
-      const response = await api.post('/orders', {
+      // Create offer (not order) - Fiverr-like flow
+      const response = await api.post('/offers', {
         serviceId: selectedServiceId,
         conversationId: conversationId || null,
         clientId: clientId,
@@ -96,42 +97,32 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
       });
 
       if (response.data.success) {
-        const order = response.data.order;
-        toast.success('Contract created and sent to client!');
+        const offer = response.data.offer;
+        toast.success('Offer sent to client!');
         
-        // Send contract message to chat
-        if (socket && isConnected && order) {
-          const selectedService = services.find(s => s.id === selectedServiceId);
-          const orderConversationId = order.conversationId || conversationId;
+        // Send offer message to chat with offer ID in attachmentName
+        if (socket && isConnected && offer) {
+          const offerConversationId = offer.conversationId || conversationId;
           
-          if (orderConversationId) {
-            const contractMessage = `📋 Contract Created\n\n` +
-              `Service: ${selectedService?.title || 'Custom Service'}\n` +
-              `Price: ${order.currency || 'USD'} ${order.price}\n` +
-              `Delivery Time: ${order.deliveryTime} days\n` +
-              `Revisions Included: ${order.revisionsIncluded}\n` +
-              `Order Number: ${order.orderNumber}\n\n` +
-              `Please review and accept the contract.`;
-            
+          if (offerConversationId) {
             try {
+              // Send message with offer ID stored in attachmentName
+              // This allows us to fetch offer data when loading messages
               socket.emit('send_message', {
-                conversationId: orderConversationId,
-                content: contractMessage,
-              });
-              
-              // Emit order update to trigger OrderCard display
-              socket.emit('order:created', {
-                order: order,
-                conversationId: orderConversationId,
+                conversationId: offerConversationId,
+                content: '💼 Custom Offer', // Simple content, offer data will come from attachmentName
+                type: 'offer', // Special type for offer messages
+                attachmentName: offer.id, // Store offer ID here
               });
             } catch (error) {
-              console.error('Error sending contract message:', error);
+              console.error('Error sending offer message:', error);
             }
           }
         }
         
         if (onContractCreated) {
-          onContractCreated(order);
+          // Pass offer instead of order
+          onContractCreated(offer);
         }
 
         onClose();
@@ -145,8 +136,8 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
         });
       }
     } catch (error) {
-      console.error('Error creating contract:', error);
-      const errorMessage = error.response?.data?.error || error.message || 'Failed to create contract';
+      console.error('Error creating offer:', error);
+      const errorMessage = error.response?.data?.error || error.message || 'Failed to create offer';
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -159,10 +150,10 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
         <DialogHeader className="text-center">
           <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mt-2 sm:mt-4 flex items-center justify-center gap-2">
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
-            Create Contract
+            Send Custom Offer
           </DialogTitle>
           <DialogDescription className="text-gray-500 text-xs sm:text-sm mb-3 sm:mb-4">
-            Send a contract proposal to the client
+            Send a custom offer to the client. They can accept to create an order or reject it.
           </DialogDescription>
         </DialogHeader>
 
@@ -304,7 +295,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
               className="flex-1 rounded-lg sm:rounded-xl bg-[#10b981] hover:bg-[#059669] text-sm sm:text-base"
               disabled={loading || !selectedServiceId || services.length === 0}
             >
-              {loading ? 'Creating...' : 'Send Contract'}
+              {loading ? 'Sending...' : 'Send Offer'}
             </Button>
           </div>
         </form>

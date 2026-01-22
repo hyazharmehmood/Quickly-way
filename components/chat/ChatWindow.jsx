@@ -20,6 +20,7 @@ import { UserStatus } from './UserStatus';
 import { ChatInput } from './ChatInput';
 import { ChatBubble } from './ChatBubble';
 import { OrderCard } from './OrderCard';
+import { OfferCard } from './OfferCard';
 import CreateContractModal from './CreateContractModal';  
 import { ImageGallery } from './ImageGallery';  
 
@@ -30,8 +31,7 @@ export function ChatWindow({ conversation, onBack }) {
   const [messageContent, setMessageContent] = useState('');
   const [typingUsers, setTypingUsers] = useState([]);
   const [connectionError, setConnectionError] = useState(null);
-  const [order, setOrder] = useState(null);
-  const [loadingOrder, setLoadingOrder] = useState(false);
+  const [orders, setOrders] = useState([]);
   const [showCreateContractModal, setShowCreateContractModal] = useState(false);
   const [service, setService] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
@@ -71,12 +71,7 @@ export function ChatWindow({ conversation, onBack }) {
       setLoading(false);
     }
 
-    // Fetch order for this conversation
-    if (socket && isConnected && conversationId) {
-      fetchOrder(conversationId);
-    } else {
-      setOrder(null);
-    }
+    // Orders are now fetched with messages, no separate call needed
 
     return () => {
       if (socket && isConnected) {
@@ -89,111 +84,68 @@ export function ChatWindow({ conversation, onBack }) {
     };
   }, [conversation?.id, conversation?.otherParticipant?.id, socket, isConnected]);
 
-  // Fallback: Fetch order via REST API
-  const fetchOrderViaAPI = useCallback(async (conversationId) => {
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        setLoadingOrder(false);
-        return;
-      }
+  // Orders are now fetched with messages, no separate API call needed
 
-      const response = await fetch(`/api/orders/conversation/${conversationId}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`,
-        },
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        console.log('Order fetched via API:', data);
-        if (data.success && data.order) {
-          setOrder(data.order);
-        } else {
-          setOrder(null);
-        }
-      } else {
-        // No order found is OK (404)
-        if (response.status === 404) {
-          console.log('No order found for this conversation');
-          setOrder(null);
-        } else {
-          console.error('API error fetching order:', response.status);
-          setOrder(null);
-        }
-      }
-    } catch (error) {
-      console.error('Error fetching order via API:', error);
-      setOrder(null);
-    } finally {
-      setLoadingOrder(false);
-    }
-  }, []);
-
-  // Fetch order by conversation ID
-  const fetchOrder = useCallback(async (conversationId) => {
-    if (!conversationId) {
-      setOrder(null);
-      return;
-    }
-
-    setLoadingOrder(true);
-    let orderFetched = false;
+  // Extract orders from messages (orders are now embedded in messages)
+  useEffect(() => {
+    const ordersFromMessages = messages
+      .filter(msg => msg.order && msg.type === 'contract')
+      .map(msg => msg.order)
+      .filter((order, index, self) => 
+        // Remove duplicates by order ID
+        index === self.findIndex(o => o.id === order.id)
+      )
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     
-    // Try Socket.IO first
-    if (socket && isConnected) {
-      try {
-        socket.emit('get_order_by_conversation', { conversationId });
+    setOrders(ordersFromMessages);
+  }, [messages]);
 
-        const handleOrderFetched = (data) => {
-          if (orderFetched) return; // Prevent duplicate calls
-          orderFetched = true;
-          console.log('Order fetched via Socket.IO:', data);
-          if (data.order) {
-            setOrder(data.order);
-          } else {
-            setOrder(null);
-          }
-          setLoadingOrder(false);
-        };
-
-        const handleError = (error) => {
-          if (orderFetched) return;
-          console.error('Socket error fetching order:', error);
-          // Fallback to API
-          fetchOrderViaAPI(conversationId);
-        };
-
-        socket.once('order:fetched', handleOrderFetched);
-        socket.once('error', handleError);
-        
-        // Timeout after 3 seconds, fallback to API
-        setTimeout(() => {
-          if (!orderFetched) {
-            console.log('Socket timeout, falling back to API');
-            orderFetched = true;
-            fetchOrderViaAPI(conversationId);
-          }
-        }, 3000);
-      } catch (error) {
-        console.error('Error in socket fetch:', error);
-        if (!orderFetched) {
-          fetchOrderViaAPI(conversationId);
-        }
-      }
-    } else {
-      // Socket not available, use API directly
-      fetchOrderViaAPI(conversationId);
-    }
-  }, [socket, isConnected, fetchOrderViaAPI]);
+  // Orders are now automatically included with messages from backend (like sender data)
 
   // Listen for order updates via Socket.IO
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const handleOrderUpdate = (data) => {
+      console.log('📦 Order update received:', {
+        orderId: data.order?.id,
+        status: data.order?.status,
+        conversationId: data.order?.conversationId,
+        currentConversationId: conversation?.id,
+        eventType: data.eventType,
+      });
+
       if (data.order && data.order.conversationId === conversation?.id) {
-        setOrder(data.order);
+        // Update order in messages
+        setMessages((prev) => {
+          const updated = prev.map((msg) => {
+            if (msg.order && msg.order.id === data.order.id) {
+              console.log('✅ Updating order in message:', {
+                messageId: msg.id,
+                oldStatus: msg.order.status,
+                newStatus: data.order.status,
+              });
+              return { ...msg, order: data.order };
+            }
+            return msg;
+          });
+          return updated;
+        });
+
+        // Also update orders array
+        setOrders((prev) => {
+          const updated = prev.map((order) =>
+            order.id === data.order.id ? data.order : order
+          );
+          return updated;
+        });
+
+        console.log('✅ Order updated in chat window');
+    } else {
+        console.log('⚠️ Order update ignored - conversation mismatch:', {
+          orderConversationId: data.order?.conversationId,
+          currentConversationId: conversation?.id,
+        });
       }
     };
 
@@ -204,11 +156,59 @@ export function ChatWindow({ conversation, onBack }) {
     };
   }, [socket, isConnected, conversation?.id]);
 
+  // Listen for offer updates via Socket.IO
+  useEffect(() => {
+    if (!socket || !isConnected) return;
+
+    const handleOfferUpdate = (data) => {
+      console.log('💼 Offer update received:', {
+        offerId: data.offer?.id,
+        status: data.offer?.status,
+        conversationId: data.offer?.conversationId,
+        currentConversationId: conversation?.id,
+        eventType: data.eventType,
+      });
+
+      if (data.offer && data.offer.conversationId === conversation?.id) {
+        // Update offer in messages
+        setMessages((prev) => {
+          const updated = prev.map((msg) => {
+            if (msg.offer && msg.offer.id === data.offer.id) {
+              console.log('✅ Updating offer in message:', {
+                messageId: msg.id,
+                oldStatus: msg.offer.status,
+                newStatus: data.offer.status,
+              });
+              return { ...msg, offer: data.offer };
+            }
+            return msg;
+          });
+          return updated;
+        });
+
+        console.log('✅ Offer updated in chat window');
+      } else {
+        console.log('⚠️ Offer update ignored - conversation mismatch:', {
+          offerConversationId: data.offer?.conversationId,
+          currentConversationId: conversation?.id,
+        });
+      }
+    };
+
+    socket.on('offer:updated', handleOfferUpdate);
+    socket.on('offer:created', handleOfferUpdate);
+
+    return () => {
+      socket.off('offer:updated', handleOfferUpdate);
+      socket.off('offer:created', handleOfferUpdate);
+    };
+  }, [socket, isConnected, conversation?.id]);
+
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     // Listen for new messages
-    const handleNewMessage = (data) => {
+    const handleNewMessage = async (data) => {
       if (data.conversationId === conversation?.id) {
         setMessages((prev) => {
           // Check if message already exists (prevent duplicates)
@@ -230,8 +230,12 @@ export function ChatWindow({ conversation, onBack }) {
             return updated;
           }
           
+          // Add message with order data if it's a contract message
           return [...prev, data.message];
         });
+
+        // Order data should already be included from backend (like sender data)
+
         scrollToBottom();
       }
     };
@@ -310,6 +314,8 @@ export function ChatWindow({ conversation, onBack }) {
     // Listen for response
     const handleMessagesFetched = (data) => {
       if (data.conversationId === conversation.id) {
+        console.log('data.messages', data.messages);
+        
         setMessages(data.messages || []);
         setLoading(false);
         scrollToBottom();
@@ -698,14 +704,11 @@ export function ChatWindow({ conversation, onBack }) {
           service={null}
           conversationId={conversation?.id}
           clientId={otherUser?.id}
-          existingOrder={order}
+          existingOrder={orders[0] || null}
           onContractCreated={(newOrder) => {
-            setOrder(newOrder);
+            setOrders((prev) => [newOrder, ...prev]);
             setShowCreateContractModal(false);
-            // Refresh order to get full details
-            if (conversation?.id) {
-              fetchOrder(conversation.id);
-            }
+            // Orders will be updated when messages are fetched/refreshed
           }}
         />
       )}
@@ -747,7 +750,9 @@ export function ChatWindow({ conversation, onBack }) {
         ) : (
           <div className="space-y-4 w-full min-w-0">
             {(() => {
-              // Group consecutive image messages from the same sender
+              console.log("messages", messages);
+              // Group conse
+              // cutive image messages from the same sender
               const groupedMessages = [];
               let currentGroup = null;
               
@@ -790,21 +795,20 @@ export function ChatWindow({ conversation, onBack }) {
                 const isOwnMessage = firstMessage.senderId === user?.id;
                 const isOptimistic = firstMessage.id?.startsWith('temp-');
                 
-                // Check if this is the contract creation message
-                const isContractMessage = (
-                  firstMessage.content?.includes('Contract Created') || 
-                  firstMessage.content?.includes('📋 Contract') ||
-                  firstMessage.content?.includes('Order Number')
-                );
+                // Check if this is a contract message or offer message
+                const isContractMessage = firstMessage.type === 'contract';
+                const isOfferMessage = firstMessage.type === 'offer';
                 
-                // Show order card after contract message
-                const isFreelancerContractMessage = role === 'FREELANCER' && isContractMessage && isOwnMessage;
-                const isClientContractMessage = role === 'CLIENT' && isContractMessage && !isOwnMessage;
-                const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && order;
+                // Show order card for contract messages (order might be loading)
+                const showOrderCard = isContractMessage && firstMessage.attachmentName;
+                
+                // Show offer card for offer messages (offer might be loading)
+                const showOfferCard = isOfferMessage && firstMessage.attachmentName;
                 
                 return (
                   <React.Fragment key={`group-${groupIndex}-${firstMessage.id}`}>
-                    {!isContractMessage && (
+                    {/* Hide contract and offer message text, only show OrderCard/OfferCard */}
+                    {!isContractMessage && !isOfferMessage && (
                       <>
                         {group.type === 'image-group' && group.messages.length > 1 ? (
                           // Render image gallery for multiple consecutive images
@@ -859,18 +863,97 @@ export function ChatWindow({ conversation, onBack }) {
                         )}
                       </>
                     )}
-                    {/* Show Order Card instead of contract message text */}
-                    {showOrderCardAfter && (
+                    {/* Show Order Card for contract messages */}
+                    {showOrderCard && firstMessage.order && (
                       <div className="flex justify-center my-4">
                         <div className="w-full max-w-md">
                           <OrderCard
-                            order={order}
+                            order={firstMessage.order}
                             conversationId={conversation.id}
                             onOrderUpdate={(updatedOrder) => {
                               console.log('Order updated:', updatedOrder);
-                              setOrder(updatedOrder);
+                              // Update order in messages
+                              setMessages((prev) =>
+                                prev.map((msg) =>
+                                  msg.id === firstMessage.id
+                                    ? { ...msg, order: updatedOrder }
+                                    : msg
+                                )
+                              );
                             }}
                           />
+                        </div>
+                      </div>
+                    )}
+                    {/* Show loading state for contract messages without order data */}
+                    {showOrderCard && !firstMessage.order && (
+                      <div className="flex justify-center my-4">
+                        <div className="w-full max-w-md">
+                          <Card className="p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <p className="text-sm text-muted-foreground">Loading contract...</p>
+                            </div>
+                          </Card>
+                        </div>
+                      </div>
+                    )}
+                    {/* Show Offer Card for offer messages */}
+                    {showOfferCard && firstMessage.offer && (
+                      <div className="flex justify-center my-4">
+                        <div className="w-full max-w-md space-y-4">
+                          <OfferCard
+                            offer={firstMessage.offer}
+                            conversationId={conversation.id}
+                            onOfferUpdate={(updatedOffer) => {
+                              console.log('Offer updated:', updatedOffer);
+                              // Update offer in messages
+                              setMessages((prev) =>
+                                prev.map((msg) =>
+                                  msg.id === firstMessage.id
+                                    ? { ...msg, offer: updatedOffer }
+                                    : msg
+                                )
+                              );
+                            }}
+                          />
+                          {/* Show Order Card if offer was accepted and has order */}
+                          {firstMessage.offer.status === 'ACCEPTED' && firstMessage.offer.order && (
+                            <OrderCard
+                              order={firstMessage.offer.order}
+                              conversationId={conversation.id}
+                              onOrderUpdate={(updatedOrder) => {
+                                console.log('Order updated:', updatedOrder);
+                                // Update order in offer
+                                setMessages((prev) =>
+                                  prev.map((msg) =>
+                                    msg.id === firstMessage.id && msg.offer
+                                      ? { 
+                                          ...msg, 
+                                          offer: { 
+                                            ...msg.offer, 
+                                            order: updatedOrder 
+                                          } 
+                                        }
+                                      : msg
+                                  )
+                                );
+                              }}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                    {/* Show loading state for offer messages without offer data */}
+                    {showOfferCard && !firstMessage.offer && (
+                      <div className="flex justify-center my-4">
+                        <div className="w-full max-w-md">
+                          <Card className="p-4">
+                            <div className="flex items-center justify-center gap-2">
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                              <p className="text-sm text-muted-foreground">Loading offer...</p>
+                            </div>
+                          </Card>
                         </div>
                       </div>
                     )}
@@ -878,31 +961,7 @@ export function ChatWindow({ conversation, onBack }) {
                 );
               });
             })()}
-            {/* Show order card at the end if order exists but no contract message found in messages */}
-            {order && !messages.some((msg) => {
-              const isContractMsg = msg.content?.includes('Contract Created') || 
-                                   msg.content?.includes('📋 Contract') ||
-                                   msg.content?.includes('Order Number');
-              // Check if contract message exists for current user's role
-              if (role === 'FREELANCER') {
-                return isContractMsg && msg.senderId === user?.id;
-              } else {
-                return isContractMsg && msg.senderId !== user?.id;
-              }
-            }) && (
-              <div className="flex justify-center my-4">
-                <div className="w-full max-w-md">
-                  <OrderCard
-                    order={order}
-                    conversationId={conversation.id}
-                    onOrderUpdate={(updatedOrder) => {
-                      console.log('Order updated:', updatedOrder);
-                      setOrder(updatedOrder);
-                    }}
-                  />
-                </div>
-              </div>
-            )}
+            {/* Orders are now displayed inline with their contract messages above */}
             {typingUsers.length > 0 && (
               <div className="flex justify-start">
                 <div className="bg-secondary text-secondary-foreground rounded-2xl p-3">
@@ -923,10 +982,10 @@ export function ChatWindow({ conversation, onBack }) {
           value={messageContent}
           onChange={(value) => {
             setMessageContent(value);
-            startTyping();
+            // startTyping();
           }}
           onSend={handleSendMessage}
-          onBlur={stopTyping}
+          // onBlur={stopTyping}
           onFileSelect={handleFileSelect}
           onFilesChange={handleFilesChange}
           placeholder={hasConversation ? "Type a message..." : "Type your first message..."}

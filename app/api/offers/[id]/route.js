@@ -1,15 +1,14 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as offerService from '@/lib/services/offerService';
 
 /**
- * GET /api/orders/conversation/[conversationId] - Get order by conversation ID
+ * GET /api/offers/[id] - Get offer by ID
  */
 export async function GET(request, { params }) {
   try {
-    // Next.js 16: params is a Promise, must await
-    const { conversationId } = await params;
+    const { id } = await params;
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
     
@@ -30,7 +29,7 @@ export async function GET(request, { params }) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true },
+      select: { id: true, role: true },
     });
 
     if (!user) {
@@ -40,21 +39,25 @@ export async function GET(request, { params }) {
       );
     }
 
-    const orders = await orderService.getOrdersByConversationId(
-      conversationId,
-      user.id
-    );
+    const offer = await offerService.getOfferById(id, user.id, user.role);
 
     return NextResponse.json({
       success: true,
-      orders,
-      count: orders.length,
+      offer,
     });
 
   } catch (error) {
-    console.error('Error fetching order by conversation:', error);
+    console.error('Error fetching offer:', error);
+    
+    if (error.message === 'Offer not found' || error.message === 'Unauthorized') {
+      return NextResponse.json(
+        { error: error.message },
+        { status: error.message === 'Offer not found' ? 404 : 403 }
+      );
+    }
+
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch order' },
+      { error: error.message || 'Failed to fetch offer' },
       { status: 500 }
     );
   }
