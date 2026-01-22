@@ -18,7 +18,7 @@ import api from '@/utils/api';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
-const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientId, onContractCreated, existingOrder }) => {
+const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientId, onContractCreated, existingContract }) => {
   const { user } = useAuthStore();
   const { socket, isConnected } = useGlobalSocket();
   const [loading, setLoading] = useState(false);
@@ -83,6 +83,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
     }
 
     setLoading(true);
+    console.log("formData",formData);
     try {
       const response = await api.post('/orders', {
         serviceId: selectedServiceId,
@@ -96,33 +97,34 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
       });
 
       if (response.data.success) {
-        const order = response.data.order;
+        const contract = response.data.contract || response.data.order;
+        console.log("contract", contract);
         toast.success('Contract created and sent to client!');
         
         // Send contract message to chat
-        if (socket && isConnected && order) {
+        if (socket && isConnected && contract) {
           const selectedService = services.find(s => s.id === selectedServiceId);
-          const orderConversationId = order.conversationId || conversationId;
+          const contractConversationId = contract.conversationId || conversationId;
           
-          if (orderConversationId) {
-            const contractMessage = `📋 Contract Created\n\n` +
-              `Service: ${selectedService?.title || 'Custom Service'}\n` +
-              `Price: ${order.currency || 'USD'} ${order.price}\n` +
-              `Delivery Time: ${order.deliveryTime} days\n` +
-              `Revisions Included: ${order.revisionsIncluded}\n` +
-              `Order Number: ${order.orderNumber}\n\n` +
-              `Please review and accept the contract.`;
+          if (contractConversationId) {
+            // Send message with type "contract" and contractId in content
+            const contractMessage = JSON.stringify({
+              contractId: contract.id,
+              contractNumber: contract.contractNumber || contract.orderNumber || 'N/A',
+              message: 'Contract created'
+            });
             
             try {
               socket.emit('send_message', {
-                conversationId: orderConversationId,
+                conversationId: contractConversationId,
                 content: contractMessage,
+                type: 'contract', // Set type as "contract"
               });
               
-              // Emit order update to trigger OrderCard display
-              socket.emit('order:created', {
-                order: order,
-                conversationId: orderConversationId,
+              // Emit contract update to trigger ContractCard display
+              socket.emit('contract:created', {
+                contract: contract,
+                conversationId: contractConversationId,
               });
             } catch (error) {
               console.error('Error sending contract message:', error);
@@ -131,7 +133,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
         }
         
         if (onContractCreated) {
-          onContractCreated(order);
+          onContractCreated(contract);
         }
 
         onClose();
@@ -141,7 +143,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
           deliveryTime: 7,
           revisionsIncluded: 2,
           scopeOfWork: service?.description || '',
-          cancellationPolicy: 'Standard cancellation policy applies. Order can be cancelled within 24 hours of acceptance.',
+          cancellationPolicy: 'Standard cancellation policy applies. Contract can be cancelled within 24 hours of acceptance.',
         });
       }
     } catch (error) {

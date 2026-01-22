@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/reject - Reject order/contract by freelancer
+ * POST /api/orders/[id]/reject - Reject contract by CLIENT
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function POST(request, { params }) {
   try {
@@ -58,23 +59,32 @@ export async function POST(request, { params }) {
       );
     }
 
-    const order = await orderService.rejectOrder(
+    const contract = await contractService.rejectContract(
       id,
       user.id,
       user.role,
       rejectionReason.trim()
     );
 
-    // Emit Socket.IO event
+    // CRITICAL: When contract is rejected, NO order is created
+    // Contract status = REJECTED, no order exists
+    console.log('Contract rejected:', {
+      contractId: contract.id,
+      contractStatus: contract.status,
+      orderExists: !!contract.order,
+    });
+
+    // Emit Socket.IO event with contract data (no order)
     try {
-      emitOrderEvent('CONTRACT_REJECTED', order);
+      emitOrderEvent('CONTRACT_REJECTED', contract);
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract, // Status = REJECTED, no order
+      order: null, // No order created when contract is rejected
     });
 
   } catch (error) {

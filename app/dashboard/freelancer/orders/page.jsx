@@ -55,26 +55,26 @@ const STATUS_CONFIG = {
     DISPUTED: { label: 'DISPUTED', color: 'bg-red-200 text-red-700 border-red-300' },
 };
 
-export default function FreelancerOrdersPage() {
+export default function FreelancerContractsPage() {
+    // This page shows contracts sent by the freelancer to clients
     const router = useRouter();
     const { user } = useAuthStore();
-    const [orders, setOrders] = useState([]);
+    const [contracts, setContracts] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [showOrderDetail, setShowOrderDetail] = useState(false);
+    const [selectedContract, setSelectedContract] = useState(null);
+    const [showContractDetail, setShowContractDetail] = useState(false);
     const [showDeliverDialog, setShowDeliverDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
     const [cancelReason, setCancelReason] = useState('');
 
     useEffect(() => {
-        fetchOrders();
+        fetchContracts();
     }, [statusFilter]);
 
-    const fetchOrders = async () => {
- 
+    const fetchContracts = async () => {
         try {
             const params = {};
             if (statusFilter !== 'all') {
@@ -82,11 +82,12 @@ export default function FreelancerOrdersPage() {
             }
             const response = await api.get('/orders', { params });
             if (response.data.success) {
-                setOrders(response.data.orders || []);
+                // API returns contracts (with backward compatibility for 'orders')
+                setContracts(response.data.contracts || response.data.orders || []);
             }
         } catch (error) {
-            console.error('Error fetching orders:', error);
-            toast.error('Failed to fetch orders');
+            console.error('Error fetching contracts:', error);
+            toast.error('Failed to fetch contracts');
         } finally {
             setLoading(false);
         }
@@ -101,12 +102,16 @@ export default function FreelancerOrdersPage() {
         );
     };
 
-    const formatDeadline = (order) => {
-        if (order.status === 'COMPLETED') return 'Completed';
-        if (order.status === 'CANCELLED') return 'Cancelled';
-        if (!order.deliveryDate) return 'No deadline';
+    const formatDeadline = (contract) => {
+        // Use contract status as primary source of truth
+        const contractStatus = contract.contract?.status || contract.status;
+        const orderStatus = contract.status;
         
-        const deliveryDate = new Date(order.deliveryDate);
+        if (orderStatus === 'COMPLETED' || contractStatus === 'CANCELLED') return 'Completed';
+        if (orderStatus === 'CANCELLED' || contractStatus === 'REJECTED') return 'Cancelled';
+        if (!contract.deliveryDate) return 'No deadline';
+        
+        const deliveryDate = new Date(contract.deliveryDate);
         const now = new Date();
         const diff = deliveryDate - now;
         const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
@@ -117,13 +122,13 @@ export default function FreelancerOrdersPage() {
         return `${days} days left`;
     };
 
-    const handleViewOrder = (order) => {
-        setSelectedOrder(order);
-        setShowOrderDetail(true);
+    const handleViewContract = (contract) => {
+        setSelectedContract(contract);
+        setShowContractDetail(true);
     };
 
     const handleDeliver = async () => {
-        if (!selectedOrder) return;
+        if (!selectedContract) return;
         if (deliveryData.type === 'MESSAGE' && !deliveryData.message.trim()) {
             toast.error('Please enter a delivery message');
             return;
@@ -134,18 +139,18 @@ export default function FreelancerOrdersPage() {
         }
 
         try {
-            const response = await api.post(`/orders/${selectedOrder.id}/deliver`, {
+            const response = await api.post(`/orders/${selectedContract.id}/deliver`, {
                 type: deliveryData.type,
                 message: deliveryData.message,
                 fileUrl: deliveryData.fileUrl,
-                isRevision: selectedOrder.status === 'REVISION_REQUESTED',
+                isRevision: selectedContract.status === 'REVISION_REQUESTED',
             });
             if (response.data.success) {
                 toast.success('Delivery submitted successfully');
                 setShowDeliverDialog(false);
                 setDeliveryData({ type: 'MESSAGE', message: '', fileUrl: '' });
-                fetchOrders();
-                setShowOrderDetail(false);
+                fetchContracts();
+                setShowContractDetail(false);
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to submit delivery');
@@ -153,40 +158,40 @@ export default function FreelancerOrdersPage() {
     };
 
     const handleCancel = async () => {
-        if (!selectedOrder || !cancelReason.trim()) {
+        if (!selectedContract || !cancelReason.trim()) {
             toast.error('Please provide a cancellation reason');
             return;
         }
 
         try {
-            const response = await api.post(`/orders/${selectedOrder.id}/cancel`, {
+            const response = await api.post(`/orders/${selectedContract.id}/cancel`, {
                 reason: cancelReason.trim(),
             });
             if (response.data.success) {
-                toast.success('Order cancelled successfully');
+                toast.success('Contract cancelled successfully');
                 setShowCancelDialog(false);
                 setCancelReason('');
-                fetchOrders();
-                setShowOrderDetail(false);
+                fetchContracts();
+                setShowContractDetail(false);
             }
         } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to cancel order');
+            toast.error(error.response?.data?.error || 'Failed to cancel contract');
         }
     };
 
-    const handleChat = (order) => {
-        if (order.conversationId) {
-            router.push(`/dashboard/freelancer/messages?conversationId=${order.conversationId}`);
+    const handleChat = (contract) => {
+        if (contract.conversationId) {
+            router.push(`/dashboard/freelancer/messages?conversationId=${contract.conversationId}`);
         } else {
-            router.push(`/dashboard/freelancer/messages?otherUserId=${order.clientId}`);
+            router.push(`/dashboard/freelancer/messages?otherUserId=${contract.clientId}`);
         }
     };
 
-    const filteredOrders = orders.filter(order => {
+    const filteredContracts = contracts.filter(contract => {
         const matchesSearch = 
-            order.orderNumber?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            order.service?.title?.toLowerCase().includes(searchQuery.toLowerCase());
+            (contract.contractNumber || contract.orderNumber)?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contract.client?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            contract.service?.title?.toLowerCase().includes(searchQuery.toLowerCase());
         return matchesSearch;
     });
 
@@ -194,14 +199,14 @@ export default function FreelancerOrdersPage() {
         <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-normal text-foreground tracking-tight">Orders Management</h2>
-                    <p className="text-muted-foreground font-normal mt-1 text-sm">Track and manage your project deliveries.</p>
+                    <h2 className="text-2xl font-normal text-foreground tracking-tight">Contracts Management</h2>
+                    <p className="text-muted-foreground font-normal mt-1 text-sm">Track and manage your contracts sent to clients.</p>
                 </div>
                 <div className="flex gap-3">
                     <div className="relative w-64">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                         <Input 
-                            placeholder="Search orders..." 
+                            placeholder="Search contracts..." 
                             className="pl-10 h-11 bg-card border-border rounded-xl"
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
@@ -231,7 +236,7 @@ export default function FreelancerOrdersPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Order ID</TableHead>
+                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Contract ID</TableHead>
                                         <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Client & Service</TableHead>
                                         <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Deadline</TableHead>
                                         <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
@@ -269,13 +274,13 @@ export default function FreelancerOrdersPage() {
                                 </TableBody>
                             </Table>
                         </div>
-                    ) : filteredOrders.length === 0 ? (
-                        <div className="p-8 text-center text-muted-foreground">No orders found</div>
+                    ) : filteredContracts.length === 0 ? (
+                        <div className="p-8 text-center text-muted-foreground">No contracts found</div>
                     ) : (
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Order ID</TableHead>
+                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Contract ID</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Client & Service</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Deadline</TableHead>
                                     <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
@@ -284,30 +289,40 @@ export default function FreelancerOrdersPage() {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {filteredOrders.map((order) => (
-                                    <TableRow key={order.id} className="hover:bg-secondary/10 transition-colors border-b border-border group">
-                                        <TableCell className="px-8 py-5 font-normal text-muted-foreground text-sm">{order.orderNumber}</TableCell>
+                                {filteredContracts.map((contract) => {
+                                    // Use contract status as primary source of truth
+                                    const contractStatus = contract.contract?.status;
+                                    const orderStatus = contract.status;
+                                    const displayStatus = contractStatus === 'PENDING_ACCEPTANCE' ? 'PENDING_ACCEPTANCE' :
+                                                         contractStatus === 'ACTIVE' ? 'IN_PROGRESS' :
+                                                         contractStatus === 'REJECTED' ? 'CANCELLED' :
+                                                         contractStatus === 'CANCELLED' ? 'CANCELLED' :
+                                                         orderStatus;
+                                    
+                                    return (
+                                    <TableRow key={contract.id} className="hover:bg-secondary/10 transition-colors border-b border-border group">
+                                        <TableCell className="px-8 py-5 font-normal text-muted-foreground text-sm">{contract.contractNumber || contract.orderNumber}</TableCell>
                                         <TableCell className="px-8 py-5">
-                                            <div className="font-normal text-foreground text-sm">{order.client?.name || 'Unknown Client'}</div>
-                                            <div className="text-xs text-muted-foreground mt-0.5">{order.service?.title || order.contract?.serviceTitle || 'Service'}</div>
+                                            <div className="font-normal text-foreground text-sm">{contract.client?.name || 'Unknown Client'}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">{contract.service?.title || contract.contract?.serviceTitle || 'Service'}</div>
                                         </TableCell>
                                         <TableCell className="px-8 py-5 text-center">
                                             <div className="flex items-center justify-center gap-1.5 text-xs font-normal">
-                                                {order.status === 'IN_PROGRESS' || order.status === 'DELIVERED' ? (
+                                                {displayStatus === 'IN_PROGRESS' || displayStatus === 'DELIVERED' ? (
                                                     <Clock className="w-3 h-3 text-orange-500" />
                                                 ) : (
                                                     <CheckCircle2 className="w-3 h-3 text-primary" />
                                                 )}
-                                                <span className={order.status === 'IN_PROGRESS' || order.status === 'DELIVERED' ? 'text-orange-500' : 'text-muted-foreground'}>
-                                                    {formatDeadline(order)}
+                                                <span className={displayStatus === 'IN_PROGRESS' || displayStatus === 'DELIVERED' ? 'text-orange-500' : 'text-muted-foreground'}>
+                                                    {formatDeadline(contract)}
                                                 </span>
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-8 py-5 text-center">
-                                            {getStatusBadge(order.status)}
+                                            {getStatusBadge(displayStatus)}
                                         </TableCell>
                                         <TableCell className="px-8 py-5 text-right font-normal text-foreground text-sm">
-                                            {order.currency || 'USD'} {order.price?.toFixed(2) || '0.00'}
+                                            {contract.contract?.currency || contract.currency || 'USD'} {contract.contract?.price?.toFixed(2) || contract.price?.toFixed(2) || '0.00'}
                                         </TableCell>
                                         <TableCell className="px-8 py-5 text-right">
                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -315,7 +330,7 @@ export default function FreelancerOrdersPage() {
                                                     variant="secondary" 
                                                     size="icon" 
                                                     className="h-9 w-9 rounded-xl"
-                                                    onClick={() => handleChat(order)}
+                                                    onClick={() => handleChat(contract)}
                                                 >
                                                     <MessageSquare className="w-4 h-4" />
                                                 </Button>
@@ -323,102 +338,113 @@ export default function FreelancerOrdersPage() {
                                                     variant="outline" 
                                                     size="icon" 
                                                     className="h-9 w-9 rounded-xl border-border"
-                                                    onClick={() => handleViewOrder(order)}
+                                                    onClick={() => handleViewContract(contract)}
                                                 >
                                                     <Eye className="w-4 h-4" />
                                                 </Button>
                                             </div>
                                         </TableCell>
                                     </TableRow>
-                                ))}
+                                    );
+                                })}
                             </TableBody>
                         </Table>
                     )}
                 </CardContent>
             </Card>
 
-            {/* Order Detail Dialog */}
-            <Dialog open={showOrderDetail} onOpenChange={setShowOrderDetail}>
+            {/* Contract Detail Dialog */}
+            <Dialog open={showContractDetail} onOpenChange={setShowContractDetail}>
                 <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
                     <DialogHeader>
-                        <DialogTitle>Order Details</DialogTitle>
+                        <DialogTitle>Contract Details</DialogTitle>
                         <DialogDescription>
-                            Order {selectedOrder?.orderNumber}
+                            Contract {selectedContract?.contractNumber || selectedContract?.orderNumber}
                         </DialogDescription>
                     </DialogHeader>
-                    {selectedOrder && (
+                    {selectedContract && (() => {
+                        // Use contract status as primary source of truth
+                        const contractStatus = selectedContract.contract?.status;
+                        const orderStatus = selectedContract.status;
+                        const displayStatus = contractStatus === 'PENDING_ACCEPTANCE' ? 'PENDING_ACCEPTANCE' :
+                                             contractStatus === 'ACTIVE' ? 'IN_PROGRESS' :
+                                             contractStatus === 'REJECTED' ? 'CANCELLED' :
+                                             contractStatus === 'CANCELLED' ? 'CANCELLED' :
+                                             orderStatus;
+                        
+                        return (
                         <div className="space-y-4">
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Status</Label>
-                                    <div className="mt-1">{getStatusBadge(selectedOrder.status)}</div>
+                                    <div className="mt-1">{getStatusBadge(displayStatus)}</div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Price</Label>
                                     <div className="mt-1 font-semibold">
-                                        {selectedOrder.currency || 'USD'} {selectedOrder.price?.toFixed(2) || '0.00'}
+                                        {selectedContract.contract?.currency || selectedContract.currency || 'USD'} {selectedContract.contract?.price?.toFixed(2) || selectedContract.price?.toFixed(2) || '0.00'}
                                     </div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Client</Label>
-                                    <div className="mt-1">{selectedOrder.client?.name || 'Unknown'}</div>
+                                    <div className="mt-1">{selectedContract.client?.name || 'Unknown'}</div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Delivery Date</Label>
                                     <div className="mt-1">
-                                        {selectedOrder.deliveryDate 
-                                            ? format(new Date(selectedOrder.deliveryDate), 'd MMM, yyyy')
+                                        {selectedContract.deliveryDate 
+                                            ? format(new Date(selectedContract.deliveryDate), 'd MMM, yyyy')
                                             : 'Not set'}
                                     </div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Service</Label>
-                                    <div className="mt-1">{selectedOrder.service?.title || selectedOrder.contract?.serviceTitle || 'N/A'}</div>
+                                    <div className="mt-1">{selectedContract.service?.title || selectedContract.contract?.serviceTitle || 'N/A'}</div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Revisions</Label>
                                     <div className="mt-1">
-                                        {selectedOrder.revisionsUsed || 0} / {selectedOrder.revisionsIncluded || 0}
+                                        {selectedContract.revisionsUsed || 0} / {selectedContract.revisionsIncluded || selectedContract.contract?.revisionsIncluded || 0}
                                     </div>
                                 </div>
                             </div>
-                            {selectedOrder.contract?.scopeOfWork && (
+                            {selectedContract.contract?.scopeOfWork && (
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Scope of Work</Label>
                                     <div className="mt-1 text-sm p-3 bg-secondary/50 rounded-lg">
-                                        {selectedOrder.contract.scopeOfWork}
+                                        {selectedContract.contract.scopeOfWork}
                                     </div>
                                 </div>
                             )}
                             <div className="flex gap-2 pt-4">
-                                {(selectedOrder.status === 'IN_PROGRESS' || selectedOrder.status === 'REVISION_REQUESTED') && (
+                                {(displayStatus === 'IN_PROGRESS' || displayStatus === 'REVISION_REQUESTED') && (
                                     <Button 
                                         onClick={() => {
-                                            setShowOrderDetail(false);
+                                            setShowContractDetail(false);
                                             setShowDeliverDialog(true);
                                         }}
                                         className="flex-1"
                                     >
                                         <Package className="w-4 h-4 mr-2" />
-                                        Deliver Order
+                                        Deliver Contract
                                     </Button>
                                 )}
-                                {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED' && (
+                                {displayStatus !== 'COMPLETED' && displayStatus !== 'CANCELLED' && (
                                     <Button 
                                         variant="outline"
                                         onClick={() => {
-                                            setShowOrderDetail(false);
+                                            setShowContractDetail(false);
                                             setShowCancelDialog(true);
                                         }}
                                         className="flex-1"
                                     >
                                         <XCircle className="w-4 h-4 mr-2" />
-                                        Cancel Order
+                                        Cancel Contract
                                     </Button>
                                 )}
                                 <Button 
                                     variant="secondary"
-                                    onClick={() => handleChat(selectedOrder)}
+                                    onClick={() => handleChat(selectedContract)}
                                     className="flex-1"
                                 >
                                     <MessageSquare className="w-4 h-4 mr-2" />
@@ -426,7 +452,8 @@ export default function FreelancerOrdersPage() {
                                 </Button>
                             </div>
                         </div>
-                    )}
+                        );
+                    })()}
                 </DialogContent>
             </Dialog>
 
@@ -436,7 +463,7 @@ export default function FreelancerOrdersPage() {
                     <DialogHeader>
                         <DialogTitle>Submit Delivery</DialogTitle>
                         <DialogDescription>
-                            Submit your work for order {selectedOrder?.orderNumber}
+                            Submit your work for contract {selectedContract?.contractNumber || selectedContract?.orderNumber}
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4">
@@ -493,9 +520,9 @@ export default function FreelancerOrdersPage() {
             <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
                 <AlertDialogContent>
                     <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
+                        <AlertDialogTitle>Cancel Contract</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Please provide a reason for cancelling order {selectedOrder?.orderNumber}
+                            Please provide a reason for cancelling contract {selectedContract?.contractNumber || selectedContract?.orderNumber}
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <div className="space-y-4">

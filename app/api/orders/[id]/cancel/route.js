@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/cancel - Cancel order
+ * POST /api/orders/[id]/cancel - Cancel contract
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function POST(request, { params }) {
   try {
@@ -51,7 +52,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const order = await orderService.cancelOrder(
+    const contract = await contractService.cancelContract(
       id,
       user.id,
       reason.trim(),
@@ -60,14 +61,15 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('ORDER_CANCELLED', order, { reason: reason.trim() });
+      emitOrderEvent('ORDER_CANCELLED', contract, { reason: reason.trim() });
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract,
+      order: contract, // Backward compatibility
     });
 
   } catch (error) {

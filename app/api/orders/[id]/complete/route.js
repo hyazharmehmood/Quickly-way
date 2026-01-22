@@ -1,11 +1,12 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/complete - Accept delivery and complete order by client
+ * POST /api/orders/[id]/complete - Accept delivery and complete contract by client
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function POST(request, { params }) {
   try {
@@ -43,7 +44,7 @@ export async function POST(request, { params }) {
 
     if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only clients can complete orders' },
+        { error: 'Only clients can complete contracts' },
         { status: 403 }
       );
     }
@@ -58,7 +59,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const order = await orderService.acceptDelivery(
+    const contract = await contractService.acceptDelivery(
       id,
       user.id,
       deliverableId
@@ -66,18 +67,19 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('ORDER_COMPLETED', order);
+      emitOrderEvent('ORDER_COMPLETED', contract);
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract,
+      order: contract, // Backward compatibility
     });
 
   } catch (error) {
-    console.error('Error completing order:', error);
+    console.error('Error completing contract:', error);
     
     if (error.message.includes('not found') || error.message.includes('Unauthorized')) {
       return NextResponse.json(

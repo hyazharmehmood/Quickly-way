@@ -19,7 +19,7 @@ import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { UserStatus } from './UserStatus';
 import { ChatInput } from './ChatInput';
 import { ChatBubble } from './ChatBubble';
-import { OrderCard } from './OrderCard';
+import { ContractCard } from './OrderCard';
 import CreateContractModal from './CreateContractModal';  
 import { ImageGallery } from './ImageGallery';  
 
@@ -30,7 +30,9 @@ export function ChatWindow({ conversation, onBack }) {
   const [messageContent, setMessageContent] = useState('');
   const [typingUsers, setTypingUsers] = useState([]);
   const [connectionError, setConnectionError] = useState(null);
-  const [order, setOrder] = useState(null);
+  const [order, setOrder] = useState(null); // Latest contract/order for conversation
+  const [contractsMap, setContractsMap] = useState(new Map()); // Map of contractId => contract (for multiple contracts)
+  const [contractsMapVersion, setContractsMapVersion] = useState(0); // Force re-render when contractsMap changes
   const [loadingOrder, setLoadingOrder] = useState(false);
   const [showCreateContractModal, setShowCreateContractModal] = useState(false);
   const [service, setService] = useState(null);
@@ -89,8 +91,8 @@ export function ChatWindow({ conversation, onBack }) {
     };
   }, [conversation?.id, conversation?.otherParticipant?.id, socket, isConnected]);
 
-  // Fallback: Fetch order via REST API
-  const fetchOrderViaAPI = useCallback(async (conversationId) => {
+  // Fallback: Fetch contract via REST API
+  const fetchContractViaAPI = useCallback(async (conversationId) => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -106,31 +108,60 @@ export function ChatWindow({ conversation, onBack }) {
 
       if (response.ok) {
         const data = await response.json();
-        console.log('Order fetched via API:', data);
-        if (data.success && data.order) {
-          setOrder(data.order);
+        console.log('Contract fetched via API:', data);
+        if (data.success && (data.contract || data.order)) {
+          const contract = data.contract || data.order;
+          
+          // CRITICAL: Add contract to contractsMap
+          setContractsMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(contract.id, { ...contract });
+            setContractsMapVersion((v) => v + 1); // Force re-render
+            return newMap;
+          });
+          
+          // CRITICAL: Only update if this is a newer contract or no contract exists
+          setOrder((currentOrder) => {
+            if (!currentOrder) {
+              return contract;
+            }
+            // If same contract ID, update it
+            if (currentOrder.id === contract.id) {
+              return contract;
+            }
+            // If new contract is newer, show it (latest contract)
+            if (contract.createdAt && currentOrder.createdAt) {
+              const newDate = new Date(contract.createdAt);
+              const currentDate = new Date(currentOrder.createdAt);
+              if (newDate > currentDate) {
+                return contract; // Show newer contract
+              }
+            }
+            // Keep current contract if it's newer
+            return currentOrder;
+          });
         } else {
           setOrder(null);
         }
       } else {
-        // No order found is OK (404)
+        // No contract found is OK (404)
         if (response.status === 404) {
-          console.log('No order found for this conversation');
+          console.log('No contract found for this conversation');
           setOrder(null);
         } else {
-          console.error('API error fetching order:', response.status);
+          console.error('API error fetching contract:', response.status);
           setOrder(null);
         }
       }
     } catch (error) {
-      console.error('Error fetching order via API:', error);
+      console.error('Error fetching contract via API:', error);
       setOrder(null);
     } finally {
       setLoadingOrder(false);
     }
   }, []);
 
-  // Fetch order by conversation ID
+  // Fetch contract by conversation ID
   const fetchOrder = useCallback(async (conversationId) => {
     if (!conversationId) {
       setOrder(null);
@@ -138,19 +169,48 @@ export function ChatWindow({ conversation, onBack }) {
     }
 
     setLoadingOrder(true);
-    let orderFetched = false;
+    let contractFetched = false;
     
     // Try Socket.IO first
     if (socket && isConnected) {
       try {
-        socket.emit('get_order_by_conversation', { conversationId });
+        socket.emit('get_contract_by_conversation', { conversationId });
 
-        const handleOrderFetched = (data) => {
-          if (orderFetched) return; // Prevent duplicate calls
-          orderFetched = true;
-          console.log('Order fetched via Socket.IO:', data);
-          if (data.order) {
-            setOrder(data.order);
+        const handleContractFetched = (data) => {
+          if (contractFetched) return; // Prevent duplicate calls
+          contractFetched = true;
+          console.log('Contract fetched via Socket.IO:', data);
+          if (data.contract || data.order) {
+            const contract = data.contract || data.order;
+            
+            // CRITICAL: Add contract to contractsMap
+            setContractsMap((prev) => {
+              const newMap = new Map(prev);
+              newMap.set(contract.id, { ...contract });
+              setContractsMapVersion((v) => v + 1); // Force re-render
+              return newMap;
+            });
+            
+            // CRITICAL: Only update if this is a newer contract or no contract exists
+            setOrder((currentOrder) => {
+              if (!currentOrder) {
+                return contract;
+              }
+              // If same contract ID, update it
+              if (currentOrder.id === contract.id) {
+                return contract;
+              }
+              // If new contract is newer, show it (latest contract)
+              if (contract.createdAt && currentOrder.createdAt) {
+                const newDate = new Date(contract.createdAt);
+                const currentDate = new Date(currentOrder.createdAt);
+                if (newDate > currentDate) {
+                  return contract; // Show newer contract
+                }
+              }
+              // Keep current contract if it's newer
+              return currentOrder;
+            });
           } else {
             setOrder(null);
           }
@@ -158,51 +218,173 @@ export function ChatWindow({ conversation, onBack }) {
         };
 
         const handleError = (error) => {
-          if (orderFetched) return;
-          console.error('Socket error fetching order:', error);
+          if (contractFetched) return;
+          console.error('Socket error fetching contract:', error);
           // Fallback to API
-          fetchOrderViaAPI(conversationId);
+          fetchContractViaAPI(conversationId);
         };
 
-        socket.once('order:fetched', handleOrderFetched);
+        socket.once('contract:fetched', handleContractFetched);
         socket.once('error', handleError);
         
         // Timeout after 3 seconds, fallback to API
         setTimeout(() => {
-          if (!orderFetched) {
+          if (!contractFetched) {
             console.log('Socket timeout, falling back to API');
-            orderFetched = true;
-            fetchOrderViaAPI(conversationId);
+            contractFetched = true;
+            fetchContractViaAPI(conversationId);
           }
         }, 3000);
       } catch (error) {
         console.error('Error in socket fetch:', error);
-        if (!orderFetched) {
-          fetchOrderViaAPI(conversationId);
+        if (!contractFetched) {
+          fetchContractViaAPI(conversationId);
         }
       }
     } else {
       // Socket not available, use API directly
-      fetchOrderViaAPI(conversationId);
+      fetchContractViaAPI(conversationId);
     }
-  }, [socket, isConnected, fetchOrderViaAPI]);
+  }, [socket, isConnected, fetchContractViaAPI]);
 
-  // Listen for order updates via Socket.IO
+  // Listen for contract updates and creation via Socket.IO
   useEffect(() => {
     if (!socket || !isConnected) return;
 
-    const handleOrderUpdate = (data) => {
-      if (data.order && data.order.conversationId === conversation?.id) {
-        setOrder(data.order);
+    const handleContractUpdate = (data) => {
+      const contract = data.contract || data.order;
+      if (contract) {
+        // Check if this contract belongs to current conversation
+        const contractConversationId = contract.conversationId || contract.conversation?.id;
+        if (contractConversationId === conversation?.id) {
+          console.log('📋 Contract updated via socket (contract:updated):', {
+            contractId: contract.id,
+            contractStatus: contract.status,
+            orderStatus: contract.order?.status,
+            conversationId: contractConversationId,
+          });
+          
+          // CRITICAL: Update contractsMap with this specific contract
+          // This ensures all contract cards get updated
+          setContractsMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(contract.id, { ...contract });
+            console.log('✅ Updated contractsMap with contract:', contract.id, 'Status:', contract.status);
+            // Force re-render by updating version
+            setContractsMapVersion((v) => v + 1);
+            return newMap;
+          });
+          
+          // Update order if this is the latest contract or matches current
+          setOrder((currentOrder) => {
+            // If no current order, set the new one
+            if (!currentOrder) {
+              return { ...contract };
+            }
+            // If contract IDs match, update it
+            if (currentOrder.id === contract.id) {
+              return { ...contract };
+            }
+            // If new contract is newer (later createdAt), replace it (show latest)
+            if (contract.createdAt && currentOrder.createdAt) {
+              const newDate = new Date(contract.createdAt);
+              const currentDate = new Date(currentOrder.createdAt);
+              if (newDate > currentDate) {
+                return { ...contract };
+              }
+            }
+            // Otherwise, keep current order
+            return currentOrder;
+          });
+        } else {
+          console.log('⚠️ Contract update ignored - different conversation:', {
+            contractConversationId,
+            currentConversationId: conversation?.id,
+          });
+        }
       }
     };
 
-    socket.on('order:updated', handleOrderUpdate);
+    const handleContractCreated = (data) => {
+      const contract = data.contract || data.order;
+      if (contract) {
+        const contractConversationId = contract.conversationId || contract.conversation?.id;
+        if (contractConversationId === conversation?.id) {
+          console.log('Contract created via socket:', contract);
+          
+          // CRITICAL: Add new contract to contractsMap
+          setContractsMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(contract.id, { ...contract });
+            setContractsMapVersion((v) => v + 1); // Force re-render
+            return newMap;
+          });
+          
+          // CRITICAL: When new contract is created, it should have status PENDING_ACCEPTANCE
+          // Only show it if it's newer than current contract
+          setOrder((currentOrder) => {
+            if (!currentOrder) {
+              return { ...contract };
+            }
+            // If new contract is newer (later createdAt), show it
+            if (contract.createdAt && currentOrder.createdAt) {
+              const newDate = new Date(contract.createdAt);
+              const currentDate = new Date(currentOrder.createdAt);
+              if (newDate > currentDate) {
+                return { ...contract }; // Show newer contract
+              }
+            }
+            // Keep current contract
+            return currentOrder;
+          });
+          // Refresh to get latest contract from database (ensures correct status)
+          if (conversation?.id) {
+            setTimeout(() => {
+              fetchOrder(conversation.id);
+            }, 500); // Small delay to ensure contract is saved
+          }
+        }
+      }
+    };
+
+    // Also listen for order:updated for backward compatibility
+    const handleOrderUpdate = (data) => {
+      const contract = data.contract || data.order;
+      if (contract) {
+        const contractConversationId = contract.conversationId || contract.conversation?.id;
+        if (contractConversationId === conversation?.id) {
+          console.log('Contract updated via order:updated event:', contract);
+          
+          // CRITICAL: Update contractsMap with this specific contract
+          setContractsMap((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(contract.id, { ...contract });
+            console.log('Updated contractsMap with contract:', contract.id, contract.status);
+            setContractsMapVersion((v) => v + 1); // Force re-render
+            return newMap;
+          });
+          
+          // Only update if contract IDs match
+          setOrder((currentOrder) => {
+            if (!currentOrder || currentOrder.id === contract.id) {
+              return { ...contract };
+            }
+            return currentOrder;
+          });
+        }
+      }
+    };
+
+    socket.on('contract:updated', handleContractUpdate);
+    socket.on('contract:created', handleContractCreated);
+    socket.on('order:updated', handleOrderUpdate); // Backward compatibility
 
     return () => {
+      socket.off('contract:updated', handleContractUpdate);
+      socket.off('contract:created', handleContractCreated);
       socket.off('order:updated', handleOrderUpdate);
     };
-  }, [socket, isConnected, conversation?.id]);
+  }, [socket, isConnected, conversation?.id, fetchOrder]);
 
   useEffect(() => {
     if (!socket || !isConnected) return;
@@ -308,9 +490,65 @@ export function ChatWindow({ conversation, onBack }) {
     });
 
     // Listen for response
-    const handleMessagesFetched = (data) => {
+    const handleMessagesFetched = async (data) => {
       if (data.conversationId === conversation.id) {
-        setMessages(data.messages || []);
+        const fetchedMessages = data.messages || [];
+        setMessages(fetchedMessages);
+        
+        // CRITICAL: Parse contract messages and fetch their contracts
+        const contractIds = new Set();
+        fetchedMessages.forEach((msg) => {
+          if (msg.type === 'contract' && msg.content) {
+            try {
+              const contractData = JSON.parse(msg.content);
+              if (contractData.contractId) {
+                contractIds.add(contractData.contractId);
+              }
+            } catch (e) {
+              console.error('Error parsing contract message:', e);
+            }
+          }
+        });
+        
+        // Fetch all contracts from contract messages
+        if (contractIds.size > 0 && socket && isConnected) {
+          const token = localStorage.getItem('token');
+          if (token) {
+            // Fetch contracts via API
+            try {
+              const contractPromises = Array.from(contractIds).map(async (contractId) => {
+                try {
+                  const response = await fetch(`/api/orders/${contractId}`, {
+                    headers: {
+                      'Authorization': `Bearer ${token}`,
+                    },
+                  });
+                  if (response.ok) {
+                    const data = await response.json();
+                    return data.contract || data.order;
+                  }
+                } catch (error) {
+                  console.error(`Error fetching contract ${contractId}:`, error);
+                }
+                return null;
+              });
+              
+              const contracts = await Promise.all(contractPromises);
+              contracts.forEach((contract) => {
+                if (contract) {
+                  setContractsMap((prev) => {
+                    const newMap = new Map(prev);
+                    newMap.set(contract.id, contract);
+                    return newMap;
+                  });
+                }
+              });
+            } catch (error) {
+              console.error('Error fetching contracts:', error);
+            }
+          }
+        }
+        
         setLoading(false);
         scrollToBottom();
       }
@@ -698,11 +936,11 @@ export function ChatWindow({ conversation, onBack }) {
           service={null}
           conversationId={conversation?.id}
           clientId={otherUser?.id}
-          existingOrder={order}
-          onContractCreated={(newOrder) => {
-            setOrder(newOrder);
+          existingContract={order}
+          onContractCreated={(newContract) => {
+            setOrder(newContract);
             setShowCreateContractModal(false);
-            // Refresh order to get full details
+            // Refresh contract to get full details
             if (conversation?.id) {
               fetchOrder(conversation.id);
             }
@@ -752,7 +990,7 @@ export function ChatWindow({ conversation, onBack }) {
               let currentGroup = null;
               
               messages.forEach((message, index) => {
-                const isOwnMessage = message.senderId === user?.id;
+              const isOwnMessage = message.senderId === user?.id;
                 const isImageMessage = message.type === 'image' && message.attachmentUrl;
                 const prevMessage = index > 0 ? messages[index - 1] : null;
                 
@@ -790,21 +1028,45 @@ export function ChatWindow({ conversation, onBack }) {
                 const isOwnMessage = firstMessage.senderId === user?.id;
                 const isOptimistic = firstMessage.id?.startsWith('temp-');
                 
-                // Check if this is the contract creation message
-                const isContractMessage = (
-                  firstMessage.content?.includes('Contract Created') || 
-                  firstMessage.content?.includes('📋 Contract') ||
-                  firstMessage.content?.includes('Order Number')
-                );
+                // Check if message type is "contract"
+                const isContractMessage = firstMessage.type === 'contract';
                 
-                // Show order card after contract message
+                // Parse contractId from contract message
+                let messageContractId = null;
+                let messageContract = null;
+                if (isContractMessage && firstMessage.content) {
+                  try {
+                    const contractData = JSON.parse(firstMessage.content);
+                    messageContractId = contractData.contractId;
+                    // Get contract from contractsMap or use order if it matches
+                    if (messageContractId) {
+                      // CRITICAL: Always check contractsMap first (it has the latest updates)
+                      // contractsMapVersion ensures React re-renders when map changes
+                      messageContract = contractsMap.get(messageContractId);
+                      
+                      // Fallback to order if not in contractsMap
+                      if (!messageContract && order && order.id === messageContractId) {
+                        messageContract = order;
+                      }
+                      
+                      // If still no contract, try to fetch it
+                      if (!messageContract && messageContractId) {
+                        console.log('Contract not found in map, will fetch:', messageContractId);
+                      }
+                    }
+                  } catch (e) {
+                    console.error('Error parsing contract message:', e);
+                  }
+                }
+                
+                // Show contract card for contract messages
                 const isFreelancerContractMessage = role === 'FREELANCER' && isContractMessage && isOwnMessage;
                 const isClientContractMessage = role === 'CLIENT' && isContractMessage && !isOwnMessage;
-                const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && order;
-                
-                return (
+                const showOrderCardAfter = (isFreelancerContractMessage || isClientContractMessage) && messageContract;
+              
+              return (
                   <React.Fragment key={`group-${groupIndex}-${firstMessage.id}`}>
-                    {!isContractMessage && (
+                  {!isContractMessage && (
                       <>
                         {group.type === 'image-group' && group.messages.length > 1 ? (
                           // Render image gallery for multiple consecutive images
@@ -849,40 +1111,56 @@ export function ChatWindow({ conversation, onBack }) {
                           </div>
                         ) : (
                           // Render single message or single image
-                          <ChatBubble
+                    <ChatBubble
                             message={firstMessage}
-                            isOwnMessage={isOwnMessage}
+                      isOwnMessage={isOwnMessage}
                             isOptimistic={firstMessage.isOptimistic || isOptimistic}
-                            showAvatar={true}
-                            showName={!isOwnMessage}
-                          />
+                      showAvatar={true}
+                      showName={!isOwnMessage}
+                    />
                         )}
                       </>
-                    )}
-                    {/* Show Order Card instead of contract message text */}
-                    {showOrderCardAfter && (
-                      <div className="flex justify-center my-4">
-                        <div className="w-full max-w-md">
-                          <OrderCard
-                            order={order}
+                  )}
+                  {/* Show Contract Card instead of contract message text */}
+                  {showOrderCardAfter && messageContract && (
+                    <div className="flex justify-center my-4">
+                      <div className="w-full max-w-md">
+                          <ContractCard
+                            key={`${messageContract.id}-${messageContract.status}-${messageContract.order?.status || 'no-order'}-${contractsMapVersion}`} // Force re-render on status change and map updates
+                            contract={messageContract}
                             conversationId={conversation.id}
-                            onOrderUpdate={(updatedOrder) => {
-                              console.log('Order updated:', updatedOrder);
-                              setOrder(updatedOrder);
+                            socket={socket}
+                            onContractUpdate={(updatedContract) => {
+                              console.log('📋 Contract updated via ContractCard callback:', {
+                                contractId: updatedContract.id,
+                                status: updatedContract.status,
+                                orderStatus: updatedContract.order?.status,
+                              });
+                              // Update contractsMap with this specific contract
+                              setContractsMap((prev) => {
+                                const newMap = new Map(prev);
+                                newMap.set(updatedContract.id, updatedContract);
+                                return newMap;
+                              });
+                              // Also update order if this is the latest contract
+                              setOrder((currentOrder) => {
+                                if (!currentOrder || currentOrder.id === updatedContract.id) {
+                                  return updatedContract;
+                                }
+                                return currentOrder;
+                              });
                             }}
                           />
-                        </div>
                       </div>
-                    )}
-                  </React.Fragment>
-                );
+                    </div>
+                  )}
+                </React.Fragment>
+              );
               });
             })()}
-            {/* Show order card at the end if order exists but no contract message found in messages */}
+            {/* Show contract card at the end if contract exists but no contract message found in messages */}
             {order && !messages.some((msg) => {
-              const isContractMsg = msg.content?.includes('Contract Created') || 
-                                   msg.content?.includes('📋 Contract') ||
-                                   msg.content?.includes('Order Number');
+              const isContractMsg = msg.type === 'contract';
               // Check if contract message exists for current user's role
               if (role === 'FREELANCER') {
                 return isContractMsg && msg.senderId === user?.id;
@@ -892,12 +1170,20 @@ export function ChatWindow({ conversation, onBack }) {
             }) && (
               <div className="flex justify-center my-4">
                 <div className="w-full max-w-md">
-                  <OrderCard
-                    order={order}
+                  <ContractCard
+                    key={order?.id || 'contract'} // Force re-render when contract changes
+                    contract={order}
                     conversationId={conversation.id}
-                    onOrderUpdate={(updatedOrder) => {
-                      console.log('Order updated:', updatedOrder);
-                      setOrder(updatedOrder);
+                    socket={socket}
+                    onContractUpdate={(updatedContract) => {
+                      console.log('Contract updated:', updatedContract);
+                      // Update contractsMap
+                      setContractsMap((prev) => {
+                        const newMap = new Map(prev);
+                        newMap.set(updatedContract.id, updatedContract);
+                        return newMap;
+                      });
+                      setOrder({ ...updatedContract }); // Create new object reference
                     }}
                   />
                 </div>
@@ -918,7 +1204,7 @@ export function ChatWindow({ conversation, onBack }) {
       </ScrollArea>
 
       {/* Input */}
-      <div className="p-4 md:p-6 border-t border-border min-w-0">
+      <div className="p-2 md:p-3 border-t border-border min-w-0">
         <ChatInput
           value={messageContent}
           onChange={(value) => {

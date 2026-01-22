@@ -38,11 +38,16 @@ model User {
   proposals                Proposal[]
   sellerApplication        SellerApplication?
   services                 Service[]
-  clientOrders             Order[]                   @relation("ClientOrders")
-  freelancerOrders         Order[]                   @relation("FreelancerOrders")
-  orderEvents              OrderEvent[]
+  clientContracts          Contract[]                @relation("ClientContracts")
+  freelancerContracts      Contract[]                @relation("FreelancerContracts")
+  contractEvents           ContractEvent[]
   disputes                 Dispute[]                 @relation("DisputeClient")
   disputesAsFreelancer     Dispute[]                 @relation("DisputeFreelancer")
+  clientOrders             Order[]                    @relation("ClientOrders")
+  freelancerOrders         Order[]                    @relation("FreelancerOrders")
+  orderEvents              OrderEvent[]
+  orderDisputesAsClient    OrderDispute[]             @relation("OrderDisputeClient")
+  orderDisputesAsFreelancer OrderDispute[]             @relation("OrderDisputeFreelancer")
 }
 
 model Project {
@@ -109,6 +114,7 @@ model Service {
   coverType       String   @default("IMAGE")
   searchTags      String[]
   freelancer      User     @relation(fields: [freelancerId], references: [id])
+  contracts       Contract[]
   orders          Order[]
 }
 
@@ -121,6 +127,7 @@ model Conversation {
   lastSenderId    String?
   participants    ConversationParticipant[]
   messages        Message[]
+  contracts       Contract[]
   orders          Order[]
 
   @@index([lastMessageAt])
@@ -187,57 +194,24 @@ enum ProposalStatus {
   REJECTED
 }
 
-// Order & Contract Models
-model Order {
-  id                    String            @id @default(uuid())
-  orderNumber           String            @unique // Human-readable order number (e.g., ORD-2024-001)
-  serviceId             String
-  clientId              String
-  freelancerId          String
-  conversationId        String?           // Link to conversation if exists
-  status                OrderStatus       @default(PENDING_ACCEPTANCE)
-  price                 Float
-  currency              String            @default("USD")
-  deliveryTime          Int               // Days for delivery
-  revisionsIncluded     Int               @default(0)
-  revisionsUsed         Int               @default(0)
-  deliveryDate          DateTime?         // Expected delivery date
-  completedAt           DateTime?
-  cancelledAt           DateTime?
-  cancellationReason    String?
-  cancelledBy           String?           // User ID who cancelled
-  clientIpAddress       String?           // IP address when order created
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  
-  // Relations
-  service               Service           @relation(fields: [serviceId], references: [id])
-  client                User              @relation("ClientOrders", fields: [clientId], references: [id])
-  freelancer            User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
-  conversation          Conversation?     @relation(fields: [conversationId], references: [id])
-  contract              Contract?
-  deliverables          OrderDeliverable[]
-  events                OrderEvent[]
-  disputes              Dispute[]
-
-  @@index([clientId])
-  @@index([freelancerId])
-  @@index([serviceId])
-  @@index([status])
-  @@index([conversationId])
-  @@index([orderNumber])
-}
-
+// Contract Model = Offer (Freelancer sends to Client)
+// Contract acceptance does NOT mean work can start
+// When contract is accepted, an Order is automatically created
 model Contract {
   id                    String            @id @default(uuid())
-  orderId               String            @unique
+  contractNumber        String?           @unique // Human-readable contract number (e.g., CTR-20240115-120530-ABCD)
+  serviceId             String?
+  clientId              String?
+  freelancerId          String?
+  conversationId        String?           // Link to conversation if exists
   serviceTitle          String
   serviceDescription    String
   scopeOfWork           String            // Detailed scope
   price                 Float
   currency              String            @default("USD")
-  deliveryTime          Int               // Days
+  deliveryTime          Int               // Days for delivery
   revisionsIncluded     Int               @default(0)
+  revisionsUsed         Int               @default(0)
   cancellationPolicy    String            // Terms for cancellation
   status                ContractStatus    @default(PENDING_ACCEPTANCE)
   clientAcceptedAt      DateTime?
@@ -247,15 +221,133 @@ model Contract {
   rejectionReason       String?
   rejectedAt            DateTime?
   rejectedBy            String?           // User ID
+  completedAt           DateTime?
+  deliveryDate          DateTime?         // Expected delivery date (from Order, not Contract)
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   
-  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  // Relations
+  service               Service?          @relation(fields: [serviceId], references: [id])
+  client                User?             @relation("ClientContracts", fields: [clientId], references: [id])
+  freelancer            User?              @relation("FreelancerContracts", fields: [freelancerId], references: [id])
+  conversation          Conversation?     @relation(fields: [conversationId], references: [id])
+  order                 Order?             // One-to-one: Contract → Order (created when contract is accepted, Order has contractId foreign key)
+  deliverables         ContractDeliverable[]
+  events                ContractEvent[]
+  disputes              Dispute[]
 
-  @@index([orderId])
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([serviceId])
   @@index([status])
+  @@index([conversationId])
+  @@index([contractNumber])
 }
 
+model ContractDeliverable {
+  id                    String            @id @default(uuid())
+  contractId            String
+  type                  DeliverableType   @default(FILE)
+  fileUrl               String?           // For FILE type
+  message               String?           // Delivery message
+  isRevision            Boolean           @default(false)
+  revisionNumber        Int?              // Which revision (1, 2, 3...)
+  deliveredAt           DateTime          @default(now())
+  acceptedAt            DateTime?
+  rejectedAt            DateTime?
+  rejectionReason       String?
+  
+  contract              Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+
+  @@index([contractId])
+  @@index([deliveredAt])
+}
+
+model ContractEvent {
+  id                    String            @id @default(uuid())
+  contractId            String
+  userId                String            // User who performed the action
+  eventType             ContractEventType
+  description           String?           // Human-readable description
+  metadata              Json?             // Additional data (IP, reason, etc.)
+  createdAt             DateTime          @default(now())
+  
+  contract              Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  user                  User              @relation(fields: [userId], references: [id])
+
+  @@index([contractId])
+  @@index([userId])
+  @@index([eventType])
+  @@index([createdAt])
+}
+
+// Order Model = Work Order (Created when Contract is accepted)
+// Order becomes ACTIVE only when payment is processed (future implementation)
+// Delivery countdown starts ONLY when order.status === ACTIVE
+model Order {
+  id                    String            @id @default(uuid())
+  orderNumber           String            @unique // Human-readable order number (e.g., ORD-20240115-120530-ABCD)
+  contractId             String            @unique // One-to-one with Contract
+  serviceId              String?
+  clientId               String
+  freelancerId           String
+  conversationId        String?           // Link to conversation
+  
+  // Order details (copied from contract at creation)
+  serviceTitle           String
+  serviceDescription     String
+  scopeOfWork            String
+  price                  Float
+  currency               String            @default("USD")
+  deliveryTime           Int               // Days for delivery
+  revisionsIncluded      Int               @default(0)
+  revisionsUsed          Int               @default(0)
+  
+  // Order status (workflow)
+  status                 OrderStatus       @default(PENDING)
+  
+  // Payment status (for future payment integration)
+  // When payment is implemented, order becomes ACTIVE only when paymentStatus === PAID
+  paymentStatus          PaymentStatus     @default(PENDING)
+  paymentMethod          String?           // "stripe", "paypal", "local", etc. (future)
+  paymentTransactionId    String?           // Payment gateway transaction ID (future)
+  paidAt                 DateTime?         // When payment was completed (future)
+  
+  // Delivery tracking
+  deliveryDate           DateTime?         // Expected delivery date (calculated when order becomes ACTIVE)
+  deliveredAt            DateTime?         // When work was delivered
+  completedAt            DateTime?         // When order was completed
+  
+  // Cancellation
+  cancelledAt            DateTime?
+  cancellationReason     String?
+  cancelledBy            String?           // User ID
+  
+  // Timestamps
+  createdAt              DateTime          @default(now())
+  updatedAt              DateTime          @updatedAt
+  
+  // Relations
+  contract               Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  service                 Service?          @relation(fields: [serviceId], references: [id])
+  client                  User              @relation("ClientOrders", fields: [clientId], references: [id])
+  freelancer              User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
+  conversation            Conversation?     @relation(fields: [conversationId], references: [id])
+  deliverables           OrderDeliverable[]
+  events                 OrderEvent[]
+  disputes               OrderDispute[]
+
+  @@index([contractId])
+  @@index([clientId])
+  @@index([freelancerId])
+  @@index([serviceId])
+  @@index([status])
+  @@index([paymentStatus])
+  @@index([conversationId])
+  @@index([orderNumber])
+}
+
+// Order Deliverables (work submissions)
 model OrderDeliverable {
   id                    String            @id @default(uuid())
   orderId               String
@@ -275,6 +367,7 @@ model OrderDeliverable {
   @@index([deliveredAt])
 }
 
+// Order Events (audit trail)
 model OrderEvent {
   id                    String            @id @default(uuid())
   orderId               String
@@ -293,7 +386,8 @@ model OrderEvent {
   @@index([createdAt])
 }
 
-model Dispute {
+// Order Disputes
+model OrderDispute {
   id                    String            @id @default(uuid())
   orderId               String
   clientId              String
@@ -308,8 +402,8 @@ model Dispute {
   updatedAt             DateTime          @updatedAt
   
   order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-  client                User              @relation("DisputeClient", fields: [clientId], references: [id])
-  freelancer            User              @relation("DisputeFreelancer", fields: [freelancerId], references: [id])
+  client                User              @relation("OrderDisputeClient", fields: [clientId], references: [id])
+  freelancer            User              @relation("OrderDisputeFreelancer", fields: [freelancerId], references: [id])
 
   @@index([orderId])
   @@index([status])
@@ -317,21 +411,39 @@ model Dispute {
   @@index([freelancerId])
 }
 
-enum OrderStatus {
-  PENDING_ACCEPTANCE
-  IN_PROGRESS
-  DELIVERED
-  REVISION_REQUESTED
-  COMPLETED
-  CANCELLED
-  DISPUTED
+model Dispute {
+  id                    String            @id @default(uuid())
+  contractId            String
+  clientId              String
+  freelancerId          String
+  reason                String
+  description           String
+  status                DisputeStatus     @default(OPEN)
+  adminResolution       String?           // Admin's resolution text
+  resolvedBy            String?           // Admin user ID
+  resolvedAt            DateTime?
+  createdAt             DateTime          @default(now())
+  updatedAt             DateTime          @updatedAt
+  
+  contract              Contract          @relation(fields: [contractId], references: [id], onDelete: Cascade)
+  client                User              @relation("DisputeClient", fields: [clientId], references: [id])
+  freelancer            User              @relation("DisputeFreelancer", fields: [freelancerId], references: [id])
+
+  @@index([contractId])
+  @@index([status])
+  @@index([clientId])
+  @@index([freelancerId])
 }
 
 enum ContractStatus {
   PENDING_ACCEPTANCE
   ACTIVE
+  DELIVERED
+  REVISION_REQUESTED
+  COMPLETED
   REJECTED
   CANCELLED
+  DISPUTED
 }
 
 enum DeliverableType {
@@ -340,19 +452,11 @@ enum DeliverableType {
   LINK
 }
 
-enum OrderEventType {
-  ORDER_CREATED
+enum ContractEventType {
+  CONTRACT_CREATED
   CONTRACT_ACCEPTED
   CONTRACT_REJECTED
-  ORDER_IN_PROGRESS
-  DELIVERY_SUBMITTED
-  DELIVERY_ACCEPTED
-  REVISION_REQUESTED
-  ORDER_COMPLETED
-  ORDER_CANCELLED
-  DISPUTE_OPENED
-  DISPUTE_RESOLVED
-  STATUS_CHANGED
+  CONTRACT_ACTIVE
 }
 
 enum DisputeStatus {
@@ -360,4 +464,38 @@ enum DisputeStatus {
   IN_REVIEW
   RESOLVED
   CLOSED
+}
+
+// Order Status - Workflow status (independent of payment)
+enum OrderStatus {
+  PENDING                 // Order created, waiting for payment (default)
+  ACTIVE                  // Payment completed, work can start (delivery countdown starts)
+  DELIVERED               // Freelancer submitted work
+  REVISION_REQUESTED      // Client requested revision
+  COMPLETED               // Client accepted delivery
+  CANCELLED               // Order cancelled
+  DISPUTED                // Order in dispute
+}
+
+// Payment Status - Payment processing status
+// FUTURE: When payment is integrated, order becomes ACTIVE only when paymentStatus === PAID
+enum PaymentStatus {
+  PENDING                 // Payment not yet processed (default)
+  PAID                    // Payment completed successfully (future)
+  REFUNDED                // Payment refunded (future)
+  FAILED                  // Payment failed (future)
+}
+
+// Order Event Types
+enum OrderEventType {
+  ORDER_CREATED           // Order created when contract accepted
+  ORDER_ACTIVATED         // Order became ACTIVE (payment completed - future)
+  DELIVERY_SUBMITTED      // Freelancer submitted work
+  DELIVERY_ACCEPTED       // Client accepted delivery
+  REVISION_REQUESTED      // Client requested revision
+  ORDER_COMPLETED          // Order completed
+  ORDER_CANCELLED         // Order cancelled
+  DISPUTE_OPENED          // Dispute opened
+  DISPUTE_RESOLVED        // Dispute resolved
+  STATUS_CHANGED          // Status changed
 }

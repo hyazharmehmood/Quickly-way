@@ -18,6 +18,14 @@ app.prepare().then(() => {
   // Initialize Socket.IO FIRST
   // Socket.IO will attach to the server and only handle /api/socket path
   const io = initSocket(httpServer);
+  
+  // Verify Socket.IO is initialized
+  if (!io) {
+    console.error('❌ Failed to initialize Socket.IO');
+    process.exit(1);
+  }
+  
+  console.log('✅ Socket.IO initialized successfully');
 
   // Set up Next.js request handler for all routes
   // Socket.IO middleware will handle /api/socket before this runs

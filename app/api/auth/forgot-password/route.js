@@ -41,7 +41,7 @@ export async function POST(request) {
 
         // Send email
         const appUrl = process.env.NEXT_PUBLIC_APP_URL || request.nextUrl.origin;
-        const resetURL = `${appUrl}/reset-password/${resetToken}`;
+        const resetURL = `${appUrl}/reset-password?token=${resetToken}`;
 
         try {
             await sendPasswordResetEmail(user.email, resetURL, user.name);

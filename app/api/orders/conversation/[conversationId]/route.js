@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 
 /**
- * GET /api/orders/conversation/[conversationId] - Get order by conversation ID
+ * GET /api/orders/conversation/[conversationId] - Get contract by conversation ID
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function GET(request, { params }) {
   try {
@@ -40,27 +41,28 @@ export async function GET(request, { params }) {
       );
     }
 
-    const order = await orderService.getOrderByConversationId(
+    const contract = await contractService.getContractByConversationId(
       conversationId,
       user.id
     );
 
-    if (!order) {
+    if (!contract) {
       return NextResponse.json(
-        { error: 'Order not found for this conversation' },
+        { error: 'Contract not found for this conversation' },
         { status: 404 }
       );
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract,
+      order: contract, // Backward compatibility
     });
 
   } catch (error) {
-    console.error('Error fetching order by conversation:', error);
+    console.error('Error fetching contract by conversation:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch order' },
+      { error: error.message || 'Failed to fetch contract' },
       { status: 500 }
     );
   }

@@ -1,10 +1,11 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 
 /**
- * GET /api/orders/[id] - Get order by ID
+ * GET /api/orders/[id] - Get contract by ID
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function GET(request, { params }) {
   try {
@@ -40,25 +41,26 @@ export async function GET(request, { params }) {
       );
     }
 
-    const order = await orderService.getOrderById(id, user.id, user.role);
+    const contract = await contractService.getContractById(id, user.id, user.role);
 
     return NextResponse.json({
       success: true,
-      order,
+      contract,
+      order: contract, // Backward compatibility
     });
 
   } catch (error) {
-    console.error('Error fetching order:', error);
+    console.error('Error fetching contract:', error);
     
-    if (error.message === 'Order not found' || error.message === 'Unauthorized') {
+    if (error.message === 'Contract not found' || error.message === 'Unauthorized') {
       return NextResponse.json(
         { error: error.message },
-        { status: error.message === 'Order not found' ? 404 : 403 }
+        { status: error.message === 'Contract not found' ? 404 : 403 }
       );
     }
 
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch order' },
+      { error: error.message || 'Failed to fetch contract' },
       { status: 500 }
     );
   }

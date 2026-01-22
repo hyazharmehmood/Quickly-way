@@ -1,11 +1,25 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/accept - Accept order/contract by freelancer
+ * POST /api/orders/[id]/accept - Accept contract by CLIENT
+ * 
+ * IMPORTANT FLOW:
+ * 1. Freelancer sends Contract (offer) to Client
+ * 2. Client accepts Contract → Contract status = ACTIVE
+ * 3. System automatically creates Order with:
+ *    - status = PENDING (waiting for payment)
+ *    - paymentStatus = PENDING
+ * 4. Order becomes ACTIVE only when payment is processed (future)
+ * 5. Delivery countdown starts ONLY when order.status === ACTIVE
+ * 
+ * FUTURE: When payment is integrated:
+ * - After payment success, call orderService.activateOrder()
+ * - Order status will change to ACTIVE
+ * - Freelancer can then start work
  */
 export async function POST(request, { params }) {
   try {
@@ -53,23 +67,34 @@ export async function POST(request, { params }) {
                      request.headers.get('x-real-ip') || 
                      null;
 
-    const order = await orderService.acceptOrder(
+    const contract = await contractService.acceptContract(
       id,
       user.id,
       user.role,
       ipAddress
     );
 
-    // Emit Socket.IO event
+    // CRITICAL: Contract should now have order with status = PENDING
+    // Order is automatically created when contract is accepted
+    console.log('Contract accepted:', {
+      contractId: contract.id,
+      contractStatus: contract.status,
+      orderId: contract.order?.id,
+      orderStatus: contract.order?.status,
+      paymentStatus: contract.order?.paymentStatus,
+    });
+
+    // Emit Socket.IO event with full contract data (including order)
     try {
-      emitOrderEvent('CONTRACT_ACCEPTED', order);
+      emitOrderEvent('CONTRACT_ACCEPTED', contract);
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract, // Includes order with status = PENDING
+      order: contract.order || contract, // Order data or contract for backward compatibility
     });
 
   } catch (error) {

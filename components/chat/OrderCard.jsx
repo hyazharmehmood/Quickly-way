@@ -1,19 +1,13 @@
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  Package, 
-  RefreshCw, 
-  AlertCircle,
-  FileText,
-  Calendar,
-  DollarSign,
+import {
+  CheckCircle2,
+  XCircle,
+  Clock,
   Eye,
 } from 'lucide-react';
 import { format } from 'date-fns';
@@ -34,199 +28,258 @@ import { Textarea } from '@/components/ui/textarea';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 
+// Contract Status Configuration - Only contract statuses
 const STATUS_CONFIG = {
   PENDING_ACCEPTANCE: {
-    label: 'PENDING',
-    color: 'bg-green-500',
+    label: 'PENDING ACCEPTANCE',
+    color: 'bg-yellow-500',
     textColor: 'text-white',
   },
-  IN_PROGRESS: {
-    label: 'IN PROGRESS',
+  ACTIVE: {
+    label: 'ACTIVE',
     color: 'bg-blue-500',
     textColor: 'text-white',
   },
-  DELIVERED: {
-    label: 'DELIVERED',
-    color: 'bg-purple-500',
-    textColor: 'text-white',
-  },
-  REVISION_REQUESTED: {
-    label: 'REVISION REQUESTED',
-    color: 'bg-orange-500',
-    textColor: 'text-white',
-  },
-  COMPLETED: {
-    label: 'COMPLETED',
-    color: 'bg-green-500',
+  REJECTED: {
+    label: 'REJECTED',
+    color: 'bg-red-500',
     textColor: 'text-white',
   },
   CANCELLED: {
     label: 'CANCELLED',
-    color: 'bg-red-500',
-    textColor: 'text-white',
-  },
-  DISPUTED: {
-    label: 'DISPUTED',
-    color: 'bg-red-600',
+    color: 'bg-gray-500',
     textColor: 'text-white',
   },
 };
 
-export function OrderCard({ order, conversationId, onOrderUpdate }) {
+export function ContractCard({ contract, conversationId, onContractUpdate, socket }) {
+  console.log('contract, conversationId, onContractUpdate', contract, conversationId, onContractUpdate);
+  // This is a freelancer platform - we use CONTRACT only
+  const actualContract = contract;
+  
   const { user, role } = useAuthStore();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
-  const [showRevisionDialog, setShowRevisionDialog] = useState(false);
-  const [revisionReason, setRevisionReason] = useState('');
-console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrderUpdate);
-  if (!order) return null;
+  const [localContract, setLocalContract] = useState(actualContract);
+  
+  // Get socket from props or global
+  const getSocket = () => {
+    if (socket) return socket;
+    if (typeof window !== 'undefined') {
+      return window.socket || window.__socket__;
+    }
+    return null;
+  };
 
-  // Ensure we're using the order status, not contract status
-  // For new contracts created by freelancer, status should be PENDING_ACCEPTANCE
-  // If status is missing, undefined, or null, default to PENDING_ACCEPTANCE
-  // Also handle case where status might be a number (enum) instead of string
-  let orderStatus = order.status;
+  // Update local contract when prop changes (for real-time updates)
+  useEffect(() => {
+    if (actualContract) {
+      setLocalContract(actualContract);
+      console.log('📋 ContractCard: Contract prop updated', {
+        contractId: actualContract.id,
+        status: actualContract.status,
+        orderStatus: actualContract.order?.status,
+        paymentStatus: actualContract.order?.paymentStatus,
+      });
+    }
+  }, [actualContract?.id, actualContract?.status, actualContract?.order?.status, actualContract?.order?.paymentStatus]);
+
+  if (!localContract) return null;
+
+  // Contract Status is PRIMARY source of truth
+  // ContractStatus enum: PENDING_ACCEPTANCE, ACTIVE, REJECTED, CANCELLED, DELIVERED, REVISION_REQUESTED, COMPLETED
+  const contractStatus = localContract.status;
   
-  // Handle enum values - convert to string if needed
-  if (typeof orderStatus === 'number') {
-    const statusMap = ['PENDING_ACCEPTANCE', 'IN_PROGRESS', 'DELIVERED', 'REVISION_REQUESTED', 'COMPLETED', 'CANCELLED', 'DISPUTED'];
-    orderStatus = statusMap[orderStatus] || 'PENDING_ACCEPTANCE';
-  }
-  
-  // If status is missing, undefined, null, or empty string, default to PENDING_ACCEPTANCE
-  if (!orderStatus || orderStatus === '' || !STATUS_CONFIG[orderStatus]) {
-    orderStatus = 'PENDING_ACCEPTANCE';
-  }
-  
-  // Debug log to help identify status issues (only in development)
-  if (typeof window !== 'undefined' && process.env.NODE_ENV === 'development') {
-    console.log('OrderCard - Order Status Debug:', {
-      orderId: order.id,
-      rawStatus: order.status,
-      orderStatus,
-      contractStatus: order.contract?.status,
-      hasStatusConfig: !!STATUS_CONFIG[orderStatus],
-    });
-  }
-  
-  // Get status config - should always have a valid config now
-  const statusConfig = STATUS_CONFIG[orderStatus] || STATUS_CONFIG.PENDING_ACCEPTANCE;
+  // Check if order exists (created when contract is accepted)
+  const order = localContract.order;
+  const orderStatus = order?.status; // PENDING, ACTIVE, DELIVERED, etc.
+  const paymentStatus = order?.paymentStatus; // PENDING, PAID, etc.
+
+  // Ensure valid status
+  const displayStatus = STATUS_CONFIG[contractStatus] ? contractStatus : 'PENDING_ACCEPTANCE';
+
+  // Get status config
+  const statusConfig = STATUS_CONFIG[displayStatus] || STATUS_CONFIG.PENDING_ACCEPTANCE;
   const isClient = role === 'CLIENT';
-  const isFreelancer = role === 'FREELANCER';
-  const isClientOrder = order.clientId === user?.id;
-  const isFreelancerOrder = order.freelancerId === user?.id;
+  
+  // Get client/freelancer IDs from contract
+  const clientId = localContract.clientId;
+  const isClientContract = clientId === user?.id;
 
-  // Get service title from contract or service
-  const serviceTitle = order.contract?.serviceTitle || order.service?.title || 'Service Order';
-  const deliveryDate = order.deliveryDate ? format(new Date(order.deliveryDate), 'd MMM, yyyy') : null;
+  // Get contract data
+  const serviceTitle = localContract.serviceTitle || localContract.service?.title || 'Contract';
+  const deliveryDate = localContract.deliveryDate ? format(new Date(localContract.deliveryDate), 'd MMM, yyyy') : null;
+  const contractPrice = localContract.price;
+  const contractCurrency = localContract.currency || 'USD';
+  const contractId = localContract.id; // Use contract.id for API calls
 
-  // Handle accept order (CLIENT accepts freelancer's contract)
+  // Handle accept contract (CLIENT accepts freelancer's contract)
+  // Using Socket.IO for real-time updates
   const handleAccept = async () => {
-    if (!isClient || !isClientOrder) return;
+    if (!isClient || !isClientContract || !contractId) return;
 
     setIsLoading(true);
-    try {
-      const response = await api.post(`/orders/${order.id}/accept`);
-      if (response.data.success) {
-        toast.success('Contract accepted successfully');
-        onOrderUpdate?.(response.data.order);
+    
+    // Get socket from parent (ChatWindow) or use global socket
+    const socket = window.socket || (typeof window !== 'undefined' && window.__socket__);
+    
+    if (socket && socket.connected) {
+      // Use Socket.IO event
+      socket.emit('contract:accept', { contractId });
+      
+      // Listen for response
+      const handleAccepted = (data) => {
+        if (data.success) {
+          toast.success('Contract accepted successfully');
+          const updatedContract = data.contract || data.order;
+          setLocalContract(updatedContract);
+          onContractUpdate?.(updatedContract);
+        }
+        socket.off('contract:accepted', handleAccepted);
+        socket.off('error', handleError);
+        setIsLoading(false);
+      };
+      
+      const handleError = (error) => {
+        toast.error(error.message || 'Failed to accept contract');
+        socket.off('contract:accepted', handleAccepted);
+        socket.off('error', handleError);
+        setIsLoading(false);
+      };
+      
+      socket.once('contract:accepted', handleAccepted);
+      socket.once('error', handleError);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        socket.off('contract:accepted', handleAccepted);
+        socket.off('error', handleError);
+        if (isLoading) {
+          setIsLoading(false);
+          toast.error('Request timeout. Please try again.');
+        }
+      }, 10000);
+    } else {
+      // Fallback to API route if socket not available
+      try {
+        const response = await api.post(`/orders/${contractId}/accept`);
+        if (response.data.success) {
+          toast.success('Contract accepted successfully');
+          const updatedContract = response.data.contract || response.data.order;
+          setLocalContract(updatedContract);
+          onContractUpdate?.(updatedContract);
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || 'Failed to accept contract');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to accept contract');
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Handle reject order (CLIENT rejects freelancer's contract)
+  // Handle reject contract (CLIENT rejects freelancer's contract)
+  // Using Socket.IO for real-time updates
   const handleReject = async () => {
-    if (!isClient || !isClientOrder || !rejectionReason.trim()) return;
+    if (!isClient || !isClientContract || !rejectionReason.trim() || !contractId) return;
 
     setIsLoading(true);
-    try {
-      const response = await api.post(`/orders/${order.id}/reject`, {
+    
+    // Get socket from props or global
+    const socket = getSocket();
+    
+    if (socket && socket.connected) {
+      // Use Socket.IO event
+      socket.emit('contract:reject', { 
+        contractId,
         rejectionReason: rejectionReason.trim(),
       });
-      if (response.data.success) {
-        toast.success('Contract rejected');
-        onOrderUpdate?.(response.data.order);
-        setShowRejectDialog(false);
-        setRejectionReason('');
+      
+      // Listen for response
+      const handleRejected = (data) => {
+        if (data.success) {
+          toast.success('Contract rejected');
+          const updatedContract = data.contract || data.order;
+          setLocalContract(updatedContract);
+          onContractUpdate?.(updatedContract);
+          setShowRejectDialog(false);
+          setRejectionReason('');
+        }
+        socket.off('contract:rejected', handleRejected);
+        socket.off('error', handleError);
+        setIsLoading(false);
+      };
+      
+      const handleError = (error) => {
+        toast.error(error.message || 'Failed to reject contract');
+        socket.off('contract:rejected', handleRejected);
+        socket.off('error', handleError);
+        setIsLoading(false);
+      };
+      
+      socket.once('contract:rejected', handleRejected);
+      socket.once('error', handleError);
+      
+      // Timeout after 10 seconds
+      setTimeout(() => {
+        socket.off('contract:rejected', handleRejected);
+        socket.off('error', handleError);
+        if (isLoading) {
+          setIsLoading(false);
+          toast.error('Request timeout. Please try again.');
+        }
+      }, 10000);
+    } else {
+      // Fallback to API route if socket not available
+      try {
+        const response = await api.post(`/orders/${contractId}/reject`, {
+          rejectionReason: rejectionReason.trim(),
+        });
+        if (response.data.success) {
+          toast.success('Contract rejected');
+          const updatedContract = response.data.contract || response.data.order;
+          setLocalContract(updatedContract);
+          onContractUpdate?.(updatedContract);
+          setShowRejectDialog(false);
+          setRejectionReason('');
+        }
+      } catch (error) {
+        toast.error(error.response?.data?.error || 'Failed to reject contract');
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to reject contract');
-    } finally {
-      setIsLoading(false);
     }
   };
 
-  // Handle complete order (client only)
-  const handleComplete = async () => {
-    if (!isClient || !isClientOrder) return;
-
-    const latestDeliverable = order.deliverables?.[0];
-    if (!latestDeliverable) {
-      toast.error('No deliverable found');
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.post(`/orders/${order.id}/complete`, {
-        deliverableId: latestDeliverable.id,
-      });
-      if (response.data.success) {
-        toast.success('Order completed successfully');
-        onOrderUpdate?.(response.data.order);
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to complete order');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Handle request revision (client only)
-  const handleRequestRevision = async () => {
-    if (!isClient || !isClientOrder || !revisionReason.trim()) return;
-
-    setIsLoading(true);
-    try {
-      const response = await api.post(`/orders/${order.id}/revision`, {
-        reason: revisionReason.trim(),
-      });
-      if (response.data.success) {
-        toast.success('Revision requested');
-        onOrderUpdate?.(response.data.order);
-        setShowRevisionDialog(false);
-        setRevisionReason('');
-      }
-    } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to request revision');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Check if user can perform actions - use orderStatus variable
-  const canAccept = isClient && isClientOrder && orderStatus === 'PENDING_ACCEPTANCE';
-  const canReject = isClient && isClientOrder && orderStatus === 'PENDING_ACCEPTANCE';
-  const canComplete = isClient && isClientOrder && orderStatus === 'DELIVERED';
-  const canRequestRevision = isClient && isClientOrder && orderStatus === 'DELIVERED' && 
-                            (order.revisionsUsed || 0) < (order.revisionsIncluded || 0);
+  // Check if user can perform actions - only accept/reject for pending contracts
+  const isContractPending = contractStatus === 'PENDING_ACCEPTANCE';
+  const canAccept = isClient && isClientContract && isContractPending;
+  const canReject = isClient && isClientContract && isContractPending;
 
   return (
     <Card className="p-4 sm:p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm w-full max-w-full">
       {/* Header: Status Badge and Price */}
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
-        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0`}>
-          {statusConfig.label}
-        </Badge>
+        <div className="flex flex-col gap-1">
+          <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0`}>
+            {statusConfig.label}
+          </Badge>
+          {/* Show order status if order exists */}
+          {order && orderStatus === 'PENDING' && (
+            <Badge className="bg-orange-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0">
+              Waiting for Payment (Coming Soon)
+            </Badge>
+          )}
+          {order && orderStatus === 'ACTIVE' && (
+            <Badge className="bg-green-500 text-white px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0">
+              Order Active
+            </Badge>
+          )}
+        </div>
         <div className="text-right flex-shrink-0">
           <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">
-            {order.currency || 'USD'} {order.price?.toFixed(0) || '0'}
+            {contractCurrency} {contractPrice?.toFixed(0) || '0'}
           </div>
         </div>
       </div>
@@ -244,7 +297,7 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
         </div>
       )}
 
-      {/* Action Buttons - Show Accept and Reject side by side for PENDING_ACCEPTANCE */}
+      {/* Action Buttons - Show Accept and Reject only for PENDING_ACCEPTANCE contracts */}
       {(canAccept || canReject) && (
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
           {canAccept && (
@@ -305,83 +358,25 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
         </div>
       )}
 
-      {/* Other Action Buttons */}
-      {(canComplete || canRequestRevision) && (
-        <div className="flex flex-col sm:flex-row gap-2 mt-4">
-          {canComplete && (
-            <Button
-              size="sm"
-              onClick={handleComplete}
-              disabled={isLoading}
-              className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm sm:text-base"
-            >
-              <CheckCircle2 className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Accept & Complete</span>
-              <span className="sm:hidden">Complete</span>
-            </Button>
-          )}
-
-          {canRequestRevision && (
-            <AlertDialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
-              <AlertDialogTrigger asChild>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  disabled={isLoading}
-                  className="flex-1 text-sm sm:text-base"
-                >
-                  <RefreshCw className="h-4 w-4 mr-1 sm:mr-2" />
-                  <span className="hidden sm:inline">Request Revision</span>
-                  <span className="sm:hidden">Revision</span>
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent className="max-w-[95vw] sm:max-w-lg mx-4">
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Request Revision</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Please describe what changes you need.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <div className="py-4">
-                  <Textarea
-                    placeholder="What changes do you need?"
-                    value={revisionReason}
-                    onChange={(e) => setRevisionReason(e.target.value)}
-                    rows={3}
-                    className="w-full"
-                  />
-                </div>
-                <AlertDialogFooter className="flex-col sm:flex-row gap-2">
-                  <AlertDialogCancel className="w-full sm:w-auto">Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleRequestRevision}
-                    disabled={!revisionReason.trim() || isLoading}
-                    className="w-full sm:w-auto"
-                  >
-                    Request Revision
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          )}
-        </div>
-      )}
-      
-      {/* View Order Button - Always show at bottom */}
+      {/* View Contract Button - Always show at bottom */}
       <Button
         size="sm"
         onClick={() => {
+          if (!contractId) return;
           if (role === 'FREELANCER') {
             router.push(`/dashboard/freelancer/orders`);
           } else {
-            router.push(`/orders/${order.id}`);
+            router.push(`/orders/${contractId}`);
           }
         }}
         className="w-full bg-green-500 hover:bg-green-600 text-white rounded-lg mt-4 text-sm sm:text-base"
       >
         <Eye className="h-4 w-4 mr-2" />
-        View Order
+        View Contract
       </Button>
     </Card>
   );
 }
+
+// Export both for backward compatibility
+export { ContractCard as OrderCard };

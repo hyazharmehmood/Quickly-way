@@ -1,11 +1,13 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders - Create a new order
+ * POST /api/orders - Create a new contract (freelancer sends to client)
+ * This is a freelancer platform - we use CONTRACT terminology
+ * Note: Endpoint is /api/orders for backward compatibility, but internally uses contracts
  */
 export async function POST(request) {
   try {
@@ -38,10 +40,11 @@ export async function POST(request) {
       );
     }
 
-    // Allow both CLIENT and FREELANCER to create orders
-    if (user.role !== 'CLIENT' && user.role !== 'FREELANCER') {
+    // Only FREELANCER can create contracts (send to clients)
+    // This is a freelancer platform - contracts are sent by freelancers
+    if (user.role !== 'FREELANCER') {
       return NextResponse.json(
-        { error: 'Only clients and freelancers can create orders' },
+        { error: 'Only freelancers can create contracts' },
         { status: 403 }
       );
     }
@@ -65,10 +68,10 @@ export async function POST(request) {
       );
     }
 
-    // If freelancer is creating, clientId is required
-    if (user.role === 'FREELANCER' && !clientId) {
+    // clientId is required (freelancer sends contract to client)
+    if (!clientId) {
       return NextResponse.json(
-        { error: 'clientId is required when freelancer creates contract' },
+        { error: 'clientId is required to send contract' },
         { status: 400 }
       );
     }
@@ -78,44 +81,50 @@ export async function POST(request) {
                      request.headers.get('x-real-ip') || 
                      null;
 
-    const order = await orderService.createOrder({
+    // Create contract (freelancer sends to client)
+    const contract = await contractService.createContract({
       serviceId,
-      clientId: user.role === 'FREELANCER' ? clientId : user.id,
-      freelancerId: user.role === 'FREELANCER' ? user.id : undefined,
+      clientId: clientId,
+      freelancerId: user.id, // Freelancer is creating the contract
       conversationId,
       deliveryTime: deliveryTime || 7,
       revisionsIncluded: revisionsIncluded || 0,
       scopeOfWork,
       cancellationPolicy: cancellationPolicy || 'Standard cancellation policy applies',
       price,
-      clientIpAddress: user.role === 'CLIENT' ? ipAddress : null,
-      freelancerIpAddress: user.role === 'FREELANCER' ? ipAddress : null,
+      clientIpAddress: null,
+      freelancerIpAddress: ipAddress,
     });
 
-    // Emit Socket.IO event
+    // Emit Socket.IO event (contract:created)
     try {
-      emitOrderEvent('ORDER_CREATED', order);
+      emitOrderEvent('ORDER_CREATED', contract);
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
       // Don't fail the request if socket emission fails
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract, // Return as 'contract' for consistency
+      order: contract, // Keep 'order' for backward compatibility
     }, { status: 201 });
 
   } catch (error) {
-    console.error('Error creating order:', error);
+    console.error('Error creating contract:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create order' },
+      { error: error.message || 'Failed to create contract' },
       { status: 500 }
     );
   }
 }
 
 /**
- * GET /api/orders - Get user's orders
+ * GET /api/orders - Get user's contracts
+ * Returns contracts for:
+ * - FREELANCER: Contracts they sent to clients
+ * - CLIENT: Contracts sent to them by freelancers
+ * - ADMIN: All contracts in the system
  */
 export async function GET(request) {
   try {
@@ -154,7 +163,9 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
-    const orders = await orderService.getUserOrders(user.id, user.role, {
+    // Get contracts for user
+    // ADMIN can see all contracts
+    const contracts = await contractService.getUserContracts(user.id, user.role, {
       status,
       serviceId,
       limit,
@@ -163,13 +174,14 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      orders,
+      contracts, // Return as 'contracts' for consistency
+      orders: contracts, // Keep 'orders' for backward compatibility
     });
 
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error fetching contracts:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to fetch orders' },
+      { error: error.message || 'Failed to fetch contracts' },
       { status: 500 }
     );
   }

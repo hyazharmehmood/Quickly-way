@@ -1,11 +1,19 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
  * POST /api/orders/[id]/revision - Request revision by client
+ * 
+ * IMPORTANT: This endpoint accepts contractId for backward compatibility
+ * Internally, it works with Order model
+ * 
+ * CRITICAL RULES:
+ * - Revision can ONLY be requested when order.status === DELIVERED
+ * - Order must be ACTIVE before delivery can happen
+ * - Order becomes ACTIVE only when payment is processed (future implementation)
  */
 export async function POST(request, { params }) {
   try {
@@ -58,7 +66,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const order = await orderService.requestRevision(
+    const contract = await contractService.requestRevision(
       id,
       user.id,
       reason.trim()
@@ -66,14 +74,15 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('REVISION_REQUESTED', order, { reason: reason.trim() });
+      emitOrderEvent('REVISION_REQUESTED', contract, { reason: reason.trim() });
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order,
+      contract,
+      order: contract, // Backward compatibility
     });
 
   } catch (error) {

@@ -1,12 +1,10 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
-import * as orderService from '@/lib/services/orderService';
+import * as contractService from '@/lib/services/contractService';
 const { emitOrderEvent } = require('@/lib/socket');
 
-/**
- * POST /api/orders/[id]/deliver - Submit delivery by freelancer
- */
+
 export async function POST(request, { params }) {
   try {
     // Next.js 16: params is a Promise, must await
@@ -72,7 +70,7 @@ export async function POST(request, { params }) {
       );
     }
 
-    const result = await orderService.submitDelivery(
+    const result = await contractService.submitDelivery(
       id,
       user.id,
       {
@@ -85,16 +83,17 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('DELIVERY_SUBMITTED', result.order, {
+      emitOrderEvent('DELIVERY_SUBMITTED', result.contract, {
         deliverable: result.deliverable,
       });
     } catch (socketError) {
-      console.error('Failed to emit order event:', socketError);
+      console.error('Failed to emit contract event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      order: result.order,
+      contract: result.contract,
+      order: result.contract, // Backward compatibility
       deliverable: result.deliverable,
     });
 
