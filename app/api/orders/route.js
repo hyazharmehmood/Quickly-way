@@ -65,31 +65,27 @@ export async function POST(request) {
       );
     }
 
-    // If freelancer is creating, clientId is required
-    if (user.role === 'FREELANCER' && !clientId) {
+    // Only clients can create orders directly
+    if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'clientId is required when freelancer creates contract' },
-        { status: 400 }
+        { error: 'Only clients can create orders. Freelancers should use offers instead.' },
+        { status: 403 }
       );
     }
 
-    // Get IP addresses
+    // Get IP address
     const ipAddress = request.headers.get('x-forwarded-for') || 
                      request.headers.get('x-real-ip') || 
                      null;
 
     const order = await orderService.createOrder({
       serviceId,
-      clientId: user.role === 'FREELANCER' ? clientId : user.id,
-      freelancerId: user.role === 'FREELANCER' ? user.id : undefined,
+      clientId: user.id,
       conversationId,
       deliveryTime: deliveryTime || 7,
       revisionsIncluded: revisionsIncluded || 0,
-      scopeOfWork,
-      cancellationPolicy: cancellationPolicy || 'Standard cancellation policy applies',
       price,
-      clientIpAddress: user.role === 'CLIENT' ? ipAddress : null,
-      freelancerIpAddress: user.role === 'FREELANCER' ? ipAddress : null,
+      clientIpAddress: ipAddress,
     });
 
     // Emit Socket.IO event

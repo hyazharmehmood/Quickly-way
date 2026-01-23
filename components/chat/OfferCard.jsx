@@ -127,18 +127,18 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
     <Card className="p-4 sm:p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm w-full max-w-full">
       {/* Header: Status Badge and Price */}
       <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
-        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs font-bold uppercase flex-shrink-0`}>
+        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-bold uppercase flex-shrink-0`}>
           {statusConfig.label}
         </Badge>
         <div className="text-right flex-shrink-0">
-          <div className="text-xl sm:text-2xl md:text-3xl font-bold text-blue-900">
+          <div className="text-lg sm:text-lg md:text-lg font-bold text-blue-900">
             {offer.currency || 'USD'} {offer.price?.toFixed(0) || '0'}
           </div>
         </div>
       </div>
 
       {/* Service Title */}
-      <h3 className="text-lg sm:text-xl font-bold text-blue-900 mb-2 sm:mb-3 leading-tight break-words">
+      <h3 className="text-md sm:text-md font-bold text-blue-900 mb-2 sm:mb-3 leading-tight break-words">
         {offer.serviceTitle || 'Custom Offer'}
       </h3>
 
@@ -188,7 +188,7 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
         <div className="flex flex-col sm:flex-row gap-2 mt-4">
           {canAccept && (
             <Button
-              size="sm"
+              size="lg"
               onClick={handleAccept}
               disabled={isLoading}
               className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm sm:text-base"
@@ -203,7 +203,7 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
             <AlertDialog open={showRejectDialog} onOpenChange={setShowRejectDialog}>
               <AlertDialogTrigger asChild>
                 <Button
-                  size="sm"
+                  size="lg"
                   variant="outline"
                   disabled={isLoading}
                   className="flex-1 border-red-300 text-red-600 hover:bg-red-50 text-sm sm:text-base"
@@ -247,7 +247,7 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
       {/* View Details Button - Show for freelancer or if offer is accepted/rejected */}
       {(isFreelancerOffer || isAccepted || isRejected) && (
         <Button
-          size="sm"
+          size="lg"
           onClick={() => {
             if (isAccepted && offer.order) {
               router.push(`/orders/${offer.order.id}`);
@@ -257,7 +257,7 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
               router.push(`/offers/${offer.id}`);
             }
           }}
-          className="w-full bg-blue-500 hover:bg-blue-600 text-white rounded-lg mt-4 text-sm sm:text-base"
+          className="w-full  mt-2"
         >
           <Eye className="h-4 w-4 mr-2" />
           {isAccepted && offer.order ? 'View Order' : 'View Offer'}

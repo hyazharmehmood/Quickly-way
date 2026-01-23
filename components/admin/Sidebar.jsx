@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
     LayoutDashboard, Users as UsersIcon, ShieldCheck, Briefcase,
     ShoppingCart, AlertCircle, Star, Search, Settings as SettingsIcon,
-    LogOut, ChevronLeft, ChevronRight
+    LogOut, ChevronLeft, ChevronRight, FolderTree, Tag
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -36,12 +36,14 @@ export const Sidebar = ({ onLogout }) => {
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
         { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
         { icon: <Star />, label: "Reviews", href: "/admin/reviews" },
+        { icon: <FolderTree />, label: "Categories", href: "/admin/categories" },
+        { icon: <Tag />, label: "Skills", href: "/admin/skills" },
         { icon: <Search />, label: "SEO", href: "/admin/seo" },
         { icon: <SettingsIcon />, label: "Settings", href: "/admin/settings" },
     ];
 
     return (
-        <aside className={`${isOpen ? 'w-64' : 'w-20'} bg-card border-r border-border transition-all duration-300 flex flex-col z-[70] h-screen sticky top-0`}>
+        <aside className={`${isOpen ? 'w-64' : 'w-20'} bg-card border-r border-border transition-all duration-300 flex flex-col  h-screen sticky top-0`}>
             {/* Logo area */}
             <div className="p-6 flex items-center justify-between h-20">
                 <div className="flex items-center gap-4">

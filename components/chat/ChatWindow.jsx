@@ -21,7 +21,7 @@ import { ChatInput } from './ChatInput';
 import { ChatBubble } from './ChatBubble';
 import { OrderCard } from './OrderCard';
 import { OfferCard } from './OfferCard';
-import CreateContractModal from './CreateContractModal';  
+import CreateOfferModal from './CreateOfferModal';  
 import { ImageGallery } from './ImageGallery';  
 
 export function ChatWindow({ conversation, onBack }) {
@@ -32,7 +32,7 @@ export function ChatWindow({ conversation, onBack }) {
   const [typingUsers, setTypingUsers] = useState([]);
   const [connectionError, setConnectionError] = useState(null);
   const [orders, setOrders] = useState([]);
-  const [showCreateContractModal, setShowCreateContractModal] = useState(false);
+  const [showCreateOfferModal, setShowCreateOfferModal] = useState(false);
   const [service, setService] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
   const messagesEndRef = useRef(null);
@@ -84,24 +84,7 @@ export function ChatWindow({ conversation, onBack }) {
     };
   }, [conversation?.id, conversation?.otherParticipant?.id, socket, isConnected]);
 
-  // Orders are now fetched with messages, no separate API call needed
-
-  // Extract orders from messages (orders are now embedded in messages)
-  useEffect(() => {
-    const ordersFromMessages = messages
-      .filter(msg => msg.order && msg.type === 'contract')
-      .map(msg => msg.order)
-      .filter((order, index, self) => 
-        // Remove duplicates by order ID
-        index === self.findIndex(o => o.id === order.id)
-      )
-      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-    
-    setOrders(ordersFromMessages);
-  }, [messages]);
-
-  // Orders are now automatically included with messages from backend (like sender data)
-
+  
   // Listen for order updates via Socket.IO
   useEffect(() => {
     if (!socket || !isConnected) return;
@@ -230,7 +213,7 @@ export function ChatWindow({ conversation, onBack }) {
             return updated;
           }
           
-          // Add message with order data if it's a contract message
+          // Add message with order data if it's an offer message
           return [...prev, data.message];
         });
 
@@ -682,11 +665,11 @@ export function ChatWindow({ conversation, onBack }) {
               <DropdownMenuContent align="end" className="w-48">
                 {role === 'FREELANCER' && (
                   <DropdownMenuItem
-                    onClick={() => setShowCreateContractModal(true)}
+                    onClick={() => setShowCreateOfferModal(true)}
                     className="cursor-pointer"
                   >
                     <FileText className="h-4 w-4 mr-2" />
-                    Create Contract
+                    Send Offer
                   </DropdownMenuItem>
                 )}
                 {/* Add more menu items here if needed */}
@@ -696,19 +679,18 @@ export function ChatWindow({ conversation, onBack }) {
         </div>
       </div>
 
-      {/* Create Contract Modal */}
+      {/* Create Offer Modal */}
       {role === 'FREELANCER' && otherUser && (
-        <CreateContractModal
-          isOpen={showCreateContractModal}
-          onClose={() => setShowCreateContractModal(false)}
+        <CreateOfferModal
+          isOpen={showCreateOfferModal}
+          onClose={() => setShowCreateOfferModal(false)}
           service={null}
           conversationId={conversation?.id}
           clientId={otherUser?.id}
           existingOrder={orders[0] || null}
-          onContractCreated={(newOrder) => {
-            setOrders((prev) => [newOrder, ...prev]);
-            setShowCreateContractModal(false);
-            // Orders will be updated when messages are fetched/refreshed
+          onOfferCreated={(newOffer) => {
+            // Offers will be updated when messages are fetched/refreshed
+            setShowCreateOfferModal(false);
           }}
         />
       )}
@@ -795,20 +777,19 @@ export function ChatWindow({ conversation, onBack }) {
                 const isOwnMessage = firstMessage.senderId === user?.id;
                 const isOptimistic = firstMessage.id?.startsWith('temp-');
                 
-                // Check if this is a contract message or offer message
-                const isContractMessage = firstMessage.type === 'contract';
+                // Check if this is an offer message
                 const isOfferMessage = firstMessage.type === 'offer';
-                
-                // Show order card for contract messages (order might be loading)
-                const showOrderCard = isContractMessage && firstMessage.attachmentName;
                 
                 // Show offer card for offer messages (offer might be loading)
                 const showOfferCard = isOfferMessage && firstMessage.attachmentName;
                 
+                // Show order card if offer was accepted and has order
+                const showOrderCard = isOfferMessage && firstMessage.offer?.status === 'ACCEPTED' && firstMessage.offer?.order;
+                
                 return (
                   <React.Fragment key={`group-${groupIndex}-${firstMessage.id}`}>
-                    {/* Hide contract and offer message text, only show OrderCard/OfferCard */}
-                    {!isContractMessage && !isOfferMessage && (
+                    {/* Hide offer message text, only show OfferCard */}
+                    {!isOfferMessage && (
                       <>
                         {group.type === 'image-group' && group.messages.length > 1 ? (
                           // Render image gallery for multiple consecutive images
@@ -863,41 +844,6 @@ export function ChatWindow({ conversation, onBack }) {
                         )}
                       </>
                     )}
-                    {/* Show Order Card for contract messages */}
-                    {showOrderCard && firstMessage.order && (
-                      <div className="flex justify-center my-4">
-                        <div className="w-full max-w-md">
-                          <OrderCard
-                            order={firstMessage.order}
-                            conversationId={conversation.id}
-                            onOrderUpdate={(updatedOrder) => {
-                              console.log('Order updated:', updatedOrder);
-                              // Update order in messages
-                              setMessages((prev) =>
-                                prev.map((msg) =>
-                                  msg.id === firstMessage.id
-                                    ? { ...msg, order: updatedOrder }
-                                    : msg
-                                )
-                              );
-                            }}
-                          />
-                        </div>
-                      </div>
-                    )}
-                    {/* Show loading state for contract messages without order data */}
-                    {showOrderCard && !firstMessage.order && (
-                      <div className="flex justify-center my-4">
-                        <div className="w-full max-w-md">
-                          <Card className="p-4">
-                            <div className="flex items-center justify-center gap-2">
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                              <p className="text-sm text-muted-foreground">Loading contract...</p>
-                            </div>
-                          </Card>
-                        </div>
-                      </div>
-                    )}
                     {/* Show Offer Card for offer messages */}
                     {showOfferCard && firstMessage.offer && (
                       <div className="flex justify-center my-4">
@@ -917,51 +863,28 @@ export function ChatWindow({ conversation, onBack }) {
                               );
                             }}
                           />
-                          {/* Show Order Card if offer was accepted and has order */}
-                          {firstMessage.offer.status === 'ACCEPTED' && firstMessage.offer.order && (
-                            <OrderCard
-                              order={firstMessage.offer.order}
-                              conversationId={conversation.id}
-                              onOrderUpdate={(updatedOrder) => {
-                                console.log('Order updated:', updatedOrder);
-                                // Update order in offer
-                                setMessages((prev) =>
-                                  prev.map((msg) =>
-                                    msg.id === firstMessage.id && msg.offer
-                                      ? { 
-                                          ...msg, 
-                                          offer: { 
-                                            ...msg.offer, 
-                                            order: updatedOrder 
-                                          } 
-                                        }
-                                      : msg
-                                  )
-                                );
-                              }}
-                            />
-                          )}
+                         
                         </div>
                       </div>
                     )}
                     {/* Show loading state for offer messages without offer data */}
                     {showOfferCard && !firstMessage.offer && (
-                      <div className="flex justify-center my-4">
-                        <div className="w-full max-w-md">
+              <div className="flex justify-center my-4">
+                <div className="w-full max-w-md">
                           <Card className="p-4">
                             <div className="flex items-center justify-center gap-2">
                               <Loader2 className="h-4 w-4 animate-spin" />
                               <p className="text-sm text-muted-foreground">Loading offer...</p>
                             </div>
                           </Card>
-                        </div>
-                      </div>
-                    )}
+                </div>
+              </div>
+            )}
                   </React.Fragment>
                 );
               });
             })()}
-            {/* Orders are now displayed inline with their contract messages above */}
+            {/* Orders are now displayed inline with their offer messages above */}
             {typingUsers.length > 0 && (
               <div className="flex justify-start">
                 <div className="bg-secondary text-secondary-foreground rounded-2xl p-3">

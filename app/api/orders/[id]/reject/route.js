@@ -5,7 +5,7 @@ import * as orderService from '@/lib/services/orderService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/reject - Reject order/contract by freelancer
+ * POST /api/orders/[id]/reject - Reject order by client
  */
 export async function POST(request, { params }) {
   try {
@@ -43,7 +43,7 @@ export async function POST(request, { params }) {
 
     if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only clients can reject contracts' },
+        { error: 'Only clients can reject orders' },
         { status: 403 }
       );
     }
@@ -67,7 +67,7 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('CONTRACT_REJECTED', order);
+      emitOrderEvent('ORDER_CANCELLED', order);
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
     }

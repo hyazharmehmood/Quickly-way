@@ -176,7 +176,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
             <p className="text-xs text-blue-700">
               <strong>Note:</strong> After you create this order, the freelancer will need to accept it. 
-              Once accepted, a legally binding contract will be created and work will begin.
+              Once accepted, the order will be created and work will begin.
             </p>
           </div>
 
@@ -206,5 +206,6 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
 };
 
 export default OrderModal;
+
 
 

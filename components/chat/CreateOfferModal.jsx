@@ -18,7 +18,7 @@ import api from '@/utils/api';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
-const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientId, onContractCreated, existingOrder, existingOffer }) => {
+const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, onOfferCreated, existingOrder, existingOffer }) => {
   const { user } = useAuthStore();
   const { socket, isConnected } = useGlobalSocket();
   const [loading, setLoading] = useState(false);
@@ -58,7 +58,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
       }
     } catch (error) {
       console.error('Error fetching services:', error);
-      // If no services, allow creating contract without service
+      // If no services, allow creating offer without service
     } finally {
       setLoadingServices(false);
     }
@@ -84,7 +84,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
 
     setLoading(true);
     try {
-      // Create offer (not order) - Fiverr-like flow
+      // Create offer - Fiverr-like flow
       const response = await api.post('/offers', {
         serviceId: selectedServiceId,
         conversationId: conversationId || null,
@@ -120,9 +120,9 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
           }
         }
         
-        if (onContractCreated) {
-          // Pass offer instead of order
-          onContractCreated(offer);
+        if (onOfferCreated) {
+          // Pass offer
+          onOfferCreated(offer);
         }
 
         onClose();
@@ -194,7 +194,7 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
           ) : (
             <div className="bg-yellow-50 rounded-xl sm:rounded-2xl p-3 sm:p-4 border border-yellow-200">
               <div className="text-xs sm:text-sm text-yellow-700">
-                No services found. Please create a service first to send contracts.
+                No services found. Please create a service first to send offers.
               </div>
             </div>
           )}
@@ -304,5 +304,5 @@ const CreateContractModal = ({ isOpen, onClose, service, conversationId, clientI
   );
 };
 
-export default CreateContractModal;
+export default CreateOfferModal;
 

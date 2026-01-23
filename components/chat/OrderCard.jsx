@@ -83,10 +83,7 @@ export function OrderCard({ order, conversationId, onOrderUpdate }) {
 console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrderUpdate);
   if (!order) return null;
 
-  // Ensure we're using the order status, not contract status
-  // For new contracts created by freelancer, status should be PENDING_ACCEPTANCE
-  // If status is missing, undefined, or null, default to PENDING_ACCEPTANCE
-  // Also handle case where status might be a number (enum) instead of string
+
   let orderStatus = order.status;
   
   // Handle enum values - convert to string if needed
@@ -106,7 +103,6 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
       orderId: order.id,
       rawStatus: order.status,
       orderStatus,
-      contractStatus: order.contract?.status,
       hasStatusConfig: !!STATUS_CONFIG[orderStatus],
     });
   }
@@ -118,11 +114,11 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
   const isClientOrder = order.clientId === user?.id;
   const isFreelancerOrder = order.freelancerId === user?.id;
 
-  // Get service title from contract or service
-  const serviceTitle = order.contract?.serviceTitle || order.service?.title || 'Service Order';
+  // Get service title from service
+  const serviceTitle = order.service?.title || 'Service Order';
   const deliveryDate = order.deliveryDate ? format(new Date(order.deliveryDate), 'd MMM, yyyy') : null;
 
-  // Handle accept order (CLIENT accepts freelancer's contract)
+  // Handle accept order (CLIENT accepts order)
   const handleAccept = async () => {
     if (!isClient || !isClientOrder) return;
 
@@ -130,17 +126,17 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
     try {
       const response = await api.post(`/orders/${order.id}/accept`);
       if (response.data.success) {
-        toast.success('Contract accepted successfully');
+        toast.success('Order accepted successfully');
         onOrderUpdate?.(response.data.order);
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to accept contract');
+      toast.error(error.response?.data?.error || 'Failed to accept order');
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Handle reject order (CLIENT rejects freelancer's contract)
+  // Handle reject order (CLIENT rejects order)
   const handleReject = async () => {
     if (!isClient || !isClientOrder || !rejectionReason.trim()) return;
 
@@ -150,13 +146,13 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
         rejectionReason: rejectionReason.trim(),
       });
       if (response.data.success) {
-        toast.success('Contract rejected');
+        toast.success('Order rejected');
         onOrderUpdate?.(response.data.order);
         setShowRejectDialog(false);
         setRejectionReason('');
       }
     } catch (error) {
-      toast.error(error.response?.data?.error || 'Failed to reject contract');
+      toast.error(error.response?.data?.error || 'Failed to reject order');
     } finally {
       setIsLoading(false);
     }
@@ -255,7 +251,7 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
               className="flex-1 bg-green-500 hover:bg-green-600 text-white text-sm sm:text-base"
             >
               <CheckCircle2 className="h-4 w-4 mr-1 sm:mr-2" />
-              <span className="hidden sm:inline">Accept Contract</span>
+              <span className="hidden sm:inline">Accept Order</span>
               <span className="sm:hidden">Accept</span>
             </Button>
           )}
@@ -275,9 +271,9 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
               </AlertDialogTrigger>
               <AlertDialogContent className="max-w-[95vw] sm:max-w-lg mx-4">
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Reject Contract</AlertDialogTitle>
+                  <AlertDialogTitle>Reject Order</AlertDialogTitle>
                   <AlertDialogDescription>
-                    Please provide a reason for rejecting this contract.
+                    Please provide a reason for rejecting this order.
                   </AlertDialogDescription>
                 </AlertDialogHeader>
                 <div className="py-4">
@@ -296,7 +292,7 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
                     disabled={!rejectionReason.trim() || isLoading}
                     className="w-full sm:w-auto bg-destructive text-destructive-foreground"
                   >
-                    Reject Contract
+                    Reject Order
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>

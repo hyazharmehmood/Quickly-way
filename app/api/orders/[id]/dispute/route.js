@@ -162,7 +162,6 @@ export async function POST(request, { params }) {
             profileImage: true,
           },
         },
-        contract: true,
       },
     });
 

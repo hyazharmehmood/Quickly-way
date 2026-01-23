@@ -289,7 +289,7 @@ export default function FreelancerOrdersPage() {
                                         <TableCell className="px-8 py-5 font-normal text-muted-foreground text-sm">{order.orderNumber}</TableCell>
                                         <TableCell className="px-8 py-5">
                                             <div className="font-normal text-foreground text-sm">{order.client?.name || 'Unknown Client'}</div>
-                                            <div className="text-xs text-muted-foreground mt-0.5">{order.service?.title || order.contract?.serviceTitle || 'Service'}</div>
+                                            <div className="text-xs text-muted-foreground mt-0.5">{order.service?.title || 'Service'}</div>
                                         </TableCell>
                                         <TableCell className="px-8 py-5 text-center">
                                             <div className="flex items-center justify-center gap-1.5 text-xs font-normal">
@@ -373,7 +373,7 @@ export default function FreelancerOrdersPage() {
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Service</Label>
-                                    <div className="mt-1">{selectedOrder.service?.title || selectedOrder.contract?.serviceTitle || 'N/A'}</div>
+                                    <div className="mt-1">{selectedOrder.service?.title || 'N/A'}</div>
                                 </div>
                                 <div>
                                     <Label className="text-xs text-muted-foreground">Revisions</Label>
@@ -382,11 +382,11 @@ export default function FreelancerOrdersPage() {
                                     </div>
                                 </div>
                             </div>
-                            {selectedOrder.contract?.scopeOfWork && (
+                            {selectedOrder.service?.description && (
                                 <div>
-                                    <Label className="text-xs text-muted-foreground">Scope of Work</Label>
+                                    <Label className="text-xs text-muted-foreground">Service Description</Label>
                                     <div className="mt-1 text-sm p-3 bg-secondary/50 rounded-lg">
-                                        {selectedOrder.contract.scopeOfWork}
+                                        {selectedOrder.service.description}
                                     </div>
                                 </div>
                             )}

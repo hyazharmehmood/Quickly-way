@@ -165,6 +165,44 @@ model Message {
   @@index([seenAt])
 }
 
+// Category and Skill Models (Admin-managed)
+// Hierarchical Category structure: Main Category → Subcategories → Skills
+model Category {
+  id          String     @id @default(uuid())
+  name        String
+  slug        String     @unique
+  isActive    Boolean    @default(true)
+  parentId    String?    // null for main categories, set for subcategories
+  parent      Category?   @relation("CategoryTree", fields: [parentId], references: [id], onDelete: Cascade)
+  children    Category[]  @relation("CategoryTree")
+  skills      Skill[]
+  createdAt   DateTime   @default(now())
+  updatedAt   DateTime   @updatedAt
+
+  @@unique([parentId, name]) // Category name unique within same parent (or root if parentId is null)
+  @@index([slug])
+  @@index([isActive])
+  @@index([parentId])
+  @@index([name])
+}
+
+model Skill {
+  id          String   @id @default(uuid())
+  categoryId  String
+  name        String
+  slug        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+
+  @@unique([categoryId, name]) // Skill name unique within category
+  @@unique([categoryId, slug]) // Slug unique within category
+  @@index([categoryId])
+  @@index([slug])
+  @@index([isActive])
+}
+
 enum UserRole {
   CLIENT
   FREELANCER
@@ -229,7 +267,7 @@ model Offer {
   @@index([orderId])
 }
 
-// Order & Contract Models
+// Order Models
 model Order {
   id                    String            @id @default(uuid())
   orderNumber           String            @unique // Human-readable order number (e.g., ORD-2024-001)
@@ -259,7 +297,6 @@ model Order {
   freelancer            User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
   conversation          Conversation?     @relation(fields: [conversationId], references: [id])
   offer                 Offer?            @relation // Reverse relation - Offer owns the relation via orderId
-  contract              Contract?
   deliverables          OrderDeliverable[]
   events                OrderEvent[]
   disputes              Dispute[]
@@ -270,34 +307,6 @@ model Order {
   @@index([status])
   @@index([conversationId])
   @@index([orderNumber])
-}
-
-model Contract {
-  id                    String            @id @default(uuid())
-  orderId               String            @unique
-  serviceTitle          String
-  serviceDescription    String
-  scopeOfWork           String            // Detailed scope
-  price                 Float
-  currency              String            @default("USD")
-  deliveryTime          Int               // Days
-  revisionsIncluded     Int               @default(0)
-  cancellationPolicy    String            // Terms for cancellation
-  status                ContractStatus    @default(PENDING_ACCEPTANCE)
-  clientAcceptedAt      DateTime?
-  freelancerAcceptedAt  DateTime?
-  clientIpAddress       String?           // IP when client created
-  freelancerIpAddress   String?           // IP when freelancer accepted
-  rejectionReason       String?
-  rejectedAt            DateTime?
-  rejectedBy            String?           // User ID
-  createdAt             DateTime          @default(now())
-  updatedAt             DateTime          @updatedAt
-  
-  order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
-
-  @@index([orderId])
-  @@index([status])
 }
 
 model OrderDeliverable {
@@ -371,13 +380,6 @@ enum OrderStatus {
   DISPUTED
 }
 
-enum ContractStatus {
-  PENDING_ACCEPTANCE
-  ACTIVE
-  REJECTED
-  CANCELLED
-}
-
 enum DeliverableType {
   FILE
   MESSAGE
@@ -386,8 +388,6 @@ enum DeliverableType {
 
 enum OrderEventType {
   ORDER_CREATED
-  CONTRACT_ACCEPTED
-  CONTRACT_REJECTED
   ORDER_IN_PROGRESS
   DELIVERY_SUBMITTED
   DELIVERY_ACCEPTED

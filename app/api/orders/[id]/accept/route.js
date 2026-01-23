@@ -5,7 +5,7 @@ import * as orderService from '@/lib/services/orderService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/accept - Accept order/contract by freelancer
+ * POST /api/orders/[id]/accept - Accept order by client
  */
 export async function POST(request, { params }) {
   try {
@@ -43,7 +43,7 @@ export async function POST(request, { params }) {
 
     if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only clients can accept contracts' },
+        { error: 'Only clients can accept orders' },
         { status: 403 }
       );
     }
@@ -62,7 +62,7 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('CONTRACT_ACCEPTED', order);
+      emitOrderEvent('ORDER_IN_PROGRESS', order);
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
     }
