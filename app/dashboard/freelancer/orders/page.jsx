@@ -19,31 +19,12 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
 
 const STATUS_CONFIG = {
     PENDING_ACCEPTANCE: { label: 'PENDING', color: 'bg-orange-100 text-orange-600 border-orange-200' },
@@ -62,12 +43,6 @@ export default function FreelancerOrdersPage() {
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
     const [statusFilter, setStatusFilter] = useState('all');
-    const [selectedOrder, setSelectedOrder] = useState(null);
-    const [showOrderDetail, setShowOrderDetail] = useState(false);
-    const [showDeliverDialog, setShowDeliverDialog] = useState(false);
-    const [showCancelDialog, setShowCancelDialog] = useState(false);
-    const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
-    const [cancelReason, setCancelReason] = useState('');
 
     useEffect(() => {
         fetchOrders();
@@ -118,61 +93,9 @@ export default function FreelancerOrdersPage() {
     };
 
     const handleViewOrder = (order) => {
-        setSelectedOrder(order);
-        setShowOrderDetail(true);
+        router.push(`/orders/${order.id}`);
     };
 
-    const handleDeliver = async () => {
-        if (!selectedOrder) return;
-        if (deliveryData.type === 'MESSAGE' && !deliveryData.message.trim()) {
-            toast.error('Please enter a delivery message');
-            return;
-        }
-        if (deliveryData.type === 'FILE' && !deliveryData.fileUrl.trim()) {
-            toast.error('Please provide a file URL');
-            return;
-        }
-
-        try {
-            const response = await api.post(`/orders/${selectedOrder.id}/deliver`, {
-                type: deliveryData.type,
-                message: deliveryData.message,
-                fileUrl: deliveryData.fileUrl,
-                isRevision: selectedOrder.status === 'REVISION_REQUESTED',
-            });
-            if (response.data.success) {
-                toast.success('Delivery submitted successfully');
-                setShowDeliverDialog(false);
-                setDeliveryData({ type: 'MESSAGE', message: '', fileUrl: '' });
-                fetchOrders();
-                setShowOrderDetail(false);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to submit delivery');
-        }
-    };
-
-    const handleCancel = async () => {
-        if (!selectedOrder || !cancelReason.trim()) {
-            toast.error('Please provide a cancellation reason');
-            return;
-        }
-
-        try {
-            const response = await api.post(`/orders/${selectedOrder.id}/cancel`, {
-                reason: cancelReason.trim(),
-            });
-            if (response.data.success) {
-                toast.success('Order cancelled successfully');
-                setShowCancelDialog(false);
-                setCancelReason('');
-                fetchOrders();
-                setShowOrderDetail(false);
-            }
-        } catch (error) {
-            toast.error(error.response?.data?.error || 'Failed to cancel order');
-        }
-    };
 
     const handleChat = (order) => {
         if (order.conversationId) {
@@ -337,181 +260,6 @@ export default function FreelancerOrdersPage() {
                 </CardContent>
             </Card>
 
-            {/* Order Detail Dialog */}
-            <Dialog open={showOrderDetail} onOpenChange={setShowOrderDetail}>
-                <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>Order Details</DialogTitle>
-                        <DialogDescription>
-                            Order {selectedOrder?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedOrder && (
-                        <div className="space-y-4">
-                            <div className="grid grid-cols-2 gap-4">
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Status</Label>
-                                    <div className="mt-1">{getStatusBadge(selectedOrder.status)}</div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Price</Label>
-                                    <div className="mt-1 font-semibold">
-                                        {selectedOrder.currency || 'USD'} {selectedOrder.price?.toFixed(2) || '0.00'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Client</Label>
-                                    <div className="mt-1">{selectedOrder.client?.name || 'Unknown'}</div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Delivery Date</Label>
-                                    <div className="mt-1">
-                                        {selectedOrder.deliveryDate 
-                                            ? format(new Date(selectedOrder.deliveryDate), 'd MMM, yyyy')
-                                            : 'Not set'}
-                                    </div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Service</Label>
-                                    <div className="mt-1">{selectedOrder.service?.title || 'N/A'}</div>
-                                </div>
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Revisions</Label>
-                                    <div className="mt-1">
-                                        {selectedOrder.revisionsUsed || 0} / {selectedOrder.revisionsIncluded || 0}
-                                    </div>
-                                </div>
-                            </div>
-                            {selectedOrder.service?.description && (
-                                <div>
-                                    <Label className="text-xs text-muted-foreground">Service Description</Label>
-                                    <div className="mt-1 text-sm p-3 bg-secondary/50 rounded-lg">
-                                        {selectedOrder.service.description}
-                                    </div>
-                                </div>
-                            )}
-                            <div className="flex gap-2 pt-4">
-                                {(selectedOrder.status === 'IN_PROGRESS' || selectedOrder.status === 'REVISION_REQUESTED') && (
-                                    <Button 
-                                        onClick={() => {
-                                            setShowOrderDetail(false);
-                                            setShowDeliverDialog(true);
-                                        }}
-                                        className="flex-1"
-                                    >
-                                        <Package className="w-4 h-4 mr-2" />
-                                        Deliver Order
-                                    </Button>
-                                )}
-                                {selectedOrder.status !== 'COMPLETED' && selectedOrder.status !== 'CANCELLED' && (
-                                    <Button 
-                                        variant="outline"
-                                        onClick={() => {
-                                            setShowOrderDetail(false);
-                                            setShowCancelDialog(true);
-                                        }}
-                                        className="flex-1"
-                                    >
-                                        <XCircle className="w-4 h-4 mr-2" />
-                                        Cancel Order
-                                    </Button>
-                                )}
-                                <Button 
-                                    variant="secondary"
-                                    onClick={() => handleChat(selectedOrder)}
-                                    className="flex-1"
-                                >
-                                    <MessageSquare className="w-4 h-4 mr-2" />
-                                    Open Chat
-                                </Button>
-                            </div>
-                        </div>
-                    )}
-                </DialogContent>
-            </Dialog>
-
-            {/* Deliver Dialog */}
-            <Dialog open={showDeliverDialog} onOpenChange={setShowDeliverDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Submit Delivery</DialogTitle>
-                        <DialogDescription>
-                            Submit your work for order {selectedOrder?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Delivery Type</Label>
-                            <Select 
-                                value={deliveryData.type} 
-                                onValueChange={(value) => setDeliveryData({ ...deliveryData, type: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="MESSAGE">Message</SelectItem>
-                                    <SelectItem value="FILE">File URL</SelectItem>
-                                    <SelectItem value="LINK">Link</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {deliveryData.type === 'MESSAGE' && (
-                            <div>
-                                <Label>Delivery Message</Label>
-                                <Textarea
-                                    value={deliveryData.message}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, message: e.target.value })}
-                                    placeholder="Describe what you've delivered..."
-                                    rows={4}
-                                />
-                            </div>
-                        )}
-                        {(deliveryData.type === 'FILE' || deliveryData.type === 'LINK') && (
-                            <div>
-                                <Label>{deliveryData.type === 'FILE' ? 'File URL' : 'Link'}</Label>
-                                <Input
-                                    value={deliveryData.fileUrl}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, fileUrl: e.target.value })}
-                                    placeholder={deliveryData.type === 'FILE' ? 'https://...' : 'https://...'}
-                                />
-                            </div>
-                        )}
-                        <div className="flex gap-2 pt-4">
-                            <Button variant="outline" onClick={() => setShowDeliverDialog(false)} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button onClick={handleDeliver} className="flex-1">
-                                Submit Delivery
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Cancel Dialog */}
-            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Please provide a reason for cancelling order {selectedOrder?.orderNumber}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="space-y-4">
-                        <Textarea
-                            value={cancelReason}
-                            onChange={(e) => setCancelReason(e.target.value)}
-                            placeholder="Reason for cancellation..."
-                            rows={4}
-                        />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCancel}>Confirm Cancellation</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
         </div>
     );
 }
