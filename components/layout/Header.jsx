@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -28,6 +29,7 @@ import { User as UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, Shoppin
 export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
   const pathname = usePathname();
+  const [logoError, setLogoError] = useState(false);
   const { isLoggedIn, role, isSeller, sellerStatus, user, logout } = useAuthStore();
   const normalizedRole = role ? role.toUpperCase() : '';
   const isAdmin = normalizedRole === 'ADMIN';
@@ -159,9 +161,20 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
             <Button
               variant="ghost"
               onClick={() => handleNavigate('')}
-              className="text-2xl font-bold tracking-tight text-primary hover:text-primary/90 transition-colors h-auto p-0"
+              className="h-auto p-0 hover:bg-transparent"
             >
-              Quicklyway
+              
+                <Image
+                  src="/images/logo.png"
+                  alt="Quicklyway Logo"
+                  width={140}
+                  height={40}
+                  className="h-8 w-auto object-contain"
+                  priority
+              
+                />
+            
+              
             </Button>
           </div>
 

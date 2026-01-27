@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { ChevronLeft, ChevronRight, LogOut, ShieldCheck, ArrowLeftRight, User as UserIcon } from 'lucide-react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 
@@ -41,10 +42,11 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
             {/* Logo area */}
             <div className="p-6 flex items-center justify-between h-20">
                 <div className="flex items-center gap-4">
-                    <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/20">
+                    <Image src="/images/logo.png" alt="Quicklyway Logo" width={140} height={40} />
+                    {/* <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/20">
                         <ShieldCheck className="w-5 h-5" />
-                    </div>
-                    {isOpen && <span className="font-normal text-lg tracking-tight text-foreground">{roleName}</span>}
+                    </div> */}
+                    {/* {isOpen && <span className="font-normal bg-red-900">{roleName}</span>} */}
                 </div>
                 {/* Collapse toggle */}
                 <button
