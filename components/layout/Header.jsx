@@ -198,7 +198,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                         <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRoleDisplay}</p>
                       </div>
                       <Avatar className="w-9 h-9 border border-border shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
-                        <AvatarImage src={user?.avatar} />
+                        <AvatarImage src={user?.profileImage} />
                         <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
                           {userInitial}
                         </AvatarFallback>
@@ -225,12 +225,12 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                             <span className="text-sm font-medium">Profile</span>
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
+                          {/* <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground mr-2">
                               <Settings className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Account Settings</span>
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
 
                           <DropdownMenuItem onClick={() => router.push('/orders')} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">

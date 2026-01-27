@@ -76,7 +76,7 @@ export const DashboardHeader = () => {
                                 <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRoleDisplay}</p>
                             </div>
                             <Avatar className="w-10 h-10 border border-border shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
-                                <AvatarImage src={user?.avatar} />
+                                <AvatarImage src={user?.profileImage} />
                                 <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
                                     {userInitial}
                                 </AvatarFallback>
