@@ -194,67 +194,67 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                   <DropdownMenuTrigger asChild>
                     <div className="flex items-center gap-3 cursor-pointer group outline-none select-none">
                       <div className="text-right hidden sm:block">
-                        <p className="text-xs font-semibold text-gray-900 leading-tight group-hover:text-primary transition-colors">{displayName}</p>
-                        <p className="text-[10px] text-gray-400 font-normal uppercase tracking-wider">{userRoleDisplay}</p>
+                        <p className="text-xs font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">{displayName}</p>
+                        <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRoleDisplay}</p>
                       </div>
-                      <Avatar className="w-9 h-9 border border-gray-100 shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
+                      <Avatar className="w-9 h-9 border border-border shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
                         <AvatarImage src={user?.avatar} />
-                        <AvatarFallback className="bg-[#10b981] text-white rounded-lg text-sm font-medium">
+                        <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
                           {userInitial}
                         </AvatarFallback>
                       </Avatar>
                     </div>
                   </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-white border border-gray-100 shadow-xl" align="end">
-                    <DropdownMenuLabel className="font-normal p-4">
+                  <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-card border border-border shadow-xl" align="end">
+                    <DropdownMenuLabel className="font-normal p-3">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-semibold leading-none text-gray-900">{displayName}</p>
-                        <p className="text-[11px] leading-none text-gray-400 mt-1">{user?.email}</p>
+                        <p className="text-sm font-semibold leading-none text-foreground">{displayName}</p>
+                        <p className="text-[11px] leading-none text-muted-foreground">{user?.email}</p>
                       </div>
                     </DropdownMenuLabel>
-                    <DropdownMenuSeparator className="bg-gray-50 mx-2" />
+                    <DropdownMenuSeparator className="bg-border mx-2" />
 
-                    <div className="p-1 space-y-1">
+                    <div className="p-1 space-y-0.5">
                       {/* CLIENT MENU */}
                       {(normalizedRole === 'CLIENT' || normalizedRole === '' || !role) && !isAdmin && (
                         <>
                           <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <UserIcon className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Profile</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/settings')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-gray-50 flex items-center justify-center text-gray-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground mr-2">
                               <Settings className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Account Settings</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/orders')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <ShoppingBag className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">My Orders</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-purple-50 flex items-center justify-center text-purple-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <MessageSquare className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Messages</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => { }} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-green-50 flex items-center justify-center text-green-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <Languages className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Language</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <HelpCircle className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Help & Support</span>
@@ -272,7 +272,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                             }}
                             className="cursor-pointer"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-blue-50 flex items-center justify-center text-blue-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <LayoutDashboard className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Dashboard</span>
@@ -285,14 +285,14 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                             }}
                             className="cursor-pointer"
                           >
-                            <div className="w-8 h-8 rounded-lg bg-orange-50 flex items-center justify-center text-orange-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <UserIcon className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Profile</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
-                            <div className="w-8 h-8 rounded-lg bg-yellow-50 flex items-center justify-center text-yellow-600 mr-2">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <HelpCircle className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Help & Support</span>
@@ -301,7 +301,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                       )}
                     </div>
 
-                    <DropdownMenuSeparator className="bg-gray-50 mx-2" />
+                    <DropdownMenuSeparator className="bg-border mx-2" />
 
                     <div className="p-1">
                       <DropdownMenuItem
@@ -309,9 +309,9 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                           logout();
                           router.push('/login');
                         }}
-                        className="  cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/5 focus:bg-destructive/5 transition-colors"
+                        className="cursor-pointer text-muted-foreground focus:text-foreground hover:bg-secondary focus:bg-secondary transition-colors"
                       >
-                        <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive">
+                        <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
                           <LogOut className="w-4 h-4" />
                         </div>
                         <span className="text-sm font-medium">Logout</span>

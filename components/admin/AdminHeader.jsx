@@ -47,7 +47,7 @@ export const AdminHeader = () => {
             <div className="flex items-center gap-5">
                 <button className="relative text-muted-foreground hover:text-foreground transition-colors">
                     <Bell className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-destructive text-destructive-foreground text-[9px] flex items-center justify-center rounded-full border border-background font-normal">3</span>
+                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-primary-foreground text-[9px] flex items-center justify-center rounded-full border border-background font-normal">3</span>
                 </button>
 
                 <DropdownMenu modal={false}>
@@ -66,10 +66,10 @@ export const AdminHeader = () => {
                         </div>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-card border border-border shadow-xl" align="end">
-                        <DropdownMenuLabel className="font-normal p-4">
+                        <DropdownMenuLabel className="font-normal p-3">
                             <div className="flex flex-col space-y-1">
                                 <p className="text-sm font-semibold leading-none text-foreground">{displayName}</p>
-                                <p className="text-[11px] leading-none text-muted-foreground mt-1">{user?.email}</p>
+                                <p className="text-[11px] leading-none text-muted-foreground">{user?.email}</p>
                             </div>
                         </DropdownMenuLabel>
                         <DropdownMenuSeparator className="bg-border mx-2" />
@@ -79,7 +79,7 @@ export const AdminHeader = () => {
                                 onClick={() => router.push('/admin')}
                                 className=""
                             >
-                                <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center text-blue-600">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
                                     <LayoutDashboard className="w-4 h-4" />
                                 </div>
                                 <span className="text-sm font-medium">Admin Dashboard</span>
@@ -91,9 +91,9 @@ export const AdminHeader = () => {
                         <div className="p-1">
                             <DropdownMenuItem
                                 onClick={handleLogout}
-                                className="cursor-pointer text-destructive focus:text-destructive hover:bg-destructive/5 focus:bg-destructive/5 transition-colors"
+                                className="cursor-pointer text-muted-foreground focus:text-foreground hover:bg-secondary focus:bg-secondary transition-colors"
                             >
-                                <div className="w-8 h-8 rounded-lg bg-destructive/10 flex items-center justify-center text-destructive">
+                                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
                                     <LogOut className="w-4 h-4" />
                                 </div>
                                 <span className="text-sm font-medium">Logout</span>
