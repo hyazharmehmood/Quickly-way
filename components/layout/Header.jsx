@@ -165,7 +165,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
             >
               
                 <Image
-                  src="/images/logo.png"
+                  src="/images/qw logo tran.png"
                   alt="Quicklyway Logo"
                   width={140}
                   height={40}
