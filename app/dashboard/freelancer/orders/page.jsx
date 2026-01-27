@@ -93,7 +93,7 @@ export default function FreelancerOrdersPage() {
     };
 
     const handleViewOrder = (order) => {
-        router.push(`/orders/${order.id}`);
+        router.push(`/dashboard/freelancer/orders/${order.id}`);
     };
 
 
@@ -154,34 +154,34 @@ export default function FreelancerOrdersPage() {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Order ID</TableHead>
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Client & Service</TableHead>
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Deadline</TableHead>
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Revenue</TableHead>
-                                        <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Actions</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest whitespace-nowrap">Order ID</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest whitespace-nowrap">Client & Service</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center whitespace-nowrap">Deadline</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center whitespace-nowrap">Status</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right whitespace-nowrap">Revenue</TableHead>
+                                        <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right whitespace-nowrap">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
                                 <TableBody>
                                     {[...Array(5)].map((_, index) => (
                                         <TableRow key={index} className="border-b border-border">
-                                            <TableCell className="px-8 py-5">
+                                            <TableCell className="px-4 py-5">
                                                 <Skeleton className="h-4 w-24" />
                                             </TableCell>
-                                            <TableCell className="px-8 py-5">
+                                            <TableCell className="px-4 py-5">
                                                 <Skeleton className="h-4 w-32 mb-2" />
                                                 <Skeleton className="h-3 w-24" />
                                             </TableCell>
-                                            <TableCell className="px-8 py-5 text-center">
+                                                <TableCell className="px-4 py-5 text-center">
                                                 <Skeleton className="h-4 w-20 mx-auto" />
                                             </TableCell>
-                                            <TableCell className="px-8 py-5 text-center">
+                                            <TableCell className="px-4 py-5 text-center">
                                                 <Skeleton className="h-6 w-20 mx-auto rounded-full" />
                                             </TableCell>
-                                            <TableCell className="px-8 py-5 text-right">
+                                            <TableCell className="px-4 py-5 text-right">
                                                 <Skeleton className="h-4 w-16 ml-auto" />
                                             </TableCell>
-                                            <TableCell className="px-8 py-5 text-right">
+                                            <TableCell className="px-4 py-5 text-right">
                                                 <div className="flex justify-end gap-2">
                                                     <Skeleton className="h-9 w-9 rounded-xl" />
                                                     <Skeleton className="h-9 w-9 rounded-xl" />
@@ -198,24 +198,24 @@ export default function FreelancerOrdersPage() {
                         <Table>
                             <TableHeader>
                                 <TableRow className="bg-secondary/40 hover:bg-secondary/40 border-b border-border">
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Order ID</TableHead>
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Client & Service</TableHead>
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Deadline</TableHead>
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Revenue</TableHead>
-                                    <TableHead className="px-8 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Actions</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap     py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Order ID</TableHead>
+                                    <TableHead className="px-4 py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest">Client & Service</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Deadline</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-center">Status</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Revenue</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap py-5 text-[10px] font-normal text-muted-foreground uppercase tracking-widest text-right">Actions</TableHead>
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {filteredOrders.map((order) => (
                                     <TableRow key={order.id} className="hover:bg-secondary/10 transition-colors border-b border-border group">
-                                        <TableCell className="px-8 py-5 font-normal text-muted-foreground text-sm">{order.orderNumber}</TableCell>
-                                        <TableCell className="px-8 py-5">
+                                        <TableCell className="px-4 whitespace-nowrap py-5 font-normal text-muted-foreground text-sm">{order.orderNumber}</TableCell>
+                                        <TableCell className="px-4 whitespace-nowrap py-5">
                                             <div className="font-normal text-foreground text-sm">{order.client?.name || 'Unknown Client'}</div>
                                             <div className="text-xs text-muted-foreground mt-0.5">{order.service?.title || 'Service'}</div>
                                         </TableCell>
-                                        <TableCell className="px-8 py-5 text-center">
-                                            <div className="flex items-center justify-center gap-1.5 text-xs font-normal">
+                                        <TableCell className="px-4 whitespace-nowrap py-5 text-center">
+                                            <div className="flex  items-center justify-center gap-1.5 text-xs font-normal">
                                                 {order.status === 'IN_PROGRESS' || order.status === 'DELIVERED' ? (
                                                     <Clock className="w-3 h-3 text-orange-500" />
                                                 ) : (
@@ -226,13 +226,13 @@ export default function FreelancerOrdersPage() {
                                                 </span>
                                             </div>
                                         </TableCell>
-                                        <TableCell className="px-8 py-5 text-center">
+                                        <TableCell className="px-4 whitespace-nowrap py-5 text-center">
                                             {getStatusBadge(order.status)}
                                         </TableCell>
-                                        <TableCell className="px-8 py-5 text-right font-normal text-foreground text-sm">
+                                        <TableCell className="px-4 whitespace-nowrap py-5 text-right font-normal text-foreground text-sm">
                                             {order.currency || 'USD'} {order.price?.toFixed(2) || '0.00'}
                                         </TableCell>
-                                        <TableCell className="px-8 py-5 text-right">
+                                        <TableCell className="px-4 py-5 text-right">
                                             <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                 <Button 
                                                     variant="secondary" 

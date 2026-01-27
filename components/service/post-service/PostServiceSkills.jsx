@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
-import TagInput from '@/components/ui/TagInput';
+import { SkillsSelector } from './SkillsSelector';
+import { KeywordSelector } from './KeywordSelector';
 
 const PostServiceSkills = (props) => {
     const {
@@ -11,38 +12,31 @@ const PostServiceSkills = (props) => {
         onBack, onNext,
         defaultSkills,
         allSkills,
-        searchTags, setSearchTags
+        searchTags, setSearchTags,
+        initialSkillNames = [], // For editing: pass initial skill names
+        initialKeywordNames = [] // For editing: pass initial keyword names
     } = props;
 
 
 
     return (
         <div>
-            <TagInput
-                label="Skills"
-                tags={skills}
-                onChange={setSkills}
-                defaultTags={defaultSkills}
-                options={allSkills}
-                helperText="Search and select your skills from the list"
+            <SkillsSelector
+                selectedSkills={skills}
+                onSkillsChange={setSkills}
+                initialSkillNames={initialSkillNames}
             />
 
             <div className="mt-8">
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Search Tags</h3>
-                <p className="text-sm text-gray-500 mb-4">
-                    Tag your Gig with buzz words that are relevant to the services you offer. Use all 5 tags to get found.
-                </p>
-                <TagInput
-                    label="Positive keywords"
-                    tags={searchTags}
-                    onChange={(newTags) => {
-                        if (newTags.length <= 5) {
-                            setSearchTags(newTags);
+                <KeywordSelector
+                    selectedKeywords={searchTags}
+                    onKeywordsChange={(newKeywords) => {
+                        if (newKeywords.length <= 5) {
+                            setSearchTags(newKeywords);
                         }
                     }}
-                    placeholder="Enter search terms"
-                    helperText="5 tags maximum. Use letters and numbers only."
-                    maxLength={20} // Limit char length per tag
+                    maxKeywords={5}
+                    initialKeywordNames={initialKeywordNames}
                 />
             </div>
 

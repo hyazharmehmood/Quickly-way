@@ -9,18 +9,37 @@ export async function GET(request) {
   try {
     const { searchParams } = new URL(request.url);
     const includeSkills = searchParams.get('includeSkills') === 'true';
+    const includeChildren = searchParams.get('includeChildren') !== 'false'; // Default true
 
+    // Get only root categories (main categories without parent)
     const categories = await prisma.category.findMany({
       where: {
-        isActive: true, // Only return active categories
+        isActive: true,
+        parentId: null, // Only root categories
       },
       include: {
+        children: includeChildren ? {
+          where: { isActive: true },
+          include: {
+            skills: includeSkills ? {
+              where: { isActive: true },
+              orderBy: { name: 'asc' },
+            } : false,
+            _count: {
+              select: { skills: true },
+            },
+          },
+          orderBy: { name: 'asc' },
+        } : false,
         skills: includeSkills ? {
-          where: { isActive: true }, // Only return active skills
+          where: { isActive: true },
           orderBy: { name: 'asc' },
         } : false,
         _count: {
-          select: { skills: true },
+          select: { 
+            skills: true,
+            children: true,
+          },
         },
       },
       orderBy: { name: 'asc' },

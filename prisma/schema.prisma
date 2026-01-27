@@ -203,6 +203,21 @@ model Skill {
   @@index([isActive])
 }
 
+model Keyword {
+  id          String   @id @default(uuid())
+  keyword     String   @unique
+  volume      String?  // e.g., "12k", "4.5k"
+  difficulty  String?  // "Low", "Medium", "High"
+  rank        Int?     // Current search rank
+  trend       String?  // "up", "down", "stable"
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([keyword])
+  @@index([isActive])
+}
+
 enum UserRole {
   CLIENT
   FREELANCER

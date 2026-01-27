@@ -43,12 +43,14 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
     const [showContactModal, setShowContactModal] = useState(false);
     const [showReportModal, setShowReportModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [avatarError, setAvatarError] = useState(false);
 
     const [reviews, setReviews] = useState(service.reviewsList || []);
 
     useEffect(() => {
         setCurrentImageIndex(0);
         setReviews(service.reviewsList || []);
+        setAvatarError(false); // Reset avatar error when service changes
     }, [service.id, service.reviewsList]);
 
     useEffect(() => {
@@ -142,11 +144,18 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                 {/* Avatar */}
                                 <div className="flex-shrink-0">
                                     <div className="relative inline-block">
-                                        <img
-                                            src={service.provider.avatarUrl}
-                                            alt={service.provider.name}
-                                            className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
-                                        />
+                                        {service.provider.avatarUrl && !avatarError ? (
+                                            <img
+                                                src={service.provider.avatarUrl}
+                                                alt={service.provider.name}
+                                                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
+                                                onError={() => setAvatarError(true)}
+                                            />
+                                        ) : (
+                                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                                <User className="w-16 h-16 text-primary/60" />
+                                            </div>
+                                        )}
                                         {/* Online Status Indicator */}
                                         {service.freelancerId && (
                                             <div className="absolute bottom-2 right-2">
@@ -228,7 +237,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                         {/* Main Content Sections - Each in a Box */}
                         <div className="space-y-4">
-{/* 
+                            {/* 
                             Service Description Box
                             <Card className="">
                                 <CardContent className="p-10">

@@ -28,7 +28,7 @@ const ALL_SKILLS = [
     "Photography", "Videography", "Interior Design", "Fashion Design", "Music Production"
 ];
 
-const DEFAULT_SKILLS = ["Adobe Illustrator", "Graphic Design", "3D Animation"];
+const DEFAULT_SKILLS = [];
 
 const DEFAULT_LANGUAGES = [
     "English",
@@ -333,6 +333,8 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                         defaultSkills={DEFAULT_SKILLS}
                         allSkills={ALL_SKILLS}
                         searchTags={searchTags} setSearchTags={setSearchTags}
+                        initialSkillNames={initialData?.freelancer?.skills || []}
+                        initialKeywordNames={initialData?.searchTags || []}
                         onBack={() => setStep(2)}
                         onNext={() => setStep(4)}
                     />
