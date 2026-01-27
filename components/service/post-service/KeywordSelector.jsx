@@ -39,9 +39,7 @@ export function KeywordSelector({
 
   const fetchKeywords = async () => {
     try {
-      setLoading(true);
-      
-      // Fetch all active keywords
+
       const response = await api.get('/keywords');
       if (response.data.success) {
         setAllKeywords(response.data.keywords || []);

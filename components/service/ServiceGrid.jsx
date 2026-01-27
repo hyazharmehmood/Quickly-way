@@ -145,7 +145,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
               {skillName}
             </span>
             <span className="text-sm text-muted-foreground">
-              ({services.length} {services.length === 1 ? 'Gig' : 'Gigs'})
+              {services.length} {services.length === 1 ? 'result' : 'results'}
             </span>
           </div>
           {onClearFilters && (
