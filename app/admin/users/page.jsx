@@ -262,7 +262,7 @@ export default function UsersPage() {
                                 <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em]">Account Category</TableHead>
                                 <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em]">Current Status</TableHead>
                                 <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em]">Registration</TableHead>
-                                <TableHead className="px-4 py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em]">Command</TableHead>
+                                {/* <TableHead className="px-4 py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em]">Command</TableHead> */}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -301,7 +301,7 @@ export default function UsersPage() {
                                                     <TableCell className="px-4 py-6 text-sm text-muted-foreground font-normal">
                                                     {format(new Date(user.createdAt), 'MMM d, yyyy')}
                                                 </TableCell>
-                                    <TableCell className="px-4 py-6 text-right">
+                                    {/* <TableCell className="px-4 py-6 text-right">
                                         <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
                                                         <Button 
                                                             variant="secondary" 
@@ -315,7 +315,7 @@ export default function UsersPage() {
                                                 <Trash2 className="w-4 h-4" />
                                             </Button>
                                         </div>
-                                    </TableCell>
+                                    </TableCell> */}
                                 </TableRow>
                             ))}
                         </TableBody>

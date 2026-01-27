@@ -76,7 +76,7 @@ export function ServiceCard({ service }) {
           </div>
 
           {/* Description */}
-          <p className="text-lg text-gray-600 leading-relaxed line-clamp-2 mb-4 hover:text-gray-900 active:text-gray-900 transition-colors">
+          <p className="text-base text-gray-600 leading-relaxed line-clamp-2 mb-4 hover:text-gray-900 active:text-gray-900 transition-colors">
             {service.description}
           </p>
 
