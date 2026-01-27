@@ -16,7 +16,6 @@ model User {
   isSeller                 Boolean                   @default(false)
   sellerStatus             SellerStatus              @default(NONE)
   bio                      String?
-  skills                   String[]
   portfolio                String?
   refreshToken             String?
   passwordResetToken       String?
@@ -91,26 +90,27 @@ model SellerApplication {
 }
 
 model Service {
-  id              String   @id @default(uuid())
+  id              String        @id @default(uuid())
   title           String
   description     String
   category        String?
   subCategory     String?
   price           Float?
-  currency        String   @default("USD")
+  currency        String        @default("USD")
   priceBreakdowns Json?
   images          String[]
-  showEmail       Boolean  @default(false)
-  showMobile      Boolean  @default(false)
+  showEmail       Boolean       @default(false)
+  showMobile      Boolean       @default(false)
   freelancerId    String
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
   coverColor      String?
   coverImage      String?
   coverText       String?
-  coverType       String   @default("IMAGE")
+  coverType       String        @default("IMAGE")
   searchTags      String[]
-  freelancer      User     @relation(fields: [freelancerId], references: [id])
+  freelancer      User          @relation(fields: [freelancerId], references: [id])
+  skills          ServiceSkill[]
   orders          Order[]
   offers          Offer[]
 }
@@ -187,20 +187,34 @@ model Category {
 }
 
 model Skill {
-  id          String   @id @default(uuid())
+  id          String        @id @default(uuid())
   categoryId  String
   name        String
   slug        String
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  services    ServiceSkill[]
 
   @@unique([categoryId, name]) // Skill name unique within category
   @@unique([categoryId, slug]) // Slug unique within category
   @@index([categoryId])
   @@index([slug])
   @@index([isActive])
+}
+
+model ServiceSkill {
+  id        String   @id @default(uuid())
+  serviceId String
+  skillId   String
+  createdAt DateTime @default(now())
+  service   Service  @relation(fields: [serviceId], references: [id], onDelete: Cascade)
+  skill     Skill    @relation(fields: [skillId], references: [id], onDelete: Cascade)
+
+  @@unique([serviceId, skillId]) // One skill can only be added once per service
+  @@index([serviceId])
+  @@index([skillId])
 }
 
 model Keyword {

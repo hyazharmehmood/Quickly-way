@@ -148,7 +148,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     const [user, setUser] = useState(null);
 
     // --- Step 3, 4 State (existing) ---
-    const [skills, setSkills] = useState(DEFAULT_SKILLS);
+    const [skills, setSkills] = useState([]); // Changed to empty array - will store skill IDs
     const [searchTags, setSearchTags] = useState([]);
     const [priceStr, setPriceStr] = useState("");
     const [selectedCurrency, setSelectedCurrency] = useState("USD");
@@ -205,7 +205,9 @@ const PostService = ({ onCancel, onSave, initialData }) => {
             while (images.length < 5) images.push(null);
             setGalleryImages(images.slice(0, 5));
 
-            setSkills(initialData.freelancer?.skills || DEFAULT_SKILLS);
+            // Extract skill IDs from the service's skills relationship
+            const serviceSkillIds = initialData.skills?.map(ss => ss.skill?.id || ss.skillId).filter(Boolean) || [];
+            setSkills(serviceSkillIds);
             setSearchTags(initialData.searchTags || []);
 
             setPriceStr(initialData.price?.toString() || "");
@@ -274,7 +276,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
 
                 images: validImages,
                 searchTags, // Add tags to payload
-                skills, // Add skills to payload for user profile update
+                skillIds: skills, // Add skill IDs to payload for service
 
                 showEmail: user?.showEmail || false,
                 showMobile: user?.showMobile || false,
@@ -333,7 +335,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                         defaultSkills={DEFAULT_SKILLS}
                         allSkills={ALL_SKILLS}
                         searchTags={searchTags} setSearchTags={setSearchTags}
-                        initialSkillNames={initialData?.freelancer?.skills || []}
+                        initialSkillIds={initialData?.skills?.map(ss => ss.skill?.id || ss.skillId).filter(Boolean) || []}
                         initialKeywordNames={initialData?.searchTags || []}
                         onBack={() => setStep(2)}
                         onNext={() => setStep(4)}

@@ -12,7 +12,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
   const [skillName, setSkillName] = useState(null);
 
   useEffect(() => {
-    // Fetch skill name if skillSlug is provided
+    // Fetch skill name if skillSlug is provided (for display purposes only)
     const fetchSkillName = async (slug) => {
       try {
         // We need to find the skill by slug - let's search through categories
@@ -59,11 +59,19 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
     const fetchServices = async () => {
       try {
         setLoading(true);
-        const res = await fetch('/api/services/public');
+        // Build URL with skillSlug query parameter if provided
+        const url = skillSlug 
+          ? `/api/services/public?skill=${encodeURIComponent(skillSlug)}`
+          : '/api/services/public';
+        
+        const res = await fetch(url);
+
         if (res.ok) {
           const data = await res.json();
+          console.log("Data:", data);
+          
           // Transform data to match ServiceCard expectation
-          let transformed = data.map(svc => ({
+          const transformed = data.map(svc => ({
             ...svc,
             freelancerId: svc.freelancerId || svc.freelancer?.id,
             provider: {
@@ -75,28 +83,6 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
             rating: 5.0,
             reviewCount: 0
           }));
-
-          // Filter by skill if skillSlug is provided
-          if (skillSlug && skillName) {
-            transformed = transformed.filter(service => {
-              // Check if skill name or slug matches in searchTags, title, or description
-              const searchText = skillName.toLowerCase();
-              const slugText = skillSlug.toLowerCase();
-              
-              const matchesSearchTags = service.searchTags?.some(tag => 
-                tag.toLowerCase().includes(searchText) || 
-                tag.toLowerCase().includes(slugText)
-              );
-              
-              const matchesTitle = service.title?.toLowerCase().includes(searchText) ||
-                                   service.title?.toLowerCase().includes(slugText);
-              
-              const matchesDescription = service.description?.toLowerCase().includes(searchText) ||
-                                         service.description?.toLowerCase().includes(slugText);
-              
-              return matchesSearchTags || matchesTitle || matchesDescription;
-            });
-          }
 
           setServices(transformed);
         } else {
@@ -110,7 +96,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
     };
 
     fetchServices();
-  }, [skillSlug, skillName]);
+  }, [skillSlug]);
 
   const handleServiceClick = (service) => {
     if (onServiceClick) {
@@ -159,7 +145,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
               {skillName}
             </span>
             <span className="text-sm text-muted-foreground">
-              ({services.length} {services.length === 1 ? 'service' : 'services'})
+              ({services.length} {services.length === 1 ? 'Gig' : 'Gigs'})
             </span>
           </div>
           {onClearFilters && (

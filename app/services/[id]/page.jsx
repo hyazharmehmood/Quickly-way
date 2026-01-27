@@ -61,7 +61,7 @@ export default function ServiceDetailsPage() {
                     ].filter(Boolean).filter((url, index, self) => self.indexOf(url) === index),
 
                     bio: data.freelancer?.bio || "",
-                    skills: data.freelancer?.skills || [],
+                    skills: data.skills?.map(ss => ss.skill?.name || '').filter(Boolean) || [],
                     yearsExperience: 1,
 
                     provider: {

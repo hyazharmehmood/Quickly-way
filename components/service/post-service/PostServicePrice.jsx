@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { CURRENCIES } from '@/utils/constants';
 import { Loader2 } from 'lucide-react';
 
@@ -15,6 +15,32 @@ const PostServicePrice = (props) => {
     } = props;
 
     const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
+    const [isManualPriceEdit, setIsManualPriceEdit] = useState(false);
+
+    // Auto-calculate total price from breakdowns
+    useEffect(() => {
+        // Only auto-update if user hasn't manually edited the price
+        if (!isManualPriceEdit) {
+            const total = priceBreakdowns.reduce((sum, breakdown) => {
+                const price = breakdown.price ? parseFloat(breakdown.price) : 0;
+                return sum + (isNaN(price) ? 0 : price);
+            }, 0);
+            
+            // Update priceStr with the calculated total (as integer string)
+            if (total > 0) {
+                const newPriceStr = Math.round(total).toString();
+                if (newPriceStr !== priceStr) {
+                    setPriceStr(newPriceStr);
+                }
+            } else if (priceBreakdowns.every(b => !b.price || b.price === '')) {
+                // If all breakdowns are empty, clear the price
+                if (priceStr !== '') {
+                    setPriceStr('');
+                }
+            }
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [priceBreakdowns]);
 
     const toggleExpand = (index) => {
         setExpandedBreakdowns(prev => ({
@@ -27,6 +53,7 @@ const PostServicePrice = (props) => {
         let numericValue = e.target.value.replace(/[^0-9]/g, '');
         if (numericValue.length > 10) numericValue = numericValue.slice(0, 10);
         setPriceStr(numericValue);
+        setIsManualPriceEdit(true); // Mark as manually edited
     };
 
     const handlePriceBreakdownChange = (index, field, value) => {
@@ -36,6 +63,12 @@ const PostServicePrice = (props) => {
             if (!newItems[index]) newItems[index] = { id: `pb-${index}`, text: "", price: "", included: "" };
 
             newItems[index] = { ...newItems[index], [field]: value };
+            
+            // If price field changed, reset manual edit flag to allow auto-calculation
+            if (field === 'price') {
+                setIsManualPriceEdit(false);
+            }
+            
             return newItems;
         });
     };
@@ -163,6 +196,7 @@ const PostServicePrice = (props) => {
                                                 onClick={() => {
                                                     const newItems = priceBreakdowns.filter((_, i) => i !== index);
                                                     setPriceBreakdowns(newItems);
+                                                    setIsManualPriceEdit(false); // Allow auto-calculation after deletion
                                                 }}
                                                 className="absolute -top-3 -right-3 bg-white border border-gray-200 text-gray-400 hover:text-red-500 rounded-full p-1.5 shadow-sm hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                 title="Remove package"
@@ -183,6 +217,7 @@ const PostServicePrice = (props) => {
                                     ...priceBreakdowns,
                                     { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
                                 ]);
+                                setIsManualPriceEdit(false); // Allow auto-calculation after adding new breakdown
                             }}
                             className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
                         >

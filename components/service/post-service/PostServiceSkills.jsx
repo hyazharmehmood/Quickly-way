@@ -13,7 +13,7 @@ const PostServiceSkills = (props) => {
         defaultSkills,
         allSkills,
         searchTags, setSearchTags,
-        initialSkillNames = [], // For editing: pass initial skill names
+        initialSkillIds = [], // For editing: pass initial skill IDs
         initialKeywordNames = [] // For editing: pass initial keyword names
     } = props;
 
@@ -24,7 +24,7 @@ const PostServiceSkills = (props) => {
             <SkillsSelector
                 selectedSkills={skills}
                 onSkillsChange={setSkills}
-                initialSkillNames={initialSkillNames}
+                initialSkillIds={initialSkillIds}
             />
 
             <div className="mt-8">

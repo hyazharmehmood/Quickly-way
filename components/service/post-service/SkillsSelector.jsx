@@ -24,7 +24,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 export function SkillsSelector({ 
   selectedSkills = [], 
   onSkillsChange,
-  initialSkillNames = [] // For editing: skill names that were already selected (may include inactive)
+  initialSkillIds = [] // For editing: skill IDs that were already selected (may include inactive)
 }) {
   const [open, setOpen] = useState(false);
   const [allSkills, setAllSkills] = useState([]);
@@ -34,16 +34,15 @@ export function SkillsSelector({
   useEffect(() => {
     fetchSkills();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initialSkillNames]);
+  }, [initialSkillIds]);
 
   const fetchSkills = async () => {
     try {
-  
-      
-      // If editing and we have initial skill names, fetch them (including inactive)
-      if (initialSkillNames.length > 0) {
-        const namesParam = initialSkillNames.join(',');
-        const response = await api.get(`/skills?names=${encodeURIComponent(namesParam)}`);
+      // If editing and we have initial skill IDs, fetch them (including inactive)
+      if (initialSkillIds.length > 0) {
+        // Fetch skills by IDs
+        const idsParam = initialSkillIds.join(',');
+        const response = await api.get(`/skills?ids=${encodeURIComponent(idsParam)}`);
         if (response.data.success) {
           let skills = response.data.skills || [];
           
@@ -87,19 +86,19 @@ export function SkillsSelector({
     })
     .sort((a, b) => a.name.localeCompare(b.name)); // Sort alphabetically by name
 
-  const toggleSkill = (skillName) => {
-    if (selectedSkills.includes(skillName)) {
-      onSkillsChange(selectedSkills.filter(s => s !== skillName));
+  const toggleSkill = (skillId) => {
+    if (selectedSkills.includes(skillId)) {
+      onSkillsChange(selectedSkills.filter(s => s !== skillId));
     } else {
-      onSkillsChange([...selectedSkills, skillName]);
+      onSkillsChange([...selectedSkills, skillId]);
     }
   };
 
-  const removeSkill = (skillName) => {
-    onSkillsChange(selectedSkills.filter(s => s !== skillName));
+  const removeSkill = (skillId) => {
+    onSkillsChange(selectedSkills.filter(s => s !== skillId));
   };
 
-  const isSelected = (skillName) => selectedSkills.includes(skillName);
+  const isSelected = (skillId) => selectedSkills.includes(skillId);
 
   return (
     <div className="space-y-2">
@@ -121,13 +120,13 @@ export function SkillsSelector({
           >
             {selectedSkills.length > 0 ? (
               <>
-                {selectedSkills.map((skillName) => {
-                  const skill = allSkills.find(s => s.name === skillName);
+                {selectedSkills.map((skillId) => {
+                  const skill = allSkills.find(s => s.id === skillId);
                   const isInactive = skill && !skill.isActive;
                   
                   return (
                     <Badge
-                      key={skillName}
+                      key={skillId}
                       variant="secondary"
                       className={cn(
                         "px-2 py-1 text-xs font-medium flex items-center gap-1 h-6",
@@ -137,10 +136,10 @@ export function SkillsSelector({
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
-                        removeSkill(skillName);
+                        removeSkill(skillId);
                       }}
                     >
-                      {skillName}
+                      {skill ? skill.name : skillId}
                       {isInactive && (
                         <span className="text-[10px] opacity-70">(inactive)</span>
                       )}
@@ -148,7 +147,7 @@ export function SkillsSelector({
                         type="button"
                         onClick={(e) => {
                           e.stopPropagation();
-                          removeSkill(skillName);
+                          removeSkill(skillId);
                         }}
                         className="ml-1 hover:opacity-70 focus:outline-none"
                       >
@@ -186,7 +185,7 @@ export function SkillsSelector({
               ) : (
                 <CommandGroup>
                   {filteredSkills.map((skill) => {
-                    const selected = isSelected(skill.name);
+                    const selected = isSelected(skill.id);
                     const inactive = !skill.isActive;
                     
                     return (
@@ -194,7 +193,7 @@ export function SkillsSelector({
                         key={skill.id}
                         value={skill.name}
                         onSelect={() => {
-                          toggleSkill(skill.name);
+                          toggleSkill(skill.id);
                         }}
                         className={cn(
                           "cursor-pointer",

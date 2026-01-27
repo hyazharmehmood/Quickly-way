@@ -24,7 +24,7 @@ export async function POST(req) {
         }
 
         const body = await req.json();
-
+console.log("body", body);
         // Delegate business logic to controller
         const result = await createService(userId, body);
 

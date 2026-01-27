@@ -22,3 +22,4 @@ CREATE INDEX IF NOT EXISTS "Keyword_keyword_idx" ON "Keyword"("keyword");
 -- CreateIndex
 CREATE INDEX IF NOT EXISTS "Keyword_isActive_idx" ON "Keyword"("isActive");
 
+
