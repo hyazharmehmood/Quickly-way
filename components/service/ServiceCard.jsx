@@ -84,7 +84,7 @@ export function ServiceCard({ service }) {
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-base font-bold text-gray-900">{service.rating}</span>
+              <span className="text-sm font-bold text-gray-900">{service.rating}</span>
               <span className="text-base text-gray-400 hover:text-gray-600 active:text-gray-900 transition-colors">({reviewCount})</span>
             </div>
             <div className="text-lg font-bold text-gray-900">

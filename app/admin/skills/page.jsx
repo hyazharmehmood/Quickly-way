@@ -35,6 +35,7 @@ import {
 import { toast } from 'sonner';
 import api from '@/utils/api';
 import useAuthStore from '@/store/useAuthStore';
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function SkillsPage() {
   const { user } = useAuthStore();
@@ -52,6 +53,7 @@ export default function SkillsPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterCategory, setFilterCategory] = useState(null);
   const [filterActive, setFilterActive] = useState(null);
+  const [togglingSkills, setTogglingSkills] = useState(new Set());
 
   // Fetch categories with subcategories
   const fetchCategories = async () => {
@@ -222,6 +224,9 @@ export default function SkillsPage() {
 
   // Handle toggle active status
   const handleToggleActive = async (skill) => {
+    // Add skill ID to toggling set
+    setTogglingSkills(prev => new Set(prev).add(skill.id));
+    
     try {
       const response = await api.patch(`/admin/skills/${skill.id}`, {
         isActive: !skill.isActive,
@@ -234,6 +239,13 @@ export default function SkillsPage() {
     } catch (error) {
       console.error('Error toggling skill status:', error);
       toast.error(error.response?.data?.error || 'Failed to update skill status');
+    } finally {
+      // Remove skill ID from toggling set
+      setTogglingSkills(prev => {
+        const next = new Set(prev);
+        next.delete(skill.id);
+        return next;
+      });
     }
   };
 
@@ -328,8 +340,49 @@ export default function SkillsPage() {
         </CardHeader>
         <CardContent className="p-0">
           {loading ? (
-            <div className="flex items-center justify-center p-12">
-              <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+            <div className="p-0">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-secondary/40 hover:bg-secondary/40">
+                    <TableHead className="pl-4">Name</TableHead>
+                    <TableHead>Category</TableHead>
+                    <TableHead>Slug</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Created</TableHead>
+                    <TableHead className="text-right">Actions</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {[...Array(5)].map((_, i) => (
+                    <TableRow key={i} className="border-b border-border">
+                      <TableCell className="pl-4">
+                        <Skeleton className="h-5 w-32" />
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex flex-col gap-1">
+                          <Skeleton className="h-5 w-24" />
+                          <Skeleton className="h-5 w-20" />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-24" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-6 w-16 rounded-full" />
+                      </TableCell>
+                      <TableCell>
+                        <Skeleton className="h-4 w-20" />
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <div className="flex items-center justify-end gap-2">
+                          <Skeleton className="h-8 w-8 rounded" />
+                          <Skeleton className="h-8 w-8 rounded" />
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
             </div>
           ) : filteredSkills.length === 0 ? (
             <div className="flex items-center justify-center p-12">
@@ -388,14 +441,17 @@ export default function SkillsPage() {
                       {new Date(skill.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex items-center justify-end gap-2">
+                      <div className="flex items-center justify-end">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleToggleActive(skill)}
                           title={skill.isActive ? 'Disable' : 'Enable'}
+                          disabled={togglingSkills.has(skill.id)}
                         >
-                          {skill.isActive ? (
+                          {togglingSkills.has(skill.id) ? (
+                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                          ) : skill.isActive ? (
                             <XCircle className="w-4 h-4 text-muted-foreground" />
                           ) : (
                             <Check className="w-4 h-4 text-green-500" />
@@ -408,13 +464,14 @@ export default function SkillsPage() {
                         >
                           <Edit2 className="w-4 h-4 text-muted-foreground" />
                         </Button>
-                        <Button
+                        {/* <Button
+                          disabled
                           variant="ghost"
                           size="icon"
                           onClick={() => handleDeleteClick(skill)}
                         >
-                          <Trash2 className="w-4 h-4 text-destructive" />
-                        </Button>
+                          <Trash2 className="w-4 h-4 text-destructive sr-only " />
+                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>

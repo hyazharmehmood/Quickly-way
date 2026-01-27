@@ -130,16 +130,27 @@ export default function EditCategoryPage() {
       return;
     }
 
-    if (mainCategoryName === categoryData.name) {
+    // Check if name or isActive changed
+    const nameChanged = mainCategoryName !== categoryData.name;
+    const activeChanged = mainCategoryIsActive !== categoryData.isActive;
+    
+    if (!nameChanged && !activeChanged) {
       toast.info('No changes to save');
       return;
     }
 
     setSaving(true);
     try {
-      const response = await api.patch(`/admin/categories/${categoryId}`, {
+      const payload = {
         name: mainCategoryName.trim(),
-      });
+      };
+      
+      // Only include isActive if it changed
+      if (activeChanged) {
+        payload.isActive = mainCategoryIsActive;
+      }
+
+      const response = await api.patch(`/admin/categories/${categoryId}`, payload);
 
       if (response.data.success) {
         toast.success('Category updated successfully');

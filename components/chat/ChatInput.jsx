@@ -98,7 +98,7 @@ export function ChatInput({
                 className="relative group"
               >
                 {fileItem.type === 'image' && fileItem.preview ? (
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border">
+                  <div className="relative w-20 h-20 rounded-lg  border border-border">
                     <img
                       src={fileItem.preview}
                       alt={fileItem.file.name}
@@ -113,7 +113,7 @@ export function ChatInput({
                     </button>
                   </div>
                 ) : fileItem.type === 'video' ? (
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-secondary flex items-center justify-center">
+                  <div className="relative w-20 h-20 rounded-lg  border border-border bg-secondary flex items-center justify-center">
                     <Video className="h-6 w-6 text-muted-foreground" />
                     <button
                       onClick={() => removeFile(fileItem.id)}
@@ -127,7 +127,7 @@ export function ChatInput({
                     </span>
                   </div>
                 ) : (
-                  <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-border bg-secondary flex flex-col items-center justify-center p-1">
+                  <div className="relative w-20 h-20 rounded-lg  border border-border bg-secondary flex flex-col items-center justify-center p-1">
                     <Paperclip className="h-4 w-4 text-muted-foreground" />
                     <span className="text-[10px] text-muted-foreground truncate w-full text-center">
                       {fileItem.file.name}

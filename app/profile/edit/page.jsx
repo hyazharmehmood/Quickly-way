@@ -185,7 +185,7 @@ export default function EditProfilePage() {
                         <ArrowLeft className="w-4 h-4" />
                     </Button>
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground">Edit Profile</h1>
+                        <h1 className="text-xl font-bold text-foreground">Edit Profile</h1>
                         <p className="text-muted-foreground  text-sm">Update your profile information</p>
                     </div>
                 </div>

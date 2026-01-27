@@ -168,9 +168,9 @@ export default function UsersPage() {
                                 <RefreshCw className="w-5 h-5 text-muted-foreground" />
                             )}
                         </Button>
-                        <Button variant="secondary" size="icon" className="h-11 w-11 rounded-[1rem]">
+                        {/* <Button variant="secondary" size="icon" className="h-11 w-11 rounded-[1rem]">
                             <Download className="w-5 h-5 text-muted-foreground" />
-                        </Button>
+                        </Button> */}
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">

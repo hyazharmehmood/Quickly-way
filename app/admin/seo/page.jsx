@@ -1,38 +1,38 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, TrendingUp, Globe2, Link, ArrowUp, BarChart3, FileSearch, Plus, Edit2, Trash2, Loader2 } from 'lucide-react';
+import { Search, TrendingUp, Globe2, Link, ArrowUp, BarChart3, FileSearch, Plus, Edit2, Trash2, Loader2, Check, XCircle } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
@@ -46,6 +46,7 @@ export default function SEOPage() {
     const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
     const [selectedKeyword, setSelectedKeyword] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [togglingKeywords, setTogglingKeywords] = useState(new Set());
     const [formData, setFormData] = useState({
         keyword: '',
         volume: '',
@@ -61,7 +62,7 @@ export default function SEOPage() {
 
     const fetchKeywords = async () => {
         try {
-       
+
             const response = await api.get('/admin/keywords');
             if (response.data.success) {
                 setKeywords(response.data.keywords || []);
@@ -164,6 +165,32 @@ export default function SEOPage() {
         }
     };
 
+    const handleToggleActive = async (keyword) => {
+        // Add keyword ID to toggling set
+        setTogglingKeywords(prev => new Set(prev).add(keyword.id));
+
+        try {
+            const response = await api.patch(`/admin/keywords/${keyword.id}`, {
+                isActive: !keyword.isActive,
+            });
+
+            if (response.data.success) {
+                toast.success(`Keyword ${keyword.isActive ? 'disabled' : 'enabled'} successfully`);
+                fetchKeywords();
+            }
+        } catch (error) {
+            console.error('Error toggling keyword status:', error);
+            toast.error(error.response?.data?.error || 'Failed to update keyword status');
+        } finally {
+            // Remove keyword ID from toggling set
+            setTogglingKeywords(prev => {
+                const next = new Set(prev);
+                next.delete(keyword.id);
+                return next;
+            });
+        }
+    };
+
     const handleDelete = async () => {
         setIsSubmitting(true);
         try {
@@ -202,10 +229,10 @@ export default function SEOPage() {
                     </>
                 ) : (
                     <>
-                <MetricCard title="Organic Traffic" value="84.2k" trend="+12% this month" icon={<TrendingUp />} />
-                <MetricCard title="Avg. Position" value="4.2" trend="Improved by 0.5" icon={<BarChart3 />} />
-                <MetricCard title="Indexed Pages" value="1,240" trend="All pages indexed" icon={<Globe2 />} />
-                <MetricCard title="Total Backlinks" value="3,450" trend="+156 new links" icon={<Link />} />
+                        <MetricCard title="Organic Traffic" value="84.2k" trend="+12% this month" icon={<TrendingUp />} />
+                        <MetricCard title="Avg. Position" value="4.2" trend="Improved by 0.5" icon={<BarChart3 />} />
+                        <MetricCard title="Indexed Pages" value="1,240" trend="All pages indexed" icon={<Globe2 />} />
+                        <MetricCard title="Total Backlinks" value="3,450" trend="+156 new links" icon={<Link />} />
                     </>
                 )}
             </div>
@@ -216,7 +243,7 @@ export default function SEOPage() {
                         <CardTitle className="text-xl font-normal text-foreground">Keyword Tracking</CardTitle>
                         <p className="text-muted-foreground font-normal mt-0.5 text-sm">Monitor search engine visibility for core terms</p>
                     </div>
-                    <Button 
+                    <Button
                         onClick={() => setIsCreateDialogOpen(true)}
                         className="h-11 px-6 bg-primary text-primary-foreground rounded-[1rem] shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
                     >
@@ -291,7 +318,7 @@ export default function SEOPage() {
                                         <TableRow key={item.id} className="hover:bg-secondary/20 transition-colors group border-b border-border">
                                             <TableCell className="px-4 py-6">
                                                 <div className="flex items-center gap-3">
-                                                   
+
                                                     <span className="font-normal text-foreground text-base">{item.keyword}</span>
                                                 </div>
                                             </TableCell>
@@ -299,8 +326,8 @@ export default function SEOPage() {
                                             <TableCell className="px-4 py-6">
                                                 {item.difficulty ? (
                                                     <Badge variant="secondary" className={`px-3 py-1 rounded-full text-[9px] font-normal uppercase tracking-widest border ${item.difficulty === 'High' ? 'bg-destructive/10 text-destructive border-destructive/20' :
-                                                            item.difficulty === 'Medium' ? 'bg-orange-50/50 text-orange-600 border-orange-100' :
-                                                                'bg-primary/10 text-primary border-primary/20'
+                                                        item.difficulty === 'Medium' ? 'bg-orange-50/50 text-orange-600 border-orange-100' :
+                                                            'bg-primary/10 text-primary border-primary/20'
                                                         }`}>
                                                         {item.difficulty}
                                                     </Badge>
@@ -317,7 +344,23 @@ export default function SEOPage() {
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="px-4 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-2">
+                                                <div className="flex items-center justify-end gap-1">
+                                                    <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleToggleActive(item)}
+                                                        title={item.isActive ? 'Disable' : 'Enable'}
+                                                        disabled={togglingKeywords.has(item.id)}
+                                                        className="h-8 w-8 p-0"
+                                                    >
+                                                        {togglingKeywords.has(item.id) ? (
+                                                            <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
+                                                        ) : item.isActive ? (
+                                                            <XCircle className="w-4 h-4 text-muted-foreground" />
+                                                        ) : (
+                                                            <Check className="w-4 h-4 text-green-500" />
+                                                        )}
+                                                    </Button>
                                                     <Button
                                                         variant="ghost"
                                                         size="sm"
@@ -326,7 +369,7 @@ export default function SEOPage() {
                                                     >
                                                         <Edit2 className="w-4 h-4" />
                                                     </Button>
-                                                    <Button
+                                                    {/* <Button
                                                         variant="ghost"
                                                         size="sm"
                                                         onClick={() => {
@@ -336,7 +379,7 @@ export default function SEOPage() {
                                                         className="h-8 w-8 p-0 text-destructive hover:text-destructive"
                                                     >
                                                         <Trash2 className="w-4 h-4" />
-                                                    </Button>
+                                                    </Button> */}
                                                 </div>
                                             </TableCell>
                                         </TableRow>
