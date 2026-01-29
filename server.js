@@ -3,7 +3,7 @@ const { parse } = require('url');
 const next = require('next');
 const { initSocket } = require('./lib/socket.js');
 
-const dev = process.env.NODE_ENV !== 'development';
+const dev = process.env.NODE_ENV !== 'production';
 const hostname = process.env.NODE_ENV === 'development'
   ? '0.0.0.0'
   : 'localhost';

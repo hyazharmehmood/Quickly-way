@@ -3,10 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "node server.js",
+    "dev": "NODE_ENV=development node server.js",
     "dev:next": "next dev -p 3000",
     "build": "next build",
-    "start": "NODE_ENV=production node server.js",
+    "start": "NODE_ENV=development node server.js",
     "start:next": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",

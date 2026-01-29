@@ -193,7 +193,6 @@ export function CategoryFilter({
                         width: 'min(calc(100vw - 2rem), 1200px)',
                         maxWidth: 'calc(100vw - 2rem)'
                       }}
-                      onOpenAutoFocus={(e) => e.preventDefault()}
                       collisionPadding={16}
                       avoidCollisions={true}
                     >
