@@ -4,7 +4,7 @@ const next = require('next');
 const { initSocket } = require('./lib/socket.js');
 
 const dev = process.env.NODE_ENV !== 'production';
-const hostname = process.env.NODE_ENV !== 'development'
+const hostname = process.env.NODE_ENV === 'development'
   ? '0.0.0.0'
   : 'localhost';
 // Frontend should run on port 3000, not 3001
