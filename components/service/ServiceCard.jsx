@@ -19,7 +19,7 @@ export function ServiceCard({ service }) {
 
   return (
     <Link href={`/services/${service.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-1">
-      <Card className="shadow-sm border-none">
+      <Card className="">
         {/* Media Container - Changed aspect ratio to 11/7 to match editor (220/140) */}
         <div className="relative aspect-[11/7] overflow-hidden rounded-xl bg-black">
           {service.coverType === 'TEXT' ? (

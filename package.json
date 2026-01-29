@@ -11,10 +11,6 @@
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "db:seed": "node prisma/seed.js"
-   
-  },
-  "prisma": {
-    "seed": "node prisma/seed.js"
   },
   "dependencies": {
     "@hookform/resolvers": "^5.2.2",
