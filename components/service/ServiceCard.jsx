@@ -19,7 +19,7 @@ export function ServiceCard({ service }) {
 
   return (
     <Link href={`/services/${service.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-1">
-      <Card className="">
+      <Card className="shadow-sm border-none">
         {/* Media Container - Changed aspect ratio to 11/7 to match editor (220/140) */}
         <div className="relative aspect-[11/7] overflow-hidden rounded-xl bg-black">
           {service.coverType === 'TEXT' ? (
@@ -42,7 +42,7 @@ export function ServiceCard({ service }) {
         <CardContent className="py-4 px-0 flex flex-col flex-grow px-2">
 
           {/* Provider Header */}
-          <div className="flex items-start gap-3 mb-3">
+          <div className="flex items-start gap-2 mb-3">
             <div className="relative flex-shrink-0">
               {provider.avatarUrl ? (
                 <Image
@@ -53,30 +53,30 @@ export function ServiceCard({ service }) {
                   className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0"
                 />
               ) : (
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center border border-gray-200 flex-shrink-0">
-                  <User className="w-5 h-5 text-gray-500" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0">
+                  <User className="w-5 h-5 text-primary/60" />
                 </div>
               )}
               {/* Online Status Indicator */}
               {service.freelancerId && (
-                <div className="absolute -bottom-0.5 right-0.5">
+                <div className="absolute bottom-[0.125rem] right-0.5">
                   <UserStatus userId={service.freelancerId} size="sm" />
                 </div>
               )}
             </div>
-            <div className="flex flex-col">
-              <h3 className="text-base font-bold text-gray-900 leading-tight">
+            <div className="flex flex-col gap-0.5">
+              <h3 className="text-sm font-bold text-gray-900 leading-tight">
                 {provider.name}
               </h3>
-              <div className="flex items-center gap-1 text-base text-gray-500 mt-1 hover:text-gray-900 active:text-gray-900 transition-colors">
-                <MapPin className="w-4 h-4" />
-                <span className="truncate max-w-[150px]">{provider.location}</span>
+              <div className="flex items-center gap-0.5 text-sm text-gray-500  hover:text-gray-900 active:text-gray-900 transition-colors">
+                <MapPin className="w-3 h-3" />
+                <span className="truncate line-clamp-0.5">{provider.location}</span>
               </div>
             </div>
           </div>
 
           {/* Description */}
-          <p className="text-base text-gray-600 leading-relaxed line-clamp-2 mb-4 hover:text-gray-900 active:text-gray-900 transition-colors">
+          <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4 hover:text-gray-900 active:text-gray-900 transition-colors">
             {service.description}
           </p>
 
@@ -87,7 +87,7 @@ export function ServiceCard({ service }) {
               <span className="text-sm font-bold text-gray-900">{service.rating}</span>
               <span className="text-base text-gray-400 hover:text-gray-600 active:text-gray-900 transition-colors">({reviewCount})</span>
             </div>
-            <div className="text-lg font-bold text-gray-900">
+            <div className="text-base font-bold text-gray-900">
               ${service.price}
             </div>
           </div>

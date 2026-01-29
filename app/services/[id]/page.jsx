@@ -2,9 +2,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import ServiceDetails from '@/components/service/ServiceDetails'; // Restored import
+import ServiceDetails from '@/components/service/ServiceDetails';
 import { ServiceDetailsSkeleton } from '@/components/service/ServiceDetailsSkeleton';
-// Removed API import - using Socket.IO only
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { toast } from 'sonner';
@@ -32,12 +31,15 @@ export default function ServiceDetailsPage() {
                     throw new Error("Failed to load service");
                 }
                 const data = await response.json();
-                console.log("Service Data:", data);
 
-                // Store raw data for contact functionality
-                const rawServiceData = data;
+                const getUniqueGalleryUrls = () => {
+                    const urls = [
+                        data.coverImage || data.thumbnail || data.images?.[0],
+                        ...(data.images || [])
+                    ].filter(Boolean);
+                    return urls.filter((url, index, self) => self.indexOf(url) === index);
+                };
 
-                // Transform API data to Component expected structure
                 const transformedService = {
                     id: data.id,
                     title: data.title,
@@ -46,24 +48,16 @@ export default function ServiceDetailsPage() {
                     subCategory: data.subCategory,
                     price: data.price,
                     priceBreakdowns: data.priceBreakdowns || [],
-                    rating: 5.0, // Default
-                    reviewCount: 0, // Default
-                    hires: 0, // Default
-
-                    // Cover & Gallery Logic
+                    rating: 5.0,
+                    reviewCount: 0,
+                    hires: 0,
                     coverType: data.coverType || 'IMAGE',
                     coverText: data.coverText,
                     coverColor: data.coverColor,
-
-                    galleryUrls: [
-                        data.coverImage || data.thumbnail || data.images?.[0],
-                        ...(data.images || [])
-                    ].filter(Boolean).filter((url, index, self) => self.indexOf(url) === index),
-
+                    galleryUrls: getUniqueGalleryUrls(),
                     bio: data.freelancer?.bio || "",
                     skills: data.skills?.map(ss => ss.skill?.name || '').filter(Boolean) || [],
                     yearsExperience: 1,
-
                     provider: {
                         name: data.freelancer?.name || "Freelancer",
                         avatarUrl: data.freelancer?.profileImage || "",
@@ -73,16 +67,13 @@ export default function ServiceDetailsPage() {
                         isOnline: false,
                         availability: data.freelancer?.availability || []
                     },
-
                     paymentMethods: ["Credit Card", "PayPal"],
-                    reviewsList: []
+                    reviewsList: [],
+                    freelancerId: data.freelancerId || data.freelancer?.id,
+                    rawData: data
                 };
 
-                setService({
-                    ...transformedService,
-                    freelancerId: data.freelancerId || data.freelancer?.id,
-                    rawData: rawServiceData, // Store raw data for contact
-                });
+                setService(transformedService);
             } catch (err) {
                 console.error(err);
                 setError(err.message);
@@ -100,14 +91,12 @@ export default function ServiceDetailsPage() {
 
     const handleContact = () => {
         try {
-            // Check if user is logged in
             if (!isLoggedIn || !user) {
                 toast.error('Please login to contact the freelancer');
                 router.push('/login');
                 return;
             }
 
-            // Get freelancer ID from service
             const freelancerId = service?.freelancerId || service?.rawData?.freelancer?.id || service?.rawData?.freelancerId;
             
             if (!freelancerId) {
@@ -115,7 +104,6 @@ export default function ServiceDetailsPage() {
                 return;
             }
 
-            // Check if trying to contact yourself
             if (freelancerId === user.id) {
                 toast.error('You cannot contact yourself');
                 return;
@@ -128,47 +116,40 @@ export default function ServiceDetailsPage() {
 
             toast.loading('Starting conversation...', { id: 'contact' });
 
-            // Set up event listeners
             let timeoutId;
             
-            const handleConversationCreated = (data) => {
+            const cleanup = () => {
                 clearTimeout(timeoutId);
-                toast.dismiss('contact');
-                if (data.conversation) {
-                    toast.success('Conversation started!', { id: 'contact' });
-                    // Navigate to messages page with conversation ID
-                    router.push(`/messages?conversationId=${data.conversation.id}`);
-                } else {
-                    toast.error('Failed to start conversation', { id: 'contact' });
-                }
-                // Clean up listeners
                 socket.off('conversation:created', handleConversationCreated);
                 socket.off('error', handleError);
             };
 
+            const handleConversationCreated = (data) => {
+                cleanup();
+                toast.dismiss('contact');
+                if (data.conversation) {
+                    toast.success('Conversation started!', { id: 'contact' });
+                    router.push(`/messages?conversationId=${data.conversation.id}`);
+                } else {
+                    toast.error('Failed to start conversation', { id: 'contact' });
+                }
+            };
 
             const handleError = (errorData) => {
-                clearTimeout(timeoutId);
+                cleanup();
                 toast.dismiss('contact');
                 const errorMessage = typeof errorData === 'string' 
                     ? errorData 
                     : (errorData?.message || 'Failed to start conversation');
                 toast.error(errorMessage, { id: 'contact' });
-                // Clean up listeners
-                socket.off('conversation:created', handleConversationCreated);
-                socket.off('error', handleError);
             };
 
             socket.once('conversation:created', handleConversationCreated);
             socket.once('error', handleError);
-
-            // Create or get existing conversation via Socket.IO
             socket.emit('create_conversation', { otherUserId: freelancerId });
             
-            // Timeout after 10 seconds if no response
             timeoutId = setTimeout(() => {
-                socket.off('conversation:created', handleConversationCreated);
-                socket.off('error', handleError);
+                cleanup();
                 toast.dismiss('contact');
                 toast.error('Connection timeout. Please try again.', { id: 'contact' });
             }, 10000);
