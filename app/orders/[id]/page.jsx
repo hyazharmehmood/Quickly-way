@@ -204,7 +204,7 @@ export default function OrderDetailPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500">
+            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500">
                 <div className="space-y-6">
                     <div className="flex items-center gap-4">
                         <Skeleton className="h-10 w-10 rounded-xl" />
@@ -229,7 +229,7 @@ export default function OrderDetailPage() {
 
     if (!order) {
         return (
-            <div className="container mx-auto py-6 px-4 md:px-6">
+            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
                 <Card className="rounded-[2rem] border-none">
                     <CardContent className="p-8 text-center">
                         <p className="text-muted-foreground">Order not found</p>
@@ -243,7 +243,7 @@ export default function OrderDetailPage() {
     }
 
     return (
-        <div className="container mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
+        <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
             <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"

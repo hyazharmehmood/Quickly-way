@@ -45,7 +45,7 @@ export default function ProfilePage() {
 
     if (authLoading || loading || !isLoggedIn) {
         return (
-            <div className="container mx-auto py-8 px-4">
+            <div className="max-w-7xl mx-auto py-8 px-4">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <div className="flex items-center justify-between">
                         <Skeleton className="h-8 w-48" />
@@ -84,7 +84,7 @@ export default function ProfilePage() {
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : 'U';
 
     return (
-        <div className="container mx-auto py-8 px-4">
+        <div className="max-w-7xl mx-auto py-8 px-4">
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center justify-between">

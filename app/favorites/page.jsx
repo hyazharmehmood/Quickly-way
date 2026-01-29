@@ -54,7 +54,7 @@ export default function ClientFavoritesPage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4 md:px-6 animate-in fade-in duration-500 space-y-4">
+        <div className="max-w-7xl mx-auto py-8 px-4 md:px-6 animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">Saved Services</h2>

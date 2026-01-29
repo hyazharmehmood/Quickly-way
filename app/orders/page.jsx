@@ -111,7 +111,7 @@ export default function ClientOrdersPage() {
     });
 
     return (
-        <div className="animate-in fade-in duration-500 space-y-4 container mx-auto py-6 px-4 md:px-6">
+        <div className="animate-in fade-in duration-500 space-y-4 max-w-7xl mx-auto py-6 px-4 md:px-6">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h2 className="text-2xl font-normal text-foreground tracking-tight">My Purchases</h2>

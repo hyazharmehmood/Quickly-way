@@ -106,7 +106,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
 
   if (loading) {
     return (
-      <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
           {[...Array(10)].map((_, i) => (
             <div key={i} className="space-y-3">
@@ -135,7 +135,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
   }
 
   return (
-    <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
       {/* Active Filter Indicator */}
       {skillSlug && skillName && (
         <div className="mb-6 flex items-center justify-between flex-wrap gap-4">

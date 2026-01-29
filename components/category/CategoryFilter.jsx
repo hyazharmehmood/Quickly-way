@@ -72,7 +72,7 @@ export function CategoryFilter({
   if (loading) {
     return (
       <div className="w-full bg-background border-b border-border py-4 md:py-6">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
 
             <Skeleton className="h-10 w-16 rounded-md" />
@@ -90,8 +90,8 @@ export function CategoryFilter({
 
   if (categories.length === 0) {
     return (
-      <div className="w-full bg-background border-b border-border py-4 md:py-6">
-        <div className="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className=" bg-background border-b border-border py-4 md:py-6">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-2">
             <Button
               onClick={() => {
@@ -112,7 +112,7 @@ export function CategoryFilter({
 
   return (
     <div className="w-full bg-background border-b border-border py-3 sm:py-4 md:py-6">
-      <div className="w-full mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
+      <div className="w-full max-w-7xl mx-auto px-3 sm:px-4 md:px-6 lg:px-8">
         <div className="flex items-center gap-1.5 sm:gap-2 overflow-hidden">
           {/* Fixed "All" Category */}
           <Button
@@ -219,12 +219,12 @@ export function CategoryFilter({
 
                                     {/* Skills */}
                                     {subcategory.skills && subcategory.skills.length > 0 && (
-                                      <ul className="space-y-1.5 sm:space-y-2">
+                                      <ul className="space-y-0.5">
                                         {subcategory.skills.slice(0, 6).map((skill) => (
                                           <li key={skill.id}>
                                             <button
                                               onClick={() => handleSkillClick(skill.slug, category.slug, subcategory.slug)}
-                                              className="text-xs sm:text-sm cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-1.5 px-2 -mx-2 rounded-md hover:bg-primary/5 group/item"
+                                              className="text-xs sm:text-sm cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-1 px-2 -mx-2 rounded-md hover:bg-primary/5 group/item"
                                             >
                                               <span className="flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 group-hover/item:bg-primary group-hover/item:scale-150 transition-all"></span>

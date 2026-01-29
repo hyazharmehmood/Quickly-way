@@ -114,7 +114,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                 onSubmit={handleSubmitReview}
             />
 
-            <div className="px-4 py-4">
+            <div className="px-4 py-4 max-w-7xl mx-auto ">
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-6">
 
@@ -122,23 +122,23 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                     <div className="lg:col-span-2 space-y-4">
 
                         <Card className="overflow-hidden relative shadow-sm border-none">
-                            <CardContent className="p-6 md:p-8 flex flex-col md:flex-row gap-10">
+                            <CardContent className="p-4 md:p-6 flex flex-col md:flex-row gap-10">
                                 <div className="flex-shrink-0">
                                     <div className="relative inline-block">
                                         {service.provider.avatarUrl && !avatarError ? (
                                             <img
                                                 src={service.provider.avatarUrl}
                                                 alt={service.provider.name}
-                                                className="w-32 h-32 rounded-full object-cover border-4 border-white shadow-md"
+                                                className="w-32 h-32 rounded-full object-cover border-2 border-gray-100 shadow-md  "
                                                 onError={() => setAvatarError(true)}
                                             />
                                         ) : (
-                                            <div className="w-32 h-32 rounded-full border-4 border-white shadow-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+                                            <div className="w-32 h-32 rounded-full border-2 border-gray-100 shadow-md bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
                                                 <User className="w-16 h-16 text-primary/60" />
                                             </div>
                                         )}
                                         {service.freelancerId && (
-                                            <div className="absolute bottom-2 right-2">
+                                            <div className="absolute bottom-2.5 right-4">
                                                 <UserStatus userId={service.freelancerId} size="md" />
                                             </div>
                                         )}
@@ -146,10 +146,10 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                 </div>
 
                                 <div className="flex-1 flex flex-col justify-center">
-                                    <div className="flex items-start justify-between gap-4">
+                                    <div className="flex items-start justify-between gap-2 ">
                                         <div>
-                                            <h1 className="text-2xl font-bold text-gray-900">{service.provider.name}</h1>
-                                            <div className="flex flex-wrap items-center gap-6 mt-1 text-lg text-gray-700">
+                                            <h1 className="text-xl font-bold text-gray-900">{service.provider.name}</h1>
+                                            <div className="flex flex-wrap items-center gap-4 mt-1 text-base text-gray-700">
                                                 <div className="flex items-center gap-2">
                                                     <Star className="w-5 h-5 fill-[#ff9529] text-[#ff9529]" />
                                                     <span className="font-bold">{service.rating}</span>
@@ -160,26 +160,26 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                                 <span className="font-medium text-gray-500">{service.hires} hires</span>
                                             </div>
                                         </div>
-                                        <Button variant="outline" className="flex items-center gap-2 px-6 py-2.5 bg-gray-50 hover:bg-gray-100 rounded-full text-gray-700 font-bold transition-all flex-shrink-0 text-sm border-gray-100 h-auto">
+                                        <Button variant="outline" className="flex items-center gap-2 transition-all flex-shrink-0">
                                             <Heart className="w-5 h-5" />
                                             <span>Favorite</span>
                                         </Button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-3 mt-6 text-[17px] text-gray-600 max-w-3xl">
-                                        <div className="flex items-center gap-3">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4  text-gray-600 max-w-3xl">
+                                        <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                                                 <MapPin className="w-4 h-4" />
                                             </div>
                                             <span>{service.provider.location}</span>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                                                 <User className="w-4 h-4" />
                                             </div>
                                             <span>Member since {service.provider.memberSince}</span>
                                         </div>
-                                        <div className="flex items-center gap-3">
+                                        <div className="flex items-center gap-2">
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
                                                 <CheckCircle className="w-4 h-4" />
                                             </div>
@@ -187,7 +187,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-8 mt-8 border-t border-gray-50 pt-8">
+                                    <div className="flex flex-wrap items-center gap-4 mt-4 border-t border-gray-50 pt-4">
                                         <Button onClick={() => setShowContactModal(true)}
                                             variant="default"
                                             size="lg"
@@ -206,7 +206,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                         <div className="space-y-4">
                             {service.galleryUrls && service.galleryUrls.length > 0 && (
                                 <Card className="border-none shadow-sm">
-                                    <CardContent className="p-6">
+                                    <CardContent className="p-4 md:p-6 ">
                                         <div className="relative aspect-video rounded-3xl overflow-hidden bg-black group">
                                             {service.coverType === 'TEXT' && currentImageIndex === 0 ? (
                                                 <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-10 text-center`}>
@@ -252,9 +252,9 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                             )}
 
                             <Card className="border-none shadow-sm">
-                                <CardContent className="p-6">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-6">Description</h3>
-                                    <p className="text-lg text-gray-700 leading-relaxed font-normal">
+                                <CardContent className="p-4 md:p-6 gap-1 ">
+                                    <h3 className="text-xl font-bold text-gray-900 ">Description</h3>
+                                    <p className="text-base text-gray-700 leading-relaxed font-normal">
                                         {service.description}
                                     </p>
                                 </CardContent>
@@ -262,11 +262,11 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {service.skills && service.skills.length > 0 && (
                                 <Card className="border-none shadow-sm">
-                                    <CardContent className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-4">Skills</h3>
+                                    <CardContent className="p-4 md:p-6 flex flex-col gap-1 ">
+                                        <h3 className="text-xl font-bold text-gray-900">Skills</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {service.skills.map((skill, idx) => (
-                                                <Badge key={idx} variant="secondary" className="px-6 py-2 bg-gray-50 border border-gray-200 rounded-xl text-lg text-gray-700 font-bold hover:bg-gray-100 h-auto">
+                                                <Badge key={idx} variant="secondary" size="lg" className="text-base text-gray-600 font-medium   ">
                                                     {skill}
                                                 </Badge>
                                             ))}
@@ -277,13 +277,13 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {service.provider.languages && service.provider.languages.length > 0 && (
                                 <Card className="border-none shadow-sm">
-                                    <CardContent className="p-6">
-                                        <h3 className="text-xl font-bold text-gray-900 mb-4">Languages</h3>
+                                    <CardContent className="p-4 md:p-6 flex flex-col gap-1 ">
+                                        <h3 className="text-xl font-bold text-gray-900">Languages</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {service.provider.languages.map((lang, idx) => (
-                                                <span key={idx} className="px-4 py-2 bg-[#10b981]/5 border border-[#10b981]/10 rounded-xl text-lg text-[#10b981] font-bold">
+                                                <Badge key={idx} variant="primary" size="lg" className="text-base font-medium   ">
                                                     {lang}
-                                                </span>
+                                                </Badge>
                                             ))}
                                         </div>
                                     </CardContent>
@@ -295,13 +295,13 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                     <div className="lg:col-span-1">
                         <div className="sticky top-24 space-y-4">
                             <Card className="border-none shadow-sm">
-                                <CardContent className="p-6">
-                                    <h3 className="text-lg text-gray-500 mb-2 font-bold uppercase tracking-widest">Starting price</h3>
-                                    <div className="text-2xl font-black text-gray-900 mb-2 tracking-tight">
+                                <CardContent className="p-4 md:p-6 ">
+                                    <h3 className="text-xl font-bold text-gray-900 uppercase tracking-widest mb-2">Starting price</h3>
+                                    <div className="text-xl font-black text-gray-900  tracking-tight">
                                         {service.priceRange ? service.priceRange.split('-')[0].trim() : `$${service.price}`}
                                     </div>
 
-                                    <ul className="space-y-4 text-lg text-gray-700 leading-relaxed font-medium mb-10 border-t border-gray-50 pt-8">
+                                    <ul className="space-y-3 text-lg text-gray-700 leading-relaxed font-medium mb-10 border-t border-gray-50 pt-4 ">
                                         {service.priceBreakdowns && service.priceBreakdowns.length > 0 ? (
                                             service.priceBreakdowns.map((item, idx) => {
                                                 const parseItem = (item) => {
@@ -324,13 +324,13 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                                                 return (
                                                     <li key={idx} className="flex flex-col gap-2">
-                                                        <div className="flex items-start gap-3">
+                                                        <div className="flex items-center gap-2">
                                                             <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                                            <span className="font-bold text-gray-900">{label}</span>
+                                                            <span className="text-lg font-medium text-gray-900">{label}</span>
                                                         </div>
                                                         {subDetails && (
                                                             <div className="pl-8 text-base text-gray-600 whitespace-pre-wrap leading-snug">
-                                                                <span className="text-xs font-bold uppercase text-gray-400 block mb-1">Included:</span>
+                                                                <span className="text-xs font-medium uppercase text-gray-400 block mb-1">Included:</span>
                                                                 {subDetails}
                                                             </div>
                                                         )}
@@ -349,7 +349,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                         onClick={() => setShowContactModal(true)}
                                         className="w-full"
                                         variant="default"
-                                       
+
                                     >
                                         Contact me
                                     </Button>
@@ -358,12 +358,12 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                             {service.provider?.availability && (
                                 <Card className="border-none shadow-sm">
-                                    <CardContent className="p-6">
-                                        <div className="flex justify-between items-center mb-6">
-                                            <h3 className="text-xl font-bold text-gray-900">Working hours</h3>
-                                            <span className="px-3 py-1 bg-green-50 text-green-600 rounded-full text-xs font-bold uppercase tracking-tighter">Live</span>
+                                    <CardContent className="p-4 md:p-6 ">
+                                        <div className="flex justify-between items-center mb-4">
+                                            <h3 className="text-xl font-bold text-gray-900 text-gray-900">Working hours</h3>
+                                            <Badge variant="secondary" size="default" className="text-sm font-medium text-green-600 ">Live</Badge>
                                         </div>
-                                        <div className="text-lg text-gray-500 font-medium mb-6">
+                                        <div className="text-base text-gray-500 font-medium mb-6">
                                             Typical Response Time: <span className="text-gray-900">1 Hour</span>
                                         </div>
                                         <div className="space-y-3 text-[17px] text-gray-700 font-medium">
@@ -387,7 +387,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                             )}
 
                             <Card className="border-none shadow-sm">
-                                <CardContent className="p-8">
+                                <CardContent className="p-4 md:p-6">
                                     <h3 className="text-xl font-bold text-gray-900 mb-4">Payment methods</h3>
                                     <p className="text-lg text-gray-600 leading-relaxed font-normal">
                                         {service.paymentMethods?.[0]?.startsWith("I accept payments via")
@@ -399,7 +399,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                             </Card>
 
                             <Card className="border-none shadow-sm">
-                                <CardContent className="p-6 flex items-center justify-center">
+                                <CardContent className="p-4 md:p-6 flex items-center justify-center">
                                     <Button
                                         variant="outline"
                                         onClick={() => setShowReportModal(true)}
@@ -414,10 +414,10 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                 </div>
 
                 <Card className="mt-8 border-none shadow-sm">
-                    <CardContent className="p-10">
+                    <CardContent className="p-4 md:p-6">
                         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
                             <div>
-                                <h3 className="text-2xl font-bold text-gray-900 mb-2">Customer Feedback</h3>
+                                <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Feedback</h3>
                                 <p className="text-gray-500 text-lg">Verified reviews from actual clients who hired this pro.</p>
                             </div>
                             <Button onClick={() => setShowReviewModal(true)} className="h-auto">

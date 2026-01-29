@@ -147,7 +147,7 @@ export default function EditProfilePage() {
 
     if (isLoadingProfile) {
         return (
-            <div className="container mx-auto py-8 px-4">
+            <div className="max-w-7xl mx-auto py-8 px-4">
                 <div className="max-w-4xl mx-auto space-y-6">
                     <Skeleton className="h-8 w-48" />
                     <Card>
@@ -172,7 +172,7 @@ export default function EditProfilePage() {
     }
 
     return (
-        <div className="container mx-auto py-8 px-4">
+        <div className="max-w-7xl mx-auto py-8 px-4">
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex items-center gap-4">

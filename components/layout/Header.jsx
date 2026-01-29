@@ -72,7 +72,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
     <div className="flex flex-col w-full relative">
       {/* Top Bar */}
       <div className="bg-background border-b border-border py-2.5 px-4 sm:px-6 lg:px-8 relative z-[60]">
-        <div className="max-w-screen-2xl mx-auto flex items-center justify-start gap-8">
+        <div className="max-w-7xl mx-auto flex items-center justify-start gap-8">
           {/* Navigation Icons Group */}
           <div className="flex items-center gap-6">
 
@@ -155,7 +155,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
 
       {/* Main Header */}
       <header className="sticky top-0 z-50 bg-background border-b border-border py-4 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-screen-2xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-4">
           {/* Logo Section */}
           <div className="flex items-center w-full md:w-auto justify-between md:justify-start md:min-w-[200px]">
             <Button

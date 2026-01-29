@@ -81,7 +81,7 @@ export default function AdminOrderDetailPage() {
 
     if (loading) {
         return (
-            <div className="container mx-auto animate-in fade-in duration-500 space-y-6">
+            <div className="max-w-7xl mx-auto animate-in fade-in duration-500 space-y-6">
                 {/* Header Skeleton */}
                 <div className="flex items-center gap-4">
                     <Skeleton className="h-10 w-10 rounded-xl" />
@@ -237,7 +237,7 @@ export default function AdminOrderDetailPage() {
 
     if (!order) {
         return (
-            <div className="container mx-auto py-6 px-4 md:px-6">
+            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
                 <Card className="rounded-[2rem] border-none">
                     <CardContent className="p-8 text-center">
                         <p className="text-muted-foreground">Order not found</p>
