@@ -59,7 +59,7 @@ export function ServiceCard({ service }) {
               )}
               {/* Online Status Indicator */}
               {service.freelancerId && (
-                <div className="absolute -bottom-0.5 -right-0.5">
+                <div className="absolute -bottom-0.5 right-0.5">
                   <UserStatus userId={service.freelancerId} size="sm" />
                 </div>
               )}
