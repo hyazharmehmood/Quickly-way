@@ -210,7 +210,7 @@ export default function FreelancerOrdersPage() {
                                 {filteredOrders.map((order) => (
                                     <TableRow key={order.id} className="hover:bg-secondary/10 transition-colors border-b border-border group">
                                         <TableCell className="px-4 whitespace-nowrap py-5 font-normal text-muted-foreground text-sm">{order.orderNumber}</TableCell>
-                                        <TableCell className="px-4 whitespace-nowrap py-5">
+                                        <TableCell className="px-4 py-5">
                                             <div className="font-normal text-foreground text-sm">{order.client?.name || 'Unknown Client'}</div>
                                             <div className="text-xs text-muted-foreground mt-0.5">{order.service?.title || 'Service'}</div>
                                         </TableCell>

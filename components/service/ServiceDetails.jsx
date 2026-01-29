@@ -370,7 +370,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                             {service.provider.availability.map((item, idx) => {
                                                 const isToday = item.day === new Date().toLocaleDateString('en-US', { weekday: 'short' });
                                                 return (
-                                                    <div key={idx} className="flex justify-between items-center p-2 rounded-xl hover:bg-gray-50 transition-colors">
+                                                    <div key={idx} className="flex justify-between items-center p-2 rounded-xl hover:bg-gray-50 transition-colors text-base">
                                                         <span className={isToday ? "text-[#10b981] font-bold" : "text-gray-500"}>
                                                             {item.day}
                                                         </span>
@@ -403,7 +403,7 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                     <Button
                                         variant="outline"
                                         onClick={() => setShowReportModal(true)}
-                                        className="w-full py-6 px-6 border-2 border-dashed border-red-100 rounded-2xl text-red-500 font-bold hover:bg-red-50 hover:text-red-600 transition-all text-base flex items-center justify-center gap-2 h-auto"
+                                        className="w-full  border-2 border-dashed border-red-100 rounded-2xl text-red-500 font-bold hover:bg-red-50 hover:text-red-600 transition-all text-base flex items-center justify-center gap-2 h-auto"
                                     >
                                         <ShieldAlert className="w-5 h-5" /> Complaint about service
                                     </Button>
