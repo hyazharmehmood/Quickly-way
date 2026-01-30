@@ -2,11 +2,16 @@
 
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useState } from 'react';
 import { MapPin, Star, User } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { UserStatus } from '@/components/chat/UserStatus';
 
 export function ServiceCard({ service }) {
+  const router = useRouter();
+  const [avatarError, setAvatarError] = useState(false);
+  
   // Handle potentially missing nested data if the API structure varies
   const provider = service.provider || {
     avatarUrl: service.profileImage,
@@ -18,9 +23,15 @@ export function ServiceCard({ service }) {
   const reviewCount = service.reviewCount || service.reviews || 0;
   const rating = service.rating || 5.0;
 
+  const handleCardClick = () => {
+    router.push(`/services/${service.id}`);
+  };
+
   return (
-    <Link href={`/services/${service.id}`} className="block h-full transition-transform duration-300 hover:-translate-y-1">
-      <Card className="">
+    <Card 
+      className="cursor-pointer transition-transform duration-300 hover:-translate-y-1 h-full"
+      onClick={handleCardClick}
+    >
         {/* Media Container - Changed aspect ratio to 11/7 to match editor (220/140) */}
         <div className="relative aspect-[11/7] overflow-hidden rounded-xl bg-black">
           {service.coverType === 'TEXT' ? (
@@ -49,13 +60,15 @@ export function ServiceCard({ service }) {
               onClick={(e) => e.stopPropagation()}
               className="relative flex-shrink-0"
             >
-              {provider.avatarUrl ? (
+              {provider.avatarUrl && provider.avatarUrl.trim() !== '' && !avatarError ? (
                 <Image
                   src={provider.avatarUrl}
                   alt={provider.name}
                   width={40}
                   height={40}
                   className="w-10 h-10 rounded-full object-cover border border-gray-100 flex-shrink-0 hover:ring-2 ring-primary/20 transition-all cursor-pointer"
+                  onError={() => setAvatarError(true)}
+                  unoptimized
                 />
               ) : (
                 <div className="w-10 h-10 rounded-full flex items-center justify-center border border-gray-200 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0 hover:ring-2 ring-primary/20 transition-all cursor-pointer">
@@ -102,6 +115,5 @@ export function ServiceCard({ service }) {
           </div>
         </CardContent>
       </Card>
-    </Link>
   );
 }

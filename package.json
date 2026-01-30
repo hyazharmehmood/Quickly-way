@@ -4,10 +4,10 @@
   "private": true,
   "scripts": {
     "dev": "NODE_ENV=development node server.js",
-    "dev:next": "next dev -p 3000",
+    "dev:next": "next dev --webpack -p 3000",
     "build": "next build",
     "start": "NODE_ENV=development node server.js",
-    "start:next": "next start",
+    "start:next": "next start --webpack",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",
     "db:seed": "node prisma/seed.js"
