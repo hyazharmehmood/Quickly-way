@@ -16,6 +16,7 @@ export default function ServiceDetailsPage() {
     const [service, setService] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [reviews, setReviews] = useState([]);
     const { isLoggedIn, user } = useAuthStore();
     const { socket, isConnected } = useGlobalSocket();
 
@@ -32,6 +33,13 @@ export default function ServiceDetailsPage() {
                 }
                 const data = await response.json();
 
+                // Reviews are now included in the service API response (optimized - no separate API calls)
+                const allReviews = data.reviews || [];
+                const avgRating = data.rating || 5.0;
+                const reviewCount = data.reviewCount || 0;
+                
+                console.log('Reviews from service API:', allReviews.length, 'Rating:', avgRating);
+
                 const getUniqueGalleryUrls = () => {
                     const urls = [
                         data.coverImage || data.thumbnail || data.images?.[0],
@@ -39,6 +47,31 @@ export default function ServiceDetailsPage() {
                     ].filter(Boolean);
                     return urls.filter((url, index, self) => self.indexOf(url) === index);
                 };
+
+                // Transform reviews to match ServiceDetails component format
+                const transformedReviews = allReviews.map(review => {
+                    // Determine if this is an order-based review
+                    const isOrderReview = review.isOrderReview === true || review.orderId !== null;
+                    const orderInfo = review.order || (isOrderReview ? { id: review.orderId, orderNumber: null } : null);
+                    
+                    return {
+                        id: review.id,
+                        userName: review.reviewer?.name || 'Anonymous',
+                        userAvatar: review.reviewer?.profileImage || null,
+                        rating: review.rating || 5,
+                        comment: review.comment || '',
+                        date: review.createdAt ? new Date(review.createdAt).toLocaleDateString('en-US', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        }) : 'Recently',
+                        details: isOrderReview && orderInfo 
+                            ? `Order #${orderInfo.orderNumber || orderInfo.id?.slice(0, 8) || 'N/A'}` 
+                            : 'Service Review'
+                    };
+                });
+                
+                console.log('Transformed reviews:', transformedReviews.length);
 
                 const transformedService = {
                     id: data.id,
@@ -48,9 +81,9 @@ export default function ServiceDetailsPage() {
                     subCategory: data.subCategory,
                     price: data.price,
                     priceBreakdowns: data.priceBreakdowns || [],
-                    rating: 5.0,
-                    reviewCount: 0,
-                    hires: 0,
+                    rating: avgRating,
+                    reviewCount: reviewCount,
+                    hires: data.orderCount || 0,
                     coverType: data.coverType || 'IMAGE',
                     coverText: data.coverText,
                     coverColor: data.coverColor,
@@ -68,12 +101,15 @@ export default function ServiceDetailsPage() {
                         availability: data.freelancer?.availability || []
                     },
                     paymentMethods: ["Credit Card", "PayPal"],
-                    reviewsList: [],
+                    reviewsList: transformedReviews,
                     freelancerId: data.freelancerId || data.freelancer?.id,
                     rawData: data
                 };
 
                 setService(transformedService);
+                // Always set reviews, even if empty array
+                setReviews(transformedReviews || []);
+                console.log('Reviews state set:', transformedReviews.length, transformedReviews);
             } catch (err) {
                 console.error(err);
                 setError(err.message);
@@ -123,7 +159,7 @@ export default function ServiceDetailsPage() {
                 socket.off('conversation:created', handleConversationCreated);
                 socket.off('error', handleError);
             };
-
+            
             const handleConversationCreated = (data) => {
                 cleanup();
                 toast.dismiss('contact');
@@ -167,6 +203,7 @@ export default function ServiceDetailsPage() {
     return (
         <ServiceDetails
             service={service}
+            reviews={reviews}
             moreServices={[]}
             onNavigateToService={handleNavigateToService}
             onContact={handleContact}

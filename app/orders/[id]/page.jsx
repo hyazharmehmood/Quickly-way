@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, ShoppingBag, Clock, CheckCircle2, XCircle,
     MessageSquare, Download, Package, AlertCircle, User,
-    Calendar, DollarSign, FileText, RefreshCw
+    Calendar, DollarSign, FileText, RefreshCw, Star, Edit
 } from 'lucide-react';
+import { ReviewModal } from '@/components/review/ReviewModal';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -57,15 +58,42 @@ export default function OrderDetailPage() {
     const [showDeliverDialog, setShowDeliverDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [showRevisionDialog, setShowRevisionDialog] = useState(false);
+    const [showDisputeDialog, setShowDisputeDialog] = useState(false);
     const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
     const [cancelReason, setCancelReason] = useState('');
     const [revisionReason, setRevisionReason] = useState('');
+    const [disputeReason, setDisputeReason] = useState('');
+    const [disputeDescription, setDisputeDescription] = useState('');
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [canReview, setCanReview] = useState({ canReview: false, reason: null });
+
+    // Calculate user role early
+    const isClient = user?.id === order?.clientId;
+    const isFreelancer = user?.id === order?.freelancerId;
 
     useEffect(() => {
         if (params.id) {
             fetchOrder();
+            fetchReviews();
+            checkCanReview();
         }
-    }, [params.id]);
+    }, [params.id, user?.id]);
+
+    useEffect(() => {
+        // Show review modal when order is completed and user is client
+        if (order?.status === 'COMPLETED' && isClient && !showReviewModal) {
+            // Check if client has already reviewed
+            const clientReview = reviews.find(r => r.isClientReview === true && r.reviewerId === user?.id);
+            if (!clientReview) {
+                // Show popup after a short delay
+                const timer = setTimeout(() => {
+                    setShowReviewModal(true);
+                }, 500);
+                return () => clearTimeout(timer);
+            }
+        }
+    }, [order?.status, isClient, reviews, user?.id, showReviewModal]);
 
     const fetchOrder = async () => {
         try {
@@ -90,9 +118,6 @@ export default function OrderDetailPage() {
             </Badge>
         );
     };
-
-    const isClient = user?.id === order?.clientId;
-    const isFreelancer = user?.id === order?.freelancerId;
 
     const handleDeliver = async () => {
         if (!order) return;
@@ -165,6 +190,30 @@ export default function OrderDetailPage() {
         }
     };
 
+    const fetchReviews = async () => {
+        if (!params.id) return;
+        try {
+            const response = await api.get(`/reviews?orderId=${params.id}`);
+            if (response.data.success) {
+                setReviews(response.data.reviews || []);
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+        }
+    };
+
+    const checkCanReview = async () => {
+        if (!params.id || !user?.id) return;
+        try {
+            const response = await api.get(`/orders/${params.id}/can-review`);
+            if (response.data.success) {
+                setCanReview(response.data);
+            }
+        } catch (error) {
+            console.error('Error checking review eligibility:', error);
+        }
+    };
+
     const handleAcceptDelivery = async () => {
         if (!order) return;
 
@@ -183,11 +232,54 @@ export default function OrderDetailPage() {
                 deliverableId: latestDeliverable.id,
             });
             if (response.data.success) {
-                toast.success('Delivery accepted successfully');
-                fetchOrder();
+                toast.success('Order completed successfully!');
+                await fetchOrder();
+                await fetchReviews();
+                await checkCanReview();
+                // Show review modal for client
+                if (isClient) {
+                    setTimeout(() => setShowReviewModal(true), 500);
+                }
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to accept delivery');
+        }
+    };
+
+    const handleReviewSubmitted = async () => {
+        await fetchReviews();
+        await checkCanReview();
+        await fetchOrder();
+    };
+
+    const getClientReview = () => {
+        return reviews.find(r => r.isClientReview === true && r.reviewerId === user?.id);
+    };
+
+    const getFreelancerReview = () => {
+        return reviews.find(r => r.isClientReview === false && r.reviewerId === user?.id);
+    };
+
+    const handleOpenDispute = async () => {
+        if (!order || !disputeReason.trim() || !disputeDescription.trim()) {
+            toast.error('Please provide both reason and description for the dispute');
+            return;
+        }
+
+        try {
+            const response = await api.post(`/orders/${order.id}/dispute`, {
+                reason: disputeReason.trim(),
+                description: disputeDescription.trim(),
+            });
+            if (response.data.success) {
+                toast.success('Dispute opened successfully');
+                setShowDisputeDialog(false);
+                setDisputeReason('');
+                setDisputeDescription('');
+                fetchOrder();
+            }
+        } catch (error) {
+            toast.error(error.response?.data?.error || 'Failed to open dispute');
         }
     };
 
@@ -364,6 +456,93 @@ export default function OrderDetailPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* Reviews Section - Show for completed orders */}
+                    {order.status === 'COMPLETED' && (
+                        <Card className="rounded-[2rem] border-none">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-normal">Reviews</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {reviews && reviews.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {reviews.map((review) => {
+                                            const reviewer = review.reviewer;
+                                            const isClientReview = review.isClientReview;
+                                            const isMyReview = review.reviewerId === user?.id;
+                                            
+                                            return (
+                                                <div key={review.id} className="p-6 bg-secondary/30 rounded-xl border border-border/50">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex items-center gap-4">
+                                                            <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden">
+                                                                {reviewer?.profileImage ? (
+                                                                    <img 
+                                                                        src={reviewer.profileImage} 
+                                                                        alt={reviewer.name}
+                                                                        className="w-12 h-12 rounded-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <User className="w-6 h-6 text-primary" />
+                                                                )}
+                                                            </div>
+                                                            <div>
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="font-normal text-foreground">
+                                                                        {reviewer?.name || 'Anonymous'}
+                                                                    </p>
+                                                                    {isClientReview && (
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            Client
+                                                                        </Badge>
+                                                                    )}
+                                                                    {!isClientReview && (
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            Freelancer
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className="flex items-center gap-0.5">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`w-4 h-4 ${
+                                                                                    i < review.rating
+                                                                                        ? 'fill-yellow-400 text-yellow-400'
+                                                                                        : 'text-border'
+                                                                                }`}
+                                                                                strokeWidth={1}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {format(new Date(review.createdAt), 'MMM d, yyyy')}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    {review.comment && (
+                                                        <p className="text-sm text-foreground/80 leading-relaxed italic mt-4 pl-16">
+                                                            "{review.comment}"
+                                                        </p>
+                                                    )}
+                                                    {/* Edit Review button removed for clients - reviews cannot be edited */}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <p className="text-sm text-muted-foreground">
+                                            No reviews yet. Reviews will appear here once submitted.
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Sidebar */}
@@ -432,27 +611,47 @@ export default function OrderDetailPage() {
                                 </Button>
                             )}
 
-                            {isClient && order.status === 'DELIVERED' && (
+                            {/* Fiverr Workflow: DELIVERED status actions */}
+                            {order.status === 'DELIVERED' && (
                                 <>
-                                    <Button
-                                        className="w-full bg-primary text-primary-foreground"
-                                        onClick={handleAcceptDelivery}
-                                    >
-                                        <CheckCircle2 className="w-4 h-4 mr-2" /> Accept Delivery
-                                    </Button>
-                                    {order.revisionsUsed < order.revisionsIncluded && (
-                                        <Button
-                                            variant="outline"
-                                            className="w-full border-border"
-                                            onClick={() => setShowRevisionDialog(true)}
-                                        >
-                                            <RefreshCw className="w-4 h-4 mr-2" /> Request Revision
-                                        </Button>
+                                    {isClient && (
+                                        <>
+                                            <Button
+                                                className="w-full bg-primary text-primary-foreground"
+                                                onClick={handleAcceptDelivery}
+                                            >
+                                                <CheckCircle2 className="w-4 h-4 mr-2" /> Accept & Complete
+                                            </Button>
+                                            {order.revisionsUsed < order.revisionsIncluded && (
+                                                <Button
+                                                    variant="outline"
+                                                    className="w-full border-border"
+                                                    onClick={() => setShowRevisionDialog(true)}
+                                                >
+                                                    <RefreshCw className="w-4 h-4 mr-2" /> Request Revision
+                                                </Button>
+                                            )}
+                                            <Button
+                                                variant="outline"
+                                                className="w-full border-destructive text-destructive hover:bg-destructive/10"
+                                                onClick={() => setShowDisputeDialog(true)}
+                                            >
+                                                <AlertCircle className="w-4 h-4 mr-2" /> Open Dispute
+                                            </Button>
+                                        </>
+                                    )}
+                                    {isFreelancer && (
+                                        <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                                            <p className="text-sm text-muted-foreground text-center">
+                                                Waiting for client response
+                                            </p>
+                                        </div>
                                     )}
                                 </>
                             )}
 
-                            {order.status !== 'COMPLETED' && order.status !== 'CANCELLED' && (
+                            {/* Fiverr Workflow: Cancellation allowed only before delivery */}
+                            {(order.status === 'PENDING_ACCEPTANCE' || order.status === 'IN_PROGRESS') && (
                                 <Button
                                     variant="ghost"
                                     className="w-full text-destructive hover:text-destructive"
@@ -460,6 +659,21 @@ export default function OrderDetailPage() {
                                 >
                                     <XCircle className="w-4 h-4 mr-2" /> Cancel Order
                                 </Button>
+                            )}
+
+                            {/* Fiverr Workflow: REVISION_REQUESTED - Client cannot cancel */}
+                            {order.status === 'REVISION_REQUESTED' && isFreelancer && (
+                                <div className="p-4 bg-muted/50 rounded-lg border border-border">
+                                    <p className="text-sm text-muted-foreground text-center mb-3">
+                                        Client requested a revision
+                                    </p>
+                                    <Button
+                                        className="w-full bg-primary text-primary-foreground"
+                                        onClick={() => setShowDeliverDialog(true)}
+                                    >
+                                        <Package className="w-4 h-4 mr-2" /> Re-deliver
+                                    </Button>
+                                </div>
                             )}
 
                             {order.status === 'DELIVERED' && isClient && (
@@ -470,10 +684,57 @@ export default function OrderDetailPage() {
                                     <Download className="w-4 h-4 mr-2" /> Download Assets
                                 </Button>
                             )}
+
+                            {/* Review Section - Show for completed orders */}
+                            {order.status === 'COMPLETED' && (
+                                <>
+                                    {isClient && (
+                                        <>
+                                            {!getClientReview() && (
+                                                <Button
+                                                    className="w-full bg-primary text-primary-foreground"
+                                                    onClick={() => setShowReviewModal(true)}
+                                                >
+                                                    <Star className="w-4 h-4 mr-2" /> Create Review
+                                                </Button>
+                                            )}
+                                            {/* Edit Review button removed for clients - reviews cannot be edited */}
+                                        </>
+                                    )}
+                                    {isFreelancer && canReview.canReview && (
+                                        <>
+                                            {!getFreelancerReview() && (
+                                                <Button
+                                                    className="w-full bg-primary text-primary-foreground"
+                                                    onClick={() => setShowReviewModal(true)}
+                                                >
+                                                    <Star className="w-4 h-4 mr-2" /> Review Client
+                                                </Button>
+                                            )}
+                                            {/* Edit Review button removed - reviews cannot be edited */}
+                                        </>
+                                    )}
+                                </>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            {/* Review Modal */}
+            {order && (
+                <ReviewModal
+                    open={showReviewModal}
+                    onOpenChange={setShowReviewModal}
+                    orderId={order.id}
+                    revieweeId={isClient ? order.freelancerId : order.clientId}
+                    revieweeName={isClient ? order.freelancer?.name : order.client?.name}
+                    isClientReview={isClient}
+                    existingReview={isClient ? getClientReview() : getFreelancerReview()}
+                    onReviewSubmitted={handleReviewSubmitted}
+                    allowEdit={!isClient} // Clients cannot edit reviews, freelancers can (if needed in future)
+                />
+            )}
 
             {/* Deliver Dialog */}
             <Dialog open={showDeliverDialog} onOpenChange={setShowDeliverDialog}>
@@ -583,6 +844,49 @@ export default function OrderDetailPage() {
                             </Button>
                             <Button onClick={handleRequestRevision} className="flex-1">
                                 Request Revision
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
+
+            {/* Dispute Dialog */}
+            <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Open Dispute</DialogTitle>
+                        <DialogDescription>
+                            Open a dispute for order {order?.orderNumber}. This will be reviewed by our support team.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Dispute Reason *</Label>
+                            <Input
+                                value={disputeReason}
+                                onChange={(e) => setDisputeReason(e.target.value)}
+                                placeholder="Brief reason for the dispute..."
+                            />
+                        </div>
+                        <div>
+                            <Label>Description *</Label>
+                            <Textarea
+                                value={disputeDescription}
+                                onChange={(e) => setDisputeDescription(e.target.value)}
+                                placeholder="Provide detailed information about the dispute..."
+                                rows={5}
+                            />
+                        </div>
+                        <div className="flex gap-2 pt-4">
+                            <Button variant="outline" onClick={() => setShowDisputeDialog(false)} className="flex-1">
+                                Cancel
+                            </Button>
+                            <Button 
+                                onClick={handleOpenDispute} 
+                                className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                disabled={!disputeReason.trim() || !disputeDescription.trim()}
+                            >
+                                Open Dispute
                             </Button>
                         </div>
                     </div>

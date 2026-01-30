@@ -4,8 +4,9 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, ShoppingBag, Clock, CheckCircle2, XCircle,
     MessageSquare, Download, Package, AlertCircle, User,
-    Calendar, DollarSign, FileText, RefreshCw
+    Calendar, DollarSign, FileText, RefreshCw, Star, Edit
 } from 'lucide-react';
+import { ReviewModal } from '@/components/review/ReviewModal';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -59,12 +60,51 @@ export default function FreelancerOrderDetailPage() {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
     const [cancelReason, setCancelReason] = useState('');
+    const [showReviewModal, setShowReviewModal] = useState(false);
+    const [reviews, setReviews] = useState([]);
+    const [canReview, setCanReview] = useState({ canReview: false, reason: null });
 
     useEffect(() => {
         if (params.id) {
             fetchOrder();
+            fetchReviews();
+            checkCanReview();
         }
-    }, [params.id]);
+    }, [params.id, user?.id]);
+
+    const fetchReviews = async () => {
+        if (!params.id) return;
+        try {
+            const response = await api.get(`/reviews?orderId=${params.id}`);
+            if (response.data.success) {
+                setReviews(response.data.reviews || []);
+            }
+        } catch (error) {
+            console.error('Error fetching reviews:', error);
+        }
+    };
+
+    const checkCanReview = async () => {
+        if (!params.id || !user?.id) return;
+        try {
+            const response = await api.get(`/orders/${params.id}/can-review`);
+            if (response.data.success) {
+                setCanReview(response.data);
+            }
+        } catch (error) {
+            console.error('Error checking review eligibility:', error);
+        }
+    };
+
+    const handleReviewSubmitted = async () => {
+        await fetchReviews();
+        await checkCanReview();
+        await fetchOrder();
+    };
+
+    const getFreelancerReview = () => {
+        return reviews.find(r => r.isClientReview === false && r.reviewerId === user?.id);
+    };
 
     const fetchOrder = async () => {
         try {
@@ -445,38 +485,153 @@ export default function FreelancerOrderDetailPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* Reviews Section - Show for completed orders */}
+                    {order.status === 'COMPLETED' && (
+                        <Card className="rounded-[2rem] border-none">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-normal">Reviews</CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                {reviews && reviews.length > 0 ? (
+                                    <div className="space-y-6">
+                                        {reviews.map((review) => {
+                                            const reviewer = review.reviewer;
+                                            const isClientReview = review.isClientReview;
+                                            const isMyReview = review.reviewerId === user?.id;
+                                            
+                                            return (
+                                                <div key={review.id} className="p-6 bg-secondary/30 rounded-xl border border-border/50">
+                                                    <div className="flex items-start justify-between mb-4">
+                                                        <div className="flex items-center gap-4 flex-1">
+                                                            <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center overflow-hidden">
+                                                                {reviewer?.profileImage ? (
+                                                                    <img 
+                                                                        src={reviewer.profileImage} 
+                                                                        alt={reviewer.name}
+                                                                        className="w-12 h-12 rounded-full object-cover"
+                                                                    />
+                                                                ) : (
+                                                                    <User className="w-6 h-6 text-primary" />
+                                                                )}
+                                                            </div>
+                                                            <div className="flex-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <p className="font-normal text-foreground">
+                                                                        {reviewer?.name || 'Anonymous'}
+                                                                    </p>
+                                                                    {isClientReview && (
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            Client
+                                                                        </Badge>
+                                                                    )}
+                                                                    {!isClientReview && (
+                                                                        <Badge variant="outline" className="text-xs">
+                                                                            Freelancer
+                                                                        </Badge>
+                                                                    )}
+                                                                </div>
+                                                                <div className="flex items-center gap-2 mt-1">
+                                                                    <div className="flex items-center gap-0.5">
+                                                                        {[...Array(5)].map((_, i) => (
+                                                                            <Star
+                                                                                key={i}
+                                                                                className={`w-4 h-4 ${
+                                                                                    i < review.rating
+                                                                                        ? 'fill-yellow-400 text-yellow-400'
+                                                                                        : 'text-border'
+                                                                                }`}
+                                                                                strokeWidth={1}
+                                                                            />
+                                                                        ))}
+                                                                    </div>
+                                                                    <span className="text-xs text-muted-foreground">
+                                                                        {format(new Date(review.createdAt), 'MMM d, yyyy')}
+                                                                    </span>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        {isMyReview && (
+                                                            <Button
+                                                                variant="ghost"
+                                                                size="sm"
+                                                                onClick={() => setShowReviewModal(true)}
+                                                                className="ml-2"
+                                                            >
+                                                                <Edit className="w-4 h-4 mr-1" />
+                                                                Edit
+                                                            </Button>
+                                                        )}
+                                                    </div>
+                                                    {review.comment && (
+                                                        <p className="text-sm text-foreground/80 leading-relaxed italic mt-4 pl-16">
+                                                            "{review.comment}"
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                ) : (
+                                    <div className="text-center py-8">
+                                        <p className="text-sm text-muted-foreground">
+                                            No reviews yet. Reviews will appear here once submitted.
+                                        </p>
+                                    </div>
+                                )}
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Sidebar */}
                 <div className="space-y-6">
-                    {/* Client Info */}
+                    {/* Client Info - Enhanced Profile */}
                     <Card className="rounded-[2rem] border-none">
                         <CardHeader>
-                            <CardTitle className="text-lg font-normal">Client Information</CardTitle>
+                            <CardTitle className="text-lg font-normal">Client Profile</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 rounded-full bg-secondary border border-border flex items-center justify-center">
+                                <div className="w-16 h-16 rounded-full bg-secondary border-2 border-border flex items-center justify-center overflow-hidden">
                                     {order.client?.profileImage ? (
                                         <img 
                                             src={order.client.profileImage} 
                                             alt={order.client.name}
-                                            className="w-12 h-12 rounded-full object-cover"
+                                            className="w-16 h-16 rounded-full object-cover"
                                         />
                                     ) : (
-                                        <User className="w-6 h-6 text-primary" />
+                                        <User className="w-8 h-8 text-primary" />
                                     )}
                                 </div>
                                 <div className="flex-1">
-                                    <p className="font-normal text-foreground">
+                                    <p className="font-semibold text-foreground text-base">
                                         {order.client?.name || 'Unknown Client'}
                                     </p>
-                                    <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                                        <MessageSquare className="w-3 h-3" />
+                                    <p className="text-xs text-muted-foreground mt-0.5">
                                         {order.client?.email || 'No email'}
                                     </p>
+                                    {order.client?.rating && (
+                                        <div className="flex items-center gap-1.5 mt-2">
+                                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
+                                            <span className="text-sm font-medium text-foreground">
+                                                {typeof order.client.rating === 'number' ? order.client.rating.toFixed(1) : order.client.rating}
+                                            </span>
+                                            <span className="text-xs text-muted-foreground">
+                                                ({order.client.reviewCount || 0} reviews)
+                                            </span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
+                            {order.client?.location && (
+                                <div className="pt-3 border-t border-border">
+                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                                        <Calendar className="w-4 h-4" />
+                                        <span>{order.client.location}</span>
+                                    </div>
+                                </div>
+                            )}
                         </CardContent>
                     </Card>
 
@@ -512,10 +667,40 @@ export default function FreelancerOrderDetailPage() {
                                     <XCircle className="w-4 h-4 mr-2" /> Cancel Order
                                 </Button>
                             )}
+
+                            {/* Review Section - Show for completed orders */}
+                            {order.status === 'COMPLETED' && canReview.canReview && (
+                                <>
+                                    {!getFreelancerReview() && (
+                                        <Button
+                                            className="w-full bg-primary text-primary-foreground"
+                                            onClick={() => setShowReviewModal(true)}
+                                        >
+                                            <Star className="w-4 h-4 mr-2" /> Review Client
+                                        </Button>
+                                    )}
+                                    {/* Edit Review button removed - reviews cannot be edited */}
+                                </>
+                            )}
                         </CardContent>
                     </Card>
                 </div>
             </div>
+
+            {/* Review Modal */}
+            {order && (
+                <ReviewModal
+                    open={showReviewModal}
+                    onOpenChange={setShowReviewModal}
+                    orderId={order.id}
+                    revieweeId={order.clientId}
+                    revieweeName={order.client?.name}
+                    isClientReview={false}
+                    existingReview={getFreelancerReview()}
+                    onReviewSubmitted={handleReviewSubmitted}
+                    allowEdit={false} // Freelancers also cannot edit reviews for now
+                />
+            )}
 
             {/* Deliver Dialog */}
             <Dialog open={showDeliverDialog} onOpenChange={setShowDeliverDialog}>

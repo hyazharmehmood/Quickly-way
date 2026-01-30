@@ -124,13 +124,15 @@ const useAuthStore = create(
                 const currentRefreshToken = useAuthStore.getState().refreshToken || localStorage.getItem('refreshToken');
                 if (!currentRefreshToken) {
                     useAuthStore.getState().logout();
-                    return;
+                    return false;
                 }
 
                 try {
+                    // Step 1: Refresh the token
                     const response = await api.post('/auth/refresh', { refreshToken: currentRefreshToken });
                     const { token, refreshToken } = response.data;
 
+                    // Step 2: Update token in store and storage
                     set({
                         token,
                         refreshToken,
@@ -140,6 +142,29 @@ const useAuthStore = create(
                     localStorage.setItem('token', token);
                     localStorage.setItem('refreshToken', refreshToken);
                     setCookie('token', token, 7);
+
+                    // Step 3: Fetch user profile with the new token to verify it works
+                    try {
+                        const profileResponse = await api.get('/auth/me');
+                        const { user } = profileResponse.data;
+                        set({
+                            user,
+                            isLoggedIn: true,
+                            sellerStatus: user.sellerStatus,
+                            isSeller: user.isSeller,
+                            role: user.role,
+                        });
+                        setCookie('role', user.role, 7);
+                    } catch (profileError) {
+                        // If profile fetch fails, token might still be invalid
+                        console.error('Failed to fetch profile after refresh:', profileError);
+                        // Don't logout here, just return false - the token refresh succeeded
+                        // but profile fetch failed, which might be a temporary issue
+                        if (profileError.response?.status === 401) {
+                            useAuthStore.getState().logout();
+                            return false;
+                        }
+                    }
 
                     return true;
                 } catch (error) {

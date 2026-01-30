@@ -150,7 +150,7 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
-    const orders = await orderService.getUserOrders(user.id, user.role, {
+    const result = await orderService.getUserOrders(user.id, user.role, {
       status,
       serviceId,
       limit,
@@ -159,7 +159,10 @@ export async function GET(request) {
 
     return NextResponse.json({
       success: true,
-      orders,
+      orders: result.orders || [],
+      total: result.total || 0,
+      limit: result.limit || limit,
+      skip: result.skip || skip,
     });
 
   } catch (error) {

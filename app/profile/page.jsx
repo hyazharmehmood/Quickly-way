@@ -111,7 +111,7 @@ export default function ProfilePage() {
                                 <AvatarFallback className="text-4xl bg-primary/10 text-primary">
                                     {userInitial}
                                 </AvatarFallback>
-                            </Avatar>
+                        </Avatar>
                             <div className="text-center sm:text-left flex-1">
                                 <CardTitle className="text-xl font-semibold mb-1">{user?.name || 'No Name'}</CardTitle>
                                 {/* <div className="flex flex-wrap items-center justify-center sm:justify-start gap-3">
@@ -143,10 +143,10 @@ export default function ProfilePage() {
                                             <span>{user.location}</span>
                                         </div>
                                     )}
-                                </div>
                             </div>
                         </div>
-                    </CardHeader>
+                    </div>
+                </CardHeader>
                     <CardContent className="space-y-6">
                         {/* Bio Section */}
                         <div className="pt-6 border-t border-border">
@@ -196,10 +196,10 @@ export default function ProfilePage() {
                                 <Badge variant="default" className="font-medium">
                                     Active
                                 </Badge>
-                            </div>
                         </div>
-                    </CardContent>
-                </Card>
+                    </div>
+                </CardContent>
+            </Card>
             </div>
         </div>
     );

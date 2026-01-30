@@ -1,14 +1,15 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
+import * as orderService from '@/lib/services/orderService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
- * POST /api/orders/[id]/dispute - Open a dispute
+ * POST /api/orders/[id]/dispute - Open dispute by client
+ * Fiverr workflow: DELIVERED → Client can Open Dispute → DISPUTED
  */
 export async function POST(request, { params }) {
   try {
-    // Next.js 16: params is a Promise, must await
     const { id } = await params;
     
     const token = request.headers.get('authorization')?.replace('Bearer ', '');
@@ -40,40 +41,10 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Get order
-    const order = await prisma.order.findUnique({
-      where: { id },
-    });
-
-    if (!order) {
+    if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Order not found' },
-        { status: 404 }
-      );
-    }
-
-    // Verify user is client or freelancer
-    if (order.clientId !== user.id && order.freelancerId !== user.id) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
+        { error: 'Only clients can open disputes' },
         { status: 403 }
-      );
-    }
-
-    // Check if dispute already exists
-    const existingDispute = await prisma.dispute.findFirst({
-      where: {
-        orderId: id,
-        status: {
-          not: 'CLOSED',
-        },
-      },
-    });
-
-    if (existingDispute) {
-      return NextResponse.json(
-        { error: 'Dispute already exists for this order' },
-        { status: 400 }
       );
     }
 
@@ -94,95 +65,31 @@ export async function POST(request, { params }) {
       );
     }
 
-    // Create dispute
-    const dispute = await prisma.dispute.create({
-      data: {
-        orderId: id,
-        clientId: order.clientId,
-        freelancerId: order.freelancerId,
-        reason: reason.trim(),
-        description: description.trim(),
-        status: 'OPEN',
-      },
-      include: {
-        order: {
-          include: {
-            service: true,
-            client: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-            freelancer: {
-              select: {
-                id: true,
-                name: true,
-                email: true,
-              },
-            },
-          },
-        },
-      },
-    });
-
-    // Update order status
-    const updatedOrder = await prisma.order.update({
-      where: { id },
-      data: {
-        status: 'DISPUTED',
-        events: {
-          create: {
-            userId: user.id,
-            eventType: 'DISPUTE_OPENED',
-            description: `Dispute opened: ${reason}`,
-            metadata: {
-              reason,
-              description,
-            },
-          },
-        },
-      },
-      include: {
-        service: true,
-        client: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profileImage: true,
-          },
-        },
-        freelancer: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            profileImage: true,
-          },
-        },
-      },
-    });
+    const result = await orderService.openDispute(
+      id,
+      user.id,
+      reason.trim(),
+      description.trim()
+    );
 
     // Emit Socket.IO event
     try {
-      emitOrderEvent('DISPUTE_OPENED', updatedOrder, { dispute });
+      emitOrderEvent('DISPUTE_OPENED', result.order, { disputeId: result.dispute.id });
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
     }
 
     return NextResponse.json({
       success: true,
-      dispute,
-    }, { status: 201 });
+      order: result.order,
+      dispute: result.dispute,
+    });
 
   } catch (error) {
-    console.error('Error creating dispute:', error);
+    console.error('Error opening dispute:', error);
     return NextResponse.json(
-      { error: error.message || 'Failed to create dispute' },
-      { status: 500 }
+      { error: error.message || 'Failed to open dispute' },
+      { status: 400 }
     );
   }
 }
-

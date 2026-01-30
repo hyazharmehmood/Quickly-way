@@ -5,13 +5,13 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export function ServiceDetailsSkeleton() {
     return (
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 ">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 md:gap-6">
+        <div className="max-w-7xl mx-auto px-4 py-4 ">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 md:gap-6">
 
                 {/* Left Column Skeleton */}
                 <div className="lg:col-span-2 space-y-4">
                     {/* Header Skeleton */}
-                    <Card>
+                    <Card className=" border-none shadow-sm">
                         <CardContent className="p-6 md:p-6 flex flex-col md:flex-row gap-10">
                             <Skeleton className="w-32 h-32 rounded-full flex-shrink-0" />
                             <div className="flex-1 space-y-4">
@@ -34,14 +34,14 @@ export function ServiceDetailsSkeleton() {
                     </Card>
 
                     {/* Content Skeletons */}
-                    <Card><CardContent className="p-4 md:p-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
-                    <Card><CardContent className="p-4 md:p-6"><Skeleton className="h-64 w-full rounded-3xl" /></CardContent></Card>
-                    <Card><CardContent className="p-4 md:p-6"><Skeleton className="h-24 w-full" /></CardContent></Card>
+                    <Card className=" border-none shadow-sm"><CardContent className="p-4 md:p-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
+                    <Card className=" border-none shadow-sm"><CardContent className="p-4 md:p-6"><Skeleton className="h-64 w-full rounded-3xl" /></CardContent></Card>
+                    <Card className=" border-none shadow-sm"><CardContent className="p-4 md:p-6"><Skeleton className="h-24 w-full" /></CardContent></Card>
                 </div>
 
                 {/* Right Column Skeleton */}
                 <div className="lg:col-span-1 space-y-4 sticky top-24">
-                    <Card>
+                    <Card className=" border-none shadow-sm">
                         <CardContent className="p-4 md:p-6 space-y-6">
                             <Skeleton className="h-10 w-32 mb-8" />
                             <div className="space-y-4">
@@ -50,7 +50,7 @@ export function ServiceDetailsSkeleton() {
                             <Skeleton className="h-12 w-full mt-8" />
                         </CardContent>
                     </Card>
-                        <Card><CardContent className="p-4 md:p-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
+                        <Card className=" border-none shadow-sm"><CardContent className="p-4 md:p-6"><Skeleton className="h-40 w-full" /></CardContent></Card>
                 </div>
             </div>
         </div>

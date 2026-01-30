@@ -17,14 +17,25 @@ import { LogOut, RefreshCw, Clock } from 'lucide-react';
 export const SessionExpiryDialog = () => {
     const router = useRouter();
     const { showExpiryDialog, setShowExpiryDialog, refreshSession, logout } = useAuthStore();
+    const [isRefreshing, setIsRefreshing] = React.useState(false);
 
     const handleRefresh = async () => {
-        const success = await refreshSession();
-        if (success) {
-            setShowExpiryDialog(false);
-        } else {
-            // If refresh fails, refreshSession already calls logout
+        setIsRefreshing(true);
+        try {
+            const success = await refreshSession();
+            if (success) {
+                setShowExpiryDialog(false);
+                // Session refreshed successfully, user profile is updated
+                // The axios interceptor will use the new token from localStorage on next request
+            } else {
+                // If refresh fails, refreshSession already calls logout
+                router.push('/login');
+            }
+        } catch (error) {
+            console.error('Error refreshing session:', error);
             router.push('/login');
+        } finally {
+            setIsRefreshing(false);
         }
     };
 
@@ -69,10 +80,11 @@ export const SessionExpiryDialog = () => {
                     </Button>
                     <Button
                         onClick={handleRefresh}
-                        className="flex-1 rounded-2xl h-12 gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-medium"
+                        disabled={isRefreshing}
+                        className="flex-1 rounded-2xl h-12 gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                     >
-                        <RefreshCw className="w-4 h-4" />
-                        Refresh Session
+                        <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
+                        {isRefreshing ? 'Refreshing...' : 'Refresh Session'}
                     </Button>
                 </DialogFooter>
             </DialogContent>

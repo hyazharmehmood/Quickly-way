@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import {
     Heart, MapPin, Star, User, ChevronLeft, ChevronRight,
     CheckCircle, Clock, ShieldAlert, Plus
@@ -21,7 +22,7 @@ const getTimezoneFromLocation = (location) => {
     return 'UTC';
 };
 
-const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onContact }) => {
+const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNavigateToService, onContact }) => {
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentTime, setCurrentTime] = useState("");
     const [timeZoneDisplay, setTimeZoneDisplay] = useState("");
@@ -30,13 +31,24 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [avatarError, setAvatarError] = useState(false);
 
-    const [reviews, setReviews] = useState(service.reviewsList || []);
+    // Always prioritize propReviews over service.reviewsList
+    const [reviews, setReviews] = useState(propReviews || []);
 
     useEffect(() => {
         setCurrentImageIndex(0);
-        setReviews(service.reviewsList || []);
+        // Always use propReviews if provided, otherwise use service.reviewsList
+        if (propReviews && Array.isArray(propReviews)) {
+            console.log('ServiceDetails: Using propReviews', propReviews.length);
+            setReviews(propReviews);
+        } else if (service.reviewsList && Array.isArray(service.reviewsList)) {
+            console.log('ServiceDetails: Using service.reviewsList', service.reviewsList.length);
+            setReviews(service.reviewsList);
+        } else {
+            console.log('ServiceDetails: No reviews available');
+            setReviews([]);
+        }
         setAvatarError(false);
-    }, [service.id, service.reviewsList]);
+    }, [service.id, service.reviewsList, propReviews]);
 
     useEffect(() => {
         if (!service.provider?.location) return;
@@ -148,7 +160,12 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                 <div className="flex-1 flex flex-col justify-center">
                                     <div className="flex items-start justify-between gap-2 ">
                                         <div>
-                                            <h1 className="text-xl font-bold text-gray-900">{service.provider.name}</h1>
+                                            <Link 
+                                                href={`/freelancer/${service.freelancerId}`}
+                                                className="text-xl font-bold text-gray-900 hover:text-primary transition-colors cursor-pointer inline-block"
+                                            >
+                                                {service.provider.name}
+                                            </Link>
                                             <div className="flex flex-wrap items-center gap-4 mt-1 text-base text-gray-700">
                                                 <div className="flex items-center gap-2">
                                                     <Star className="w-5 h-5 fill-[#ff9529] text-[#ff9529]" />
@@ -264,15 +281,15 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 flex flex-col gap-1 ">
                                         <h3 className="text-xl font-bold text-gray-900">Skills</h3>
-                                        <div className="flex flex-wrap gap-2">
+                                    <div className="flex flex-wrap gap-2">
                                             {service.skills.map((skill, idx) => (
                                                 <Badge key={idx} variant="secondary" size="lg" className="text-base text-gray-600 font-medium   ">
-                                                    {skill}
-                                                </Badge>
-                                            ))}
-                                        </div>
-                                    </CardContent>
-                                </Card>
+                                                {skill}
+                                            </Badge>
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
                             )}
 
                             {service.provider.languages && service.provider.languages.length > 0 && (
@@ -305,9 +322,9 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                         {service.priceBreakdowns && service.priceBreakdowns.length > 0 ? (
                                             service.priceBreakdowns.map((item, idx) => {
                                                 const parseItem = (item) => {
-                                                    if (typeof item === 'string') {
-                                                        if (item.trim().startsWith('{')) {
-                                                            try {
+                                                if (typeof item === 'string') {
+                                                    if (item.trim().startsWith('{')) {
+                                                        try {
                                                                 return JSON.parse(item);
                                                             } catch {
                                                                 return { text: item };
@@ -338,10 +355,10 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                                 );
                                             })
                                         ) : (
-                                            <li className="flex items-start gap-3">
-                                                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                                <span>Service Details Included</span>
-                                            </li>
+                                                <li className="flex items-start gap-3">
+                                                    <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                                                    <span>Service Details Included</span>
+                                                </li>
                                         )}
                                     </ul>
 
@@ -374,10 +391,10 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
                                                         <span className={isToday ? "text-[#10b981] font-bold" : "text-gray-500"}>
                                                             {item.day}
                                                         </span>
-                                                        <span className={`text-right ${item.isClosed ? 'text-red-400' : 'font-bold'}`}>
-                                                            {item.isClosed ? 'Closed' : `${item.startTime} - ${item.endTime}`}
-                                                        </span>
-                                                    </div>
+                                                    <span className={`text-right ${item.isClosed ? 'text-red-400' : 'font-bold'}`}>
+                                                        {item.isClosed ? 'Closed' : `${item.startTime} - ${item.endTime}`}
+                                                    </span>
+                                                </div>
                                                 );
                                             })}
                                         </div>
@@ -415,91 +432,88 @@ const ServiceDetails = ({ service, moreServices = [], onNavigateToService, onCon
 
                 <Card className="mt-8 border-none shadow-sm">
                     <CardContent className="p-4 md:p-6">
-                        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900 mb-2">Customer Feedback</h3>
-                                <p className="text-gray-500 text-lg">Verified reviews from actual clients who hired this pro.</p>
+                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
+                                <div>
+                                <h3 className="text-xl font-bold text-gray-900 ">Customer Feedback</h3>
+                                    <p className="text-gray-500 text-base">Verified reviews from actual clients who hired this pro.</p>
+                                </div>
+                          
                             </div>
-                            <Button onClick={() => setShowReviewModal(true)} className="h-auto">
-                                <Plus className="w-5 h-5" /> Write a Review
-                            </Button>
-                        </div>
 
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8 items-center">
-                            <div className="text-center p-8 bg-[#f8faff] rounded-[2rem] border border-gray-50">
-                                <div className="text-5xl font-black text-gray-900 mb-4">{service.rating}</div>
-                                <div className="flex justify-center gap-1.5 mb-3">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8 items-center">
+                                <div className="text-center p-8 bg-[#f8faff] rounded-[2rem] border border-gray-50">
+                                    <div className="text-3xl font-black text-gray-900 mb-4">{service.rating}</div>
+                                    <div className="flex justify-center gap-1.5 mb-3">
                                     {[1, 2, 3, 4, 5].map(i => (
                                         <Star key={i} className={`w-6 h-6 ${i <= Math.round(service.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
                                     ))}
+                                    </div>
+                                    <div className="text-sm  font-bold uppercase tracking-widest">{service.reviewCount} total reviews</div>
                                 </div>
-                                <div className="text-base text-gray-400 font-bold uppercase tracking-widest">{service.reviewCount} total reviews</div>
+                                <div className="lg:col-span-2 space-y-4">
+                                    {[5, 4, 3, 2, 1].map((num) => {
+                                        // Calculate actual rating distribution from reviews
+                                        const reviewsWithRating = reviews.filter(r => r.rating === num);
+                                        const pct = reviews.length > 0 
+                                            ? Math.round((reviewsWithRating.length / reviews.length) * 100) 
+                                            : 0;
+                                        return (
+                                            <div key={num} className="flex items-center gap-4 text-sm font-bold text-gray-500">
+                                                <div className="w-10 flex items-center gap-1">{num} <Star className="w-3.5 h-3.5 text-gray-300" /></div>
+                                                <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                                                    <div className="h-full bg-yellow-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>
+                                                </div>
+                                                <span className="w-10 text-right text-gray-400">{pct}%</span>
+                                            </div>
+                                        );
+                                    })}
+                                </div>
                             </div>
-                            <div className="lg:col-span-2 space-y-4">
-                                {[5, 4, 3, 2, 1].map((num) => {
-                                    const pct = num === 5 ? 97 : num === 2 ? 1 : num === 1 ? 2 : 0;
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {reviews && Array.isArray(reviews) && reviews.length > 0 ? (
+                                reviews.map((review, index) => {
+                                    console.log('Rendering review:', index, review);
                                     return (
-                                        <div key={num} className="flex items-center gap-4 text-sm font-bold text-gray-500">
-                                            <div className="w-10 flex items-center gap-1">{num} <Star className="w-3.5 h-3.5 text-gray-300" /></div>
-                                            <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                                <div className="h-full bg-yellow-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>
-                                            </div>
-                                            <span className="w-10 text-right text-gray-400">{pct}%</span>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            {reviews.map((review) => (
-                                <div key={review.id} className="bg-gray-50/50 rounded-[1.5rem] p-8 border border-gray-100 hover:shadow-md transition-all">
-                                    <div className="flex justify-between items-start mb-6">
-                                        <div className="flex items-center gap-4">
-                                            {review.userAvatar ? (
-                                                <img src={review.userAvatar} alt={review.userName} className="w-14 h-14 rounded-2xl object-cover border border-white shadow-sm" />
-                                            ) : (
-                                                <div className="w-14 h-14 rounded-2xl bg-gray-800 flex items-center justify-center text-white font-black text-xl border border-white shadow-sm">
-                                                    {review.userName.charAt(0)}
-                                                </div>
-                                            )}
-                                            <div>
-                                                <div className="font-bold text-lg text-gray-900">{review.userName}</div>
-                                                <div className="flex items-center gap-2 mt-0.5">
-                                                    <div className="flex text-yellow-400">
-                                                        {[...Array(5)].map((_, i) => (
-                                                            <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} />
-                                                        ))}
+                                <Card key={review.id} className=" shadow-sm transition-all">
+                                    <CardContent className="p-4 md:p-6">
+                                        <div className="flex justify-between items-start mb-3">
+                                            <div className="flex items-center gap-3">
+                                                {review.userAvatar ? (
+                                                    <img src={review.userAvatar} alt={review.userName} className="w-14 h-14 rounded-2xl object-cover border border-white shadow-sm" />
+                                                ) : (
+                                                   
+                                                        <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0">
+                  <User className="w-5 h-5 text-primary/60" />
                                                     </div>
-                                                    <span className="text-xs text-gray-400 font-bold uppercase ml-1">{review.date}</span>
+                                                 
+                                                )}
+                                                <div>
+                                                    <div className="font-bold text-base text-gray-900">{review.userName}</div>
+                                                    <div className="flex items-center gap-1 mt-0.5">
+                                                        <div className="flex text-yellow-400">
+                                                            {[...Array(5)].map((_, i) => (
+                                                                <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} />
+                                                            ))}
+                                                        </div>
+                                                        <span className="text-sm text-gray-400  ml-1">{review.date}</span>
+                                                    </div>
                                                 </div>
                                             </div>
                                         </div>
-                                    </div>
-                                    <p className="text-lg text-gray-700 leading-relaxed font-normal mb-6 min-h-[80px]">"{review.comment}"</p>
-                                    <div className="flex items-center justify-between border-t border-gray-100 pt-6">
-                                        <span className="text-xs text-gray-400 font-bold uppercase tracking-wider">{review.details || "Recent Job"}</span>
-                                        <button className="flex items-center gap-1.5 text-gray-400 hover:text-[#10b981] transition-colors text-xs font-bold">
-                                            Helpful
-                                        </button>
-                                    </div>
+                                        <p className="text-base text-gray-700 leading-relaxed font-normal ">"{review.comment}"</p>
+                                        </CardContent>
+                                    </Card>
+                                    );
+                                })
+                            ) : (
+                                <div className="col-span-2 text-center py-12">
+                                    <p className="text-gray-500 text-lg">No reviews yet. Be the first to review this service!</p>
                                 </div>
-                            ))}
-                        </div>
-
-                        <div className="flex items-center justify-center gap-6 mt-16 pt-8 border-t border-gray-50">
-                            <button className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-300 hover:text-gray-900 hover:shadow-sm transition-all disabled:opacity-30">
-                                <ChevronLeft className="w-6 h-6" />
-                            </button>
-                            <div className="flex items-center gap-4">
-                                <button className="w-12 h-12 rounded-2xl bg-gray-900 text-white font-bold shadow-md">1</button>
-                                <button className="w-12 h-12 rounded-2xl bg-white text-gray-500 font-bold hover:bg-gray-50 border border-transparent transition-all">2</button>
-                                <button className="w-12 h-12 rounded-2xl bg-white text-gray-500 font-bold hover:bg-gray-50 border border-transparent transition-all">3</button>
+                            )}
                             </div>
-                            <button className="w-12 h-12 rounded-2xl bg-white border border-gray-100 flex items-center justify-center text-gray-400 hover:text-gray-900 hover:shadow-sm transition-all">
-                                <ChevronRight className="w-6 h-6" />
-                            </button>
-                        </div>
+
+                          
                     </CardContent>
                 </Card>
 

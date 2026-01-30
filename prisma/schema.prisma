@@ -44,6 +44,10 @@ model User {
   orderEvents              OrderEvent[]
   disputes                 Dispute[]                 @relation("DisputeClient")
   disputesAsFreelancer     Dispute[]                 @relation("DisputeFreelancer")
+  reviewsGiven              Review[]                  @relation("Reviewer")
+  reviewsReceived           Review[]                 @relation("Reviewee")
+  rating                    Float?                   @default(0) // Average rating from reviews
+  reviewCount               Int                       @default(0) // Total number of reviews received
 }
 
 model Project {
@@ -113,6 +117,7 @@ model Service {
   skills          ServiceSkill[]
   orders          Order[]
   offers          Offer[]
+  reviews         Review[]      @relation("ServiceReviews")
 }
 
 model Conversation {
@@ -329,6 +334,7 @@ model Order {
   deliverables          OrderDeliverable[]
   events                OrderEvent[]
   disputes              Dispute[]
+  reviews               Review[]
 
   @@index([clientId])
   @@index([freelancerId])
@@ -440,4 +446,33 @@ enum OfferStatus {
   ACCEPTED
   REJECTED
   EXPIRED
+}
+
+// Review Model - Supports both order-based and service-based reviews
+model Review {
+  id                    String            @id @default(uuid())
+  orderId               String?           // Link to order (for order-based reviews)
+  serviceId             String?            // Link to service (for service/gig-based reviews)
+  reviewerId            String             // User who wrote the review
+  revieweeId            String             // User being reviewed (freelancer or client)
+  rating                Int                // 1-5 stars
+  comment               String?            // Review text
+  isOrderReview         Boolean            @default(true) // true = order-based, false = service-based
+  isClientReview        Boolean            // true = client reviewing freelancer, false = freelancer reviewing client
+  createdAt             DateTime           @default(now())
+  updatedAt             DateTime           @updatedAt
+  
+  // Relations
+  order                 Order?             @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  service               Service?           @relation("ServiceReviews", fields: [serviceId], references: [id], onDelete: Cascade)
+  reviewer              User               @relation("Reviewer", fields: [reviewerId], references: [id])
+  reviewee              User               @relation("Reviewee", fields: [revieweeId], references: [id])
+
+  @@unique([orderId, reviewerId, isClientReview]) // One review per order per reviewer type
+  @@index([orderId])
+  @@index([serviceId])
+  @@index([reviewerId])
+  @@index([revieweeId])
+  @@index([isOrderReview])
+  @@index([createdAt])
 }

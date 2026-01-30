@@ -68,10 +68,10 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
 
         if (res.ok) {
           const data = await res.json();
-          console.log("Data:", data);
+          console.log("Services data:", data.length, "services");
           
-          // Transform data to match ServiceCard expectation
-          const transformed = data.map(svc => ({
+          // Reviews are now included in the API response (optimized - no separate API calls)
+          const transformed = data.map((svc) => ({
             ...svc,
             freelancerId: svc.freelancerId || svc.freelancer?.id,
             provider: {
@@ -80,8 +80,8 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
               location: "Remote"
             },
             thumbnailUrl: svc.coverImage || svc.images?.[0],
-            rating: 5.0,
-            reviewCount: 0
+            rating: svc.rating || 5.0,
+            reviewCount: svc.reviewCount || 0
           }));
 
           setServices(transformed);
