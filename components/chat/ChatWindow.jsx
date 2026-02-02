@@ -73,6 +73,10 @@ export function ChatWindow({ conversation, onBack }) {
         const cached = cachedMessagesRef.current.get(conversationId);
         if (cached && cached.length > 0) {
           // Use cached messages immediately (from Redis or previous load)
+          console.log('📦 Loading from cache:', {
+            conversationId: conversationId.substring(0, 8) + '...',
+            messageCount: cached.length,
+          });
           setMessages(cached);
           setLoading(false);
           setIsUserAtBottom(true);
@@ -80,10 +84,15 @@ export function ChatWindow({ conversation, onBack }) {
             setTimeout(scrollToBottom, 50);
           });
           // Still fetch in background to update cache (silent refresh)
+          // This will check for new messages and update cache, but won't duplicate existing ones
           currentConversationRef.current = conversationId;
-          fetchMessages(true); // Pass true to indicate silent refresh
+          // Use setTimeout to ensure state is updated before silent refresh
+          setTimeout(() => {
+            fetchMessages(true); // Pass true to indicate silent refresh
+          }, 100);
         } else {
           // No cache - fetch messages (Redis cache will be checked on backend)
+          console.log('📥 No cache, fetching messages:', conversationId.substring(0, 8) + '...');
           currentConversationRef.current = conversationId;
           fetchMessages();
         }
@@ -275,22 +284,88 @@ export function ChatWindow({ conversation, onBack }) {
     const handleNewMessage = async (data) => {
       if (data.conversationId === conversation?.id) {
         setMessages((prev) => {
-          // Check if message already exists (prevent duplicates)
-          const exists = prev.some((msg) => msg.id === data.message.id);
-          if (exists) return prev;
+          // STRICT duplicate check: by ID first (most reliable)
+          const existsById = prev.some((msg) => msg.id === data.message.id);
+          if (existsById) {
+            console.log('🚫 Duplicate message blocked by ID:', data.message.id);
+            return prev;
+          }
           
-          // Replace optimistic message with real message if content or attachment matches
+          // Also check by content + sender + timestamp (within 5 seconds) to catch duplicates
+          const messageTime = new Date(data.message.createdAt).getTime();
+          const existsByContent = prev.some((msg) => {
+            if (msg.id === data.message.id) return true; // Already checked
+            if (msg.senderId !== data.message.senderId) return false;
+            
+            // Check if same content (normalize whitespace)
+            const msgContent = (msg.content || '').trim();
+            const newContent = (data.message.content || '').trim();
+            const contentMatch = msgContent === newContent && msgContent !== '';
+            
+            // Check if same attachment (by name or URL)
+            const attachmentMatch = 
+              (msg.attachmentName && data.message.attachmentName && 
+               msg.attachmentName === data.message.attachmentName) ||
+              (msg.attachmentUrl && data.message.attachmentUrl && 
+               msg.attachmentUrl === data.message.attachmentUrl);
+            
+            // Check timestamp (within 5 seconds) - same message sent twice
+            const msgTime = new Date(msg.createdAt).getTime();
+            const timeDiff = Math.abs(messageTime - msgTime);
+            const timeMatch = timeDiff < 5000; // 5 seconds
+            
+            return (contentMatch || attachmentMatch) && timeMatch;
+          });
+          
+          if (existsByContent) {
+            console.log('🚫 Duplicate message blocked by content/timestamp:', data.message.id);
+            return prev;
+          }
+          
+          // Replace optimistic message with real message
+          // Match by: temp ID, same sender, and (content match OR attachment match OR within 2 seconds)
           const optimisticIndex = prev.findIndex(
-            (msg) => msg.id?.startsWith('temp-') && 
-            msg.senderId === data.message.senderId &&
-            (msg.content === data.message.content || 
-             (msg.attachmentUrl && msg.attachmentUrl === data.message.attachmentUrl))
+            (msg) => {
+              if (!msg.id?.startsWith('temp-')) return false;
+              if (msg.senderId !== data.message.senderId) return false;
+              
+              // Match by content (normalize whitespace)
+              const msgContent = (msg.content || '').trim();
+              const newContent = (data.message.content || '').trim();
+              const contentMatch = msgContent === newContent && msgContent !== '';
+              
+              // Match by attachment name (for files/images/videos)
+              const attachmentNameMatch = 
+                msg.attachmentName && data.message.attachmentName &&
+                msg.attachmentName === data.message.attachmentName;
+              
+              // Match by attachment URL (if available)
+              const attachmentUrlMatch = 
+                msg.attachmentUrl && data.message.attachmentUrl &&
+                (msg.attachmentUrl === data.message.attachmentUrl ||
+                 msg.attachmentUrl.includes(data.message.attachmentUrl) ||
+                 data.message.attachmentUrl.includes(msg.attachmentUrl));
+              
+              // Match by type (for offer messages)
+              const typeMatch = msg.type === data.message.type;
+              
+              // Match by timestamp (within 2 seconds - optimistic message was just created)
+              const msgTime = new Date(msg.createdAt).getTime();
+              const newTime = new Date(data.message.createdAt).getTime();
+              const timeMatch = Math.abs(newTime - msgTime) < 2000; // 2 seconds
+              
+              return (contentMatch || attachmentNameMatch || attachmentUrlMatch) && 
+                     typeMatch && 
+                     timeMatch;
+            }
           );
           
           if (optimisticIndex !== -1) {
-            // Replace optimistic message with real one (remove isOptimistic flag and error state)
+            // Replace optimistic message with real one
             const updated = [...prev];
             updated[optimisticIndex] = { ...data.message, isOptimistic: false, sendError: false };
+            console.log('✅ Replaced optimistic message with real message:', data.message.id);
+            
             // Remove from failed messages if it was there
             setFailedMessages((prev) => {
               const newMap = new Map(prev);
@@ -302,10 +377,11 @@ export function ChatWindow({ conversation, onBack }) {
             return updated;
           }
           
-          // Add message with order data if it's an offer message
+          // New message from other user or not matching optimistic - add it
           const newMessages = [...prev, data.message];
           // Update cache ref
           cachedMessagesRef.current.set(conversation.id, newMessages);
+          console.log('➕ Added new message:', data.message.id);
           return newMessages;
         });
 
@@ -520,14 +596,122 @@ export function ChatWindow({ conversation, onBack }) {
         if (!silentRefresh) {
           setMessages(fetchedMessages);
         } else {
-          // Silent refresh - only update if messages changed
+          // Silent refresh - STRICT deduplication to prevent duplicates
           setMessages((prev) => {
-            // Check if messages are different
-            if (prev.length !== fetchedMessages.length || 
-                prev[prev.length - 1]?.id !== fetchedMessages[fetchedMessages.length - 1]?.id) {
-              return fetchedMessages;
+            // Create sets for quick lookup
+            const existingIds = new Set(prev.map(msg => msg.id));
+            const fetchedIds = new Set(fetchedMessages.map(msg => msg.id));
+            
+            // Check if fetched messages are exactly the same (same IDs, same count)
+            // This happens when cache already has all messages
+            if (prev.length === fetchedMessages.length && 
+                fetchedIds.size === existingIds.size &&
+                Array.from(fetchedIds).every(id => existingIds.has(id))) {
+              console.log('✅ Silent refresh: Messages unchanged, skipping update', {
+                count: prev.length,
+                conversationId: conversation.id,
+              });
+              // Just update cache ref, don't change state
+              return prev;
             }
-            return prev;
+            
+            // Track optimistic messages that might match fetched messages
+            const optimisticMessages = prev.filter(msg => msg.id?.startsWith('temp-'));
+            
+            // Filter out ALL duplicates from fetched messages (strict check)
+            const newMessages = fetchedMessages.filter(msg => {
+              // STRICT: Skip if ID already exists
+              if (existingIds.has(msg.id)) {
+                console.log('🚫 Silent refresh: Duplicate by ID blocked:', msg.id);
+                return false;
+              }
+              
+              // Also check by content + sender + timestamp (within 3 seconds) for extra safety
+              const msgTime = new Date(msg.createdAt).getTime();
+              const isDuplicate = prev.some(existingMsg => {
+                if (existingMsg.id === msg.id) return true; // Already checked
+                if (existingMsg.senderId !== msg.senderId) return false;
+                
+                // Content match (normalize)
+                const existingContent = (existingMsg.content || '').trim();
+                const newContent = (msg.content || '').trim();
+                const contentMatch = existingContent === newContent && existingContent !== '';
+                
+                // Attachment match
+                const attachmentMatch = 
+                  (existingMsg.attachmentName && msg.attachmentName &&
+                   existingMsg.attachmentName === msg.attachmentName) ||
+                  (existingMsg.attachmentUrl && msg.attachmentUrl &&
+                   existingMsg.attachmentUrl === msg.attachmentUrl);
+                
+                // Timestamp match (within 3 seconds)
+                const existingTime = new Date(existingMsg.createdAt).getTime();
+                const timeMatch = Math.abs(msgTime - existingTime) < 3000;
+                
+                return (contentMatch || attachmentMatch) && timeMatch;
+              });
+              
+              if (isDuplicate) {
+                console.log('🚫 Silent refresh: Duplicate by content/timestamp blocked:', msg.id);
+                return false;
+              }
+              
+              // Check if this matches an optimistic message (will be replaced by handleNewMessage)
+              const matchesOptimistic = optimisticMessages.some(optMsg => {
+                if (optMsg.senderId !== msg.senderId) return false;
+                
+                const optContent = (optMsg.content || '').trim();
+                const msgContent = (msg.content || '').trim();
+                const contentMatch = optContent === msgContent && optContent !== '';
+                
+                const attachmentMatch = 
+                  (optMsg.attachmentName && msg.attachmentName &&
+                   optMsg.attachmentName === msg.attachmentName) ||
+                  (optMsg.attachmentUrl && msg.attachmentUrl &&
+                   (optMsg.attachmentUrl === msg.attachmentUrl ||
+                    optMsg.attachmentUrl.includes(msg.attachmentUrl) ||
+                    msg.attachmentUrl.includes(optMsg.attachmentUrl)));
+                
+                const timeMatch = Math.abs(
+                  new Date(optMsg.createdAt).getTime() - msgTime
+                ) < 5000; // 5 seconds
+                
+                return (contentMatch || attachmentMatch) && timeMatch;
+              });
+              
+              if (matchesOptimistic) {
+                console.log('🚫 Silent refresh: Skipping (matches optimistic):', msg.id);
+                return false;
+              }
+              
+              return true;
+            });
+            
+            // If no new messages, return previous state (no changes)
+            if (newMessages.length === 0) {
+              console.log('✅ Silent refresh: No new messages, keeping existing', {
+                existing: prev.length,
+                fetched: fetchedMessages.length,
+              });
+              return prev;
+            }
+            
+            // Merge: combine existing and new messages, sort by timestamp
+            const merged = [...prev, ...newMessages].sort((a, b) => {
+              const timeA = new Date(a.createdAt).getTime();
+              const timeB = new Date(b.createdAt).getTime();
+              return timeA - timeB;
+            });
+            
+            console.log('🔄 Silent refresh: Merged messages', {
+              existing: prev.length,
+              fetched: fetchedMessages.length,
+              new: newMessages.length,
+              total: merged.length,
+              conversationId: conversation.id,
+            });
+            
+            return merged;
           });
         }
         
@@ -744,7 +928,7 @@ export function ChatWindow({ conversation, onBack }) {
           // Update optimistic message with final URL
           setMessages((prev) => prev.map(msg => {
             if (msg.id === optimisticMessages[index].id) {
-              return { ...msg, attachmentUrl: fileUrl, uploadProgress: 100 };
+              return { ...msg, attachmentUrl: fileUrl, uploadProgress: 100, sendError: false };
             }
             return msg;
           }));
@@ -755,6 +939,31 @@ export function ChatWindow({ conversation, onBack }) {
           };
         } catch (error) {
           clearInterval(progressInterval);
+          // Mark message as failed with error
+          setMessages((prev) => prev.map(msg => {
+            if (msg.id === optimisticMessages[index].id) {
+              return { 
+                ...msg, 
+                sendError: true, 
+                isOptimistic: true,
+                uploadError: error.message || 'Upload failed',
+                uploadProgress: 0, // Reset progress on error
+              };
+            }
+            return msg;
+          }));
+          
+          // Add to failed messages for resend
+          setFailedMessages((prev) => {
+            const newMap = new Map(prev);
+            newMap.set(optimisticMessages[index].id, {
+              fileItem,
+              resourceType,
+              error: error.message || 'Upload failed',
+            });
+            return newMap;
+          });
+          
           throw error;
         }
       });
@@ -816,16 +1025,17 @@ export function ChatWindow({ conversation, onBack }) {
       }
     } catch (error) {
       console.error('Error uploading files:', error);
-      alert('Failed to upload files. Please try again.');
-      // Remove optimistic messages on error
-      if (conversation?.id) {
+      // Don't remove messages - they're already marked as failed with resend option
+      // Only remove if it's a critical error (like no conversation)
+      if (!conversation?.id) {
         setMessages((prev) => prev.filter(msg => 
           !optimisticMessages.some(om => om.id === msg.id)
         ));
       }
     } finally {
       setUploadingFile(false);
-      setUploadProgress(new Map());
+      // Don't clear progress map - keep it for failed uploads to show resend
+      // setUploadProgress(new Map());
     }
   };
 
@@ -965,30 +1175,136 @@ export function ChatWindow({ conversation, onBack }) {
     }
   };
 
-  // Resend failed message
-  const resendMessage = useCallback((messageId) => {
+  // Resend failed message (handles both text and file uploads)
+  const resendMessage = useCallback(async (messageId) => {
     const message = messages.find(m => m.id === messageId);
     if (!message || !socket || !isConnected) return;
     
-    // Remove error state
+    // Check if this is a failed file upload
+    const failedUpload = failedMessages.get(messageId);
+    
+    // Remove error state and show resending
     setMessages((prev) => 
       prev.map((msg) => 
         msg.id === messageId 
-          ? { ...msg, sendError: false, isOptimistic: true, resending: true }
+          ? { 
+              ...msg, 
+              sendError: false, 
+              isOptimistic: true, 
+              resending: true,
+              uploadProgress: failedUpload ? 0 : undefined, // Reset progress for file uploads
+              uploadError: undefined,
+            }
           : msg
       )
     );
     
-    // Resend message
-    socket.emit('send_message', {
-      conversationId: conversation.id,
-      content: message.content,
-      type: message.type,
-      attachmentUrl: message.attachmentUrl,
-      attachmentName: message.attachmentName,
-      tempId: messageId,
-    });
-  }, [messages, socket, isConnected, conversation?.id]);
+    try {
+      // If it's a failed file upload, re-upload the file
+      if (failedUpload && failedUpload.fileItem) {
+        const { uploadToCloudinary } = await import('@/utils/cloudinary');
+        const { fileItem, resourceType } = failedUpload;
+        
+        // Show upload progress
+        const progressInterval = setInterval(() => {
+          setMessages((prev) => prev.map(msg => {
+            if (msg.id === messageId) {
+              const currentProgress = msg.uploadProgress || 0;
+              const newProgress = Math.min(currentProgress + 10, 90);
+              return { ...msg, uploadProgress: newProgress };
+            }
+            return msg;
+          }));
+        }, 200);
+        
+        try {
+          // Re-upload file
+          const fileUrl = await uploadToCloudinary(fileItem.file, resourceType);
+          clearInterval(progressInterval);
+          
+          // Update message with new URL and 100% progress
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.id === messageId 
+                ? { 
+                    ...msg, 
+                    attachmentUrl: fileUrl, 
+                    uploadProgress: 100,
+                    resending: false,
+                  }
+                : msg
+            )
+          );
+          
+          // Remove from failed messages
+          setFailedMessages((prev) => {
+            const newMap = new Map(prev);
+            newMap.delete(messageId);
+            return newMap;
+          });
+          
+          // Send message with new file URL
+          socket.emit('send_message', {
+            conversationId: conversation.id,
+            content: message.content || fileItem.file.name,
+            type: message.type,
+            attachmentUrl: fileUrl,
+            attachmentName: message.attachmentName || fileItem.file.name,
+            tempId: messageId,
+          });
+        } catch (error) {
+          clearInterval(progressInterval);
+          // Mark as failed again
+          setMessages((prev) => 
+            prev.map((msg) => 
+              msg.id === messageId 
+                ? { 
+                    ...msg, 
+                    sendError: true, 
+                    resending: false,
+                    uploadError: error.message || 'Upload failed',
+                    uploadProgress: 0,
+                  }
+                : msg
+            )
+          );
+          console.error('Error re-uploading file:', error);
+        }
+      } else {
+        // Regular text message or already uploaded file - just resend
+        socket.emit('send_message', {
+          conversationId: conversation.id,
+          content: message.content,
+          type: message.type,
+          attachmentUrl: message.attachmentUrl,
+          attachmentName: message.attachmentName,
+          tempId: messageId,
+        });
+        
+        // Remove from failed messages
+        setFailedMessages((prev) => {
+          const newMap = new Map(prev);
+          newMap.delete(messageId);
+          return newMap;
+        });
+      }
+    } catch (error) {
+      console.error('Error resending message:', error);
+      // Mark as failed again
+      setMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === messageId 
+            ? { 
+                ...msg, 
+                sendError: true, 
+                resending: false,
+                uploadError: error.message || 'Failed to resend',
+              }
+            : msg
+        )
+      );
+    }
+  }, [messages, socket, isConnected, conversation?.id, failedMessages]);
 
   // Debounced typing indicator - Improved with better timing
   const startTyping = useCallback(() => {

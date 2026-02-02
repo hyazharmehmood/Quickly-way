@@ -46,7 +46,7 @@ export function ChatBubble({
         
         <div
           className={cn(
-            "shadow-sm overflow-hidden",
+            "shadow-sm overflow-hidden relative",
             isOwnMessage
               ? "bg-primary rounded-r-lg rounded-tl-lg text-primary-foreground"
               : "bg-secondary rounded-l-lg rounded-tr-lg text-secondary-foreground",
@@ -74,7 +74,7 @@ export function ChatBubble({
                 }}
               />
               {/* Upload Progress Bar - WhatsApp Style */}
-              {message.uploadProgress !== undefined && message.uploadProgress < 100 && (
+              {message.uploadProgress !== undefined && message.uploadProgress < 100 && !message.sendError && (
                 <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
                   <Loader2 className="h-6 w-6 text-white animate-spin mb-2" />
                   <div className="w-[80%] bg-black/50 rounded-full h-1.5 overflow-hidden">
@@ -86,8 +86,36 @@ export function ChatBubble({
                   <p className="text-xs text-white mt-1">{message.uploadProgress}%</p>
                 </div>
               )}
+              {/* Error overlay for failed uploads */}
+              {isOwnMessage && message.sendError && onResend && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-destructive" />
+                  <p className="text-xs text-white text-center px-2">
+                    {message.uploadError || 'Upload failed'}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 px-3 text-xs mt-1"
+                    onClick={() => onResend(message.id)}
+                    disabled={message.resending}
+                  >
+                    {message.resending ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Retry Upload
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
               {/* Text overlay on image if content exists */}
-              {message.content && message.content.trim() && message.uploadProgress === 100 && (
+              {message.content && message.content.trim() && message.uploadProgress === 100 && !message.sendError && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {message.content}
@@ -97,19 +125,63 @@ export function ChatBubble({
             </div>
           )}
           
-          {/* Video Attachment */}
+          {/* Video Attachment - WhatsApp Style with Progress Bar */}
           {message.type === 'video' && message.attachmentUrl && (
-            <div className="relative">
+            <div className="relative group">
               <video
                 src={message.attachmentUrl}
                 controls
-                className="w-full h-auto"
+                className={cn(
+                  "w-full h-auto",
+                  message.uploadProgress !== undefined && message.uploadProgress < 100 && "opacity-70"
+                )}
                 preload="metadata"
               >
                 Your browser does not support the video tag.
               </video>
+              {/* Upload Progress Bar - WhatsApp Style */}
+              {message.uploadProgress !== undefined && message.uploadProgress < 100 && !message.sendError && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                  <Loader2 className="h-6 w-6 text-white animate-spin mb-2" />
+                  <div className="w-[80%] bg-black/50 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-white h-full transition-all duration-300 ease-out"
+                      style={{ width: `${message.uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-white mt-1">{message.uploadProgress}%</p>
+                </div>
+              )}
+              {/* Error overlay for failed uploads */}
+              {isOwnMessage && message.sendError && onResend && (
+                <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center gap-2 rounded-lg">
+                  <AlertCircle className="h-6 w-6 text-destructive" />
+                  <p className="text-xs text-white text-center px-2">
+                    {message.uploadError || 'Upload failed'}
+                  </p>
+                  <Button
+                    variant="secondary"
+                    size="sm"
+                    className="h-7 px-3 text-xs mt-1"
+                    onClick={() => onResend(message.id)}
+                    disabled={message.resending}
+                  >
+                    {message.resending ? (
+                      <>
+                        <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                        Retrying...
+                      </>
+                    ) : (
+                      <>
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        Retry Upload
+                      </>
+                    )}
+                  </Button>
+                </div>
+              )}
               {/* Text overlay on video if content exists */}
-              {message.content && message.content.trim() && (
+              {message.content && message.content.trim() && message.uploadProgress === 100 && !message.sendError && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {message.content}
@@ -119,18 +191,63 @@ export function ChatBubble({
             </div>
           )}
           
-          {/* File Attachment */}
+          {/* File Attachment - WhatsApp Style with Progress Bar */}
           {message.type === 'file' && message.attachmentUrl && (
-            <div className="mb-2 flex items-center gap-2 p-2 bg-black/10 rounded-lg">
-              <Paperclip className="h-4 w-4" />
-              <a
-                href={message.attachmentUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-sm underline truncate flex-1"
-              >
-                {message.attachmentName || 'Download file'}
-              </a>
+            <div className="relative mb-2 flex items-center gap-2 p-3 bg-black/10 rounded-lg">
+              <Paperclip className="h-4 w-4 flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <a
+                  href={message.attachmentUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "text-sm underline truncate block",
+                    message.uploadProgress !== undefined && message.uploadProgress < 100 && "opacity-70 pointer-events-none"
+                  )}
+                >
+                  {message.attachmentName || 'Download file'}
+                </a>
+                {/* Upload Progress Bar - WhatsApp Style */}
+                {message.uploadProgress !== undefined && message.uploadProgress < 100 && !message.sendError && (
+                  <div className="mt-2">
+                    <div className="w-full bg-black/20 rounded-full h-1.5 overflow-hidden">
+                      <div 
+                        className="bg-primary h-full transition-all duration-300 ease-out"
+                        style={{ width: `${message.uploadProgress}%` }}
+                      />
+                    </div>
+                    <p className="text-xs text-muted-foreground mt-1">{message.uploadProgress}%</p>
+                  </div>
+                )}
+                {/* Error state for failed file uploads */}
+                {isOwnMessage && message.sendError && onResend && (
+                  <div className="mt-2 flex items-center gap-2">
+                    <AlertCircle className="h-4 w-4 text-destructive flex-shrink-0" />
+                    <p className="text-xs text-destructive flex-1">
+                      {message.uploadError || 'Upload failed'}
+                    </p>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-6 px-2 text-xs"
+                      onClick={() => onResend(message.id)}
+                      disabled={message.resending}
+                    >
+                      {message.resending ? (
+                        <>
+                          <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                          Retrying...
+                        </>
+                      ) : (
+                        <>
+                          <RefreshCw className="h-3 w-3 mr-1" />
+                          Retry
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                )}
+              </div>
             </div>
           )}
           
@@ -153,8 +270,8 @@ export function ChatBubble({
             {moment(message.createdAt).format('HH:mm A')}
           </p>
           
-          {/* Error state with resend button (WhatsApp style) */}
-          {isOwnMessage && message.sendError && onResend && (
+          {/* Error state with resend button (WhatsApp style) - for text messages only */}
+          {isOwnMessage && message.sendError && onResend && message.type === 'text' && (
             <div className="flex items-center gap-1">
               <AlertCircle className="h-3 w-3 text-destructive" />
               <Button
