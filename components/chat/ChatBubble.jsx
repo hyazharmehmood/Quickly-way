@@ -2,7 +2,8 @@
 
 import React, { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Paperclip, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Progress } from "@/components/ui/progress";
+import { Paperclip, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
 import { cn } from "@/utils";
 import moment from 'moment';
 
@@ -52,21 +53,39 @@ export function ChatBubble({
             (message.type === 'image' || message.type === 'video') ? "p-0" : "px-4 py-2.5"
           )}
         >
-          {/* Image Attachment - WhatsApp Style */}
+          {/* Image Attachment - WhatsApp Style with Progress Bar */}
           {message.type === 'image' && message.attachmentUrl && (
             <div className="relative group">
               <img
                 src={message.attachmentUrl}
                 alt={message.content || 'Image'}
-                className="w-full h-auto object-cover cursor-pointer"
+                className={cn(
+                  "w-full h-auto object-cover",
+                  message.uploadProgress !== undefined && message.uploadProgress < 100 && "opacity-70",
+                  message.uploadProgress === 100 && "cursor-pointer"
+                )}
                 loading="lazy"
                 onClick={() => {
-                  // Open image in full screen (can be enhanced with a modal)
-                  window.open(message.attachmentUrl, '_blank');
+                  if (message.uploadProgress === 100 || message.uploadProgress === undefined) {
+                    window.open(message.attachmentUrl, '_blank');
+                  }
                 }}
               />
+              {/* Upload Progress Bar - WhatsApp Style */}
+              {message.uploadProgress !== undefined && message.uploadProgress < 100 && (
+                <div className="absolute inset-0 bg-black/40 flex flex-col items-center justify-center">
+                  <Loader2 className="h-6 w-6 text-white animate-spin mb-2" />
+                  <div className="w-[80%] bg-black/50 rounded-full h-1.5 overflow-hidden">
+                    <div 
+                      className="bg-white h-full transition-all duration-300 ease-out"
+                      style={{ width: `${message.uploadProgress}%` }}
+                    />
+                  </div>
+                  <p className="text-xs text-white mt-1">{message.uploadProgress}%</p>
+                </div>
+              )}
               {/* Text overlay on image if content exists */}
-              {message.content && message.content.trim() && (
+              {message.content && message.content.trim() && message.uploadProgress === 100 && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
                   <p className="text-sm whitespace-pre-wrap break-words">
                     {message.content}

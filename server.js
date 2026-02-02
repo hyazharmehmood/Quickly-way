@@ -13,13 +13,13 @@ const port = 3000;
 const app = next({ dev, hostname, port });
 const handle = app.getRequestHandler();
 
-app.prepare().then(() => {
+app.prepare().then(async () => {
   // Create HTTP server
   const httpServer = createServer();
 
-  // Initialize Socket.IO FIRST
+  // Initialize Socket.IO FIRST (now async due to Redis)
   // Socket.IO will attach to the server and only handle /api/socket path
-  const io = initSocket(httpServer);
+  const io = await initSocket(httpServer);
 
   // Set up Next.js request handler for all routes
   // Socket.IO middleware will handle /api/socket before this runs

@@ -35,6 +35,10 @@ export function ChatWindow({ conversation, onBack }) {
   const [showCreateOfferModal, setShowCreateOfferModal] = useState(false);
   const [service, setService] = useState(null);
   const [uploadingFile, setUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(new Map()); // fileId => progress
+  const [hasMoreMessages, setHasMoreMessages] = useState(true);
+  const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
   const messagesEndRef = useRef(null);
   const scrollAreaRef = useRef(null);
   const typingDebounceRef = useRef(null);
@@ -43,35 +47,45 @@ export function ChatWindow({ conversation, onBack }) {
   const { user } = useAuthStore();
   const role = user?.role?.toUpperCase();
 
+  // Track current conversation to avoid refetching when switching back
+  const currentConversationRef = useRef(null);
+
   useEffect(() => {
     if (!conversation) return;
 
     const otherUserId = conversation.otherParticipant?.id;
     const conversationId = conversation.id;
 
-    // Only join conversation room if conversation exists
-    if (socket && isConnected && conversationId) {
-      socket.emit('join_conversation', conversationId);
+    // Only fetch if this is a different conversation (WhatsApp style - use cache)
+    const isNewConversation = currentConversationRef.current !== conversationId;
+    
+    if (conversationId) {
+      if (isNewConversation) {
+        // New conversation - fetch messages
+        currentConversationRef.current = conversationId;
+        fetchMessages();
+      } else {
+        // Same conversation - messages already loaded, just set loading to false
+        setLoading(false);
+      }
+    } else {
+      // No conversation yet, show empty state
+      setMessages([]);
+      setLoading(false);
+      currentConversationRef.current = null;
+    }
+
+    // Join conversation room and emit focus when socket is ready
+    if (socket && isConnected) {
+      if (conversationId) {
+        socket.emit('join_conversation', conversationId);
+      }
       
       // Emit chat:focus when user opens chat
       if (otherUserId) {
         socket.emit('chat:focus', { partnerId: otherUserId });
       }
-    } else if (socket && isConnected && otherUserId) {
-      // If no conversation yet but we have otherUserId, just emit chat:focus
-      socket.emit('chat:focus', { partnerId: otherUserId });
     }
-
-    // Fetch messages only if conversation exists
-    if (socket && isConnected && conversationId) {
-      fetchMessages();
-    } else {
-      // No conversation yet, show empty state
-      setMessages([]);
-      setLoading(false);
-    }
-
-    // Orders are now fetched with messages, no separate call needed
 
     return () => {
       if (socket && isConnected) {
@@ -178,14 +192,58 @@ export function ChatWindow({ conversation, onBack }) {
       }
     };
 
+    // Handle offer creation - add optimistic message immediately
+    const handleOfferCreated = (data) => {
+      if (data.offer && data.conversationId === conversation?.id) {
+        console.log('💼 Offer created - adding optimistic message:', data.offer.id);
+        
+        // Create optimistic offer message
+        const optimisticOfferMessage = {
+          id: `temp-offer-${Date.now()}`,
+          content: '💼 Custom Offer',
+          type: 'offer',
+          attachmentName: data.offer.id,
+          senderId: user.id,
+          conversationId: data.conversationId,
+          isRead: false,
+          isOptimistic: true,
+          createdAt: new Date().toISOString(),
+          sender: {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            profileImage: user.profileImage,
+          },
+          offer: data.offer, // Include full offer data
+          order: null,
+          seenBy: [],
+          deliveredAt: null,
+          seenAt: null,
+        };
+
+        // Add optimistic message immediately
+        setMessages((prev) => {
+          // Check if already exists
+          const exists = prev.some(msg => 
+            msg.id === optimisticOfferMessage.id || 
+            (msg.type === 'offer' && msg.attachmentName === data.offer.id)
+          );
+          if (exists) return prev;
+          return [...prev, optimisticOfferMessage];
+        });
+
+        scrollToBottom();
+      }
+    };
+
     socket.on('offer:updated', handleOfferUpdate);
-    socket.on('offer:created', handleOfferUpdate);
+    socket.on('offer:created', handleOfferCreated);
 
     return () => {
       socket.off('offer:updated', handleOfferUpdate);
-      socket.off('offer:created', handleOfferUpdate);
+      socket.off('offer:created', handleOfferCreated);
     };
-  }, [socket, isConnected, conversation?.id]);
+  }, [socket, isConnected, conversation?.id, user]);
 
   useEffect(() => {
     if (!socket || !isConnected) return;
@@ -276,6 +334,26 @@ export function ChatWindow({ conversation, onBack }) {
     scrollToBottom();
   }, [messages]);
 
+  // Handle scroll for pagination (WhatsApp style - load older messages when scrolling up)
+  useEffect(() => {
+    if (!scrollAreaRef.current || !conversation?.id) return;
+
+    const scrollElement = scrollAreaRef.current.querySelector('[data-radix-scroll-area-viewport]');
+    if (!scrollElement) return;
+
+    const handleScroll = () => {
+      // Load older messages when user scrolls near the top
+      if (scrollElement.scrollTop < 200 && hasMoreMessages && !loadingOlderMessages) {
+        loadOlderMessages();
+      }
+    };
+
+    scrollElement.addEventListener('scroll', handleScroll);
+    return () => {
+      scrollElement.removeEventListener('scroll', handleScroll);
+    };
+  }, [hasMoreMessages, loadingOlderMessages, conversation?.id]);
+
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
@@ -283,11 +361,40 @@ export function ChatWindow({ conversation, onBack }) {
   };
 
   const fetchMessages = () => {
-    if (!conversation || !socket || !isConnected) return;
+    if (!conversation || !conversation.id) {
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
+    setCurrentPage(1);
+    setHasMoreMessages(true);
     
-    // Request messages via Socket.IO
+    // If socket is not ready, try to fetch via API as fallback
+    if (!socket || !isConnected) {
+      // Fallback: fetch via API
+      fetch(`/api/conversations/${conversation.id}/messages?page=1&limit=50`, {
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('token')}`,
+        },
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.messages) {
+            setMessages(data.messages || []);
+            setHasMoreMessages(data.hasMore !== false);
+            setLoading(false);
+            setTimeout(scrollToBottom, 100);
+          }
+        })
+        .catch(err => {
+          console.error('Error fetching messages:', err);
+          setLoading(false);
+        });
+      return;
+    }
+    
+    // Request messages via Socket.IO (preferred method)
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
       page: 1,
@@ -297,11 +404,13 @@ export function ChatWindow({ conversation, onBack }) {
     // Listen for response
     const handleMessagesFetched = (data) => {
       if (data.conversationId === conversation.id) {
-        console.log('data.messages', data.messages);
-        
         setMessages(data.messages || []);
+        setHasMoreMessages(data.hasMore !== false);
         setLoading(false);
-        scrollToBottom();
+        // Use requestAnimationFrame for smooth scroll
+        requestAnimationFrame(() => {
+          setTimeout(scrollToBottom, 50);
+        });
       }
     };
 
@@ -309,8 +418,42 @@ export function ChatWindow({ conversation, onBack }) {
 
     // Cleanup listener if component unmounts
     return () => {
-      socket.off('messages:fetched', handleMessagesFetched);
+      if (socket) {
+        socket.off('messages:fetched', handleMessagesFetched);
+      }
     };
+  };
+
+  // Load older messages when scrolling up (WhatsApp style pagination)
+  const loadOlderMessages = () => {
+    if (!conversation?.id || !hasMoreMessages || loadingOlderMessages || !socket || !isConnected) {
+      return;
+    }
+
+    setLoadingOlderMessages(true);
+    const nextPage = currentPage + 1;
+
+    socket.emit('fetch_messages', {
+      conversationId: conversation.id,
+      page: nextPage,
+      limit: 50,
+    });
+
+    const handleOlderMessagesFetched = (data) => {
+      if (data.conversationId === conversation.id) {
+        if (data.messages && data.messages.length > 0) {
+          // Prepend older messages to the beginning
+          setMessages((prev) => [...data.messages, ...prev]);
+          setCurrentPage(nextPage);
+          setHasMoreMessages(data.hasMore !== false);
+        } else {
+          setHasMoreMessages(false);
+        }
+        setLoadingOlderMessages(false);
+      }
+    };
+
+    socket.once('messages:fetched', handleOlderMessagesFetched);
   };
 
   const handleFileSelect = async (file, type) => {
@@ -322,33 +465,28 @@ export function ChatWindow({ conversation, onBack }) {
     if (!socket || !isConnected || uploadingFile || fileItems.length === 0) return;
     
     setUploadingFile(true);
+    const progressMap = new Map();
+    fileItems.forEach(item => {
+      progressMap.set(item.id, 0);
+    });
+    setUploadProgress(new Map(progressMap));
+    
     try {
       const { uploadToCloudinary } = await import('@/utils/cloudinary');
       const otherUserId = conversation?.otherParticipant?.id;
       
-      // Upload all files
-      const uploadPromises = fileItems.map(async (fileItem) => {
-        const resourceType = fileItem.type === 'video' ? 'video' : fileItem.type === 'image' ? 'image' : 'raw';
-        const fileUrl = await uploadToCloudinary(fileItem.file, resourceType);
-        return {
-          ...fileItem,
-          fileUrl,
-        };
-      });
-
-      const uploadedFiles = await Promise.all(uploadPromises);
-      
-      // Create optimistic messages for immediate display
-      const optimisticMessages = uploadedFiles.map((fileItem, index) => ({
+      // Create optimistic messages immediately with progress tracking
+      const optimisticMessages = fileItems.map((fileItem, index) => ({
         id: `temp-${Date.now()}-${index}`,
         content: fileItem.file.name || '',
         type: fileItem.type,
-        attachmentUrl: fileItem.fileUrl,
+        attachmentUrl: fileItem.preview || null, // Use preview initially
         attachmentName: fileItem.file.name,
         senderId: user.id,
         conversationId: conversation?.id || 'temp',
         isRead: false,
         isOptimistic: true,
+        uploadProgress: 0, // Track upload progress
         createdAt: new Date().toISOString(),
         sender: {
           id: user.id,
@@ -364,6 +502,56 @@ export function ChatWindow({ conversation, onBack }) {
         setMessages((prev) => [...prev, ...optimisticMessages]);
         scrollToBottom();
       }
+      
+      // Upload all files with progress tracking
+      const uploadPromises = fileItems.map(async (fileItem, index) => {
+        const resourceType = fileItem.type === 'video' ? 'video' : fileItem.type === 'image' ? 'image' : 'raw';
+        
+        // Simulate progress (Cloudinary doesn't provide progress events, so we simulate)
+        const progressInterval = setInterval(() => {
+          progressMap.set(fileItem.id, (prev) => {
+            const newProgress = Math.min(prev + 10, 90);
+            setUploadProgress(new Map(progressMap));
+            
+            // Update optimistic message progress
+            setMessages((prev) => prev.map(msg => {
+              if (msg.id === optimisticMessages[index].id) {
+                return { ...msg, uploadProgress: newProgress };
+              }
+              return msg;
+            }));
+            
+            return newProgress;
+          });
+        }, 200);
+        
+        try {
+          const fileUrl = await uploadToCloudinary(fileItem.file, resourceType);
+          clearInterval(progressInterval);
+          
+          // Set to 100%
+          progressMap.set(fileItem.id, 100);
+          setUploadProgress(new Map(progressMap));
+          
+          // Update optimistic message with final URL
+          setMessages((prev) => prev.map(msg => {
+            if (msg.id === optimisticMessages[index].id) {
+              return { ...msg, attachmentUrl: fileUrl, uploadProgress: 100 };
+            }
+            return msg;
+          }));
+          
+          return {
+            ...fileItem,
+            fileUrl,
+          };
+        } catch (error) {
+          clearInterval(progressInterval);
+          throw error;
+        }
+      });
+
+      const uploadedFiles = await Promise.all(uploadPromises);
 
       // If no conversation exists yet, create it first
       if (!conversation?.id && otherUserId) {
@@ -423,10 +611,13 @@ export function ChatWindow({ conversation, onBack }) {
       alert('Failed to upload files. Please try again.');
       // Remove optimistic messages on error
       if (conversation?.id) {
-        setMessages((prev) => prev.filter(msg => !msg.id?.startsWith('temp-')));
+        setMessages((prev) => prev.filter(msg => 
+          !optimisticMessages.some(om => om.id === msg.id)
+        ));
       }
     } finally {
       setUploadingFile(false);
+      setUploadProgress(new Map());
     }
   };
 
@@ -507,12 +698,13 @@ export function ChatWindow({ conversation, onBack }) {
       return;
     }
 
-    // Create optimistic message for immediate display
+    // Create optimistic message for immediate display - WITH CONTENT (fix empty bubble)
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
-      content,
+      content: content || '', // Ensure content is always set
       senderId: user.id,
       conversationId: conversation.id,
+      type: 'text',
       isRead: false,
       isOptimistic: true, // Mark as optimistic
       createdAt: new Date().toISOString(),
@@ -523,6 +715,8 @@ export function ChatWindow({ conversation, onBack }) {
         profileImage: user.profileImage,
       },
       seenBy: [],
+      deliveredAt: null,
+      seenAt: null,
     };
 
     // Add message immediately to UI
@@ -552,7 +746,7 @@ export function ChatWindow({ conversation, onBack }) {
     }
   };
 
-  // Debounced typing indicator
+  // Debounced typing indicator - Improved with better timing
   const startTyping = useCallback(() => {
     if (!socket || !isConnected || !conversation || !conversation.id) return;
 
@@ -561,7 +755,7 @@ export function ChatWindow({ conversation, onBack }) {
       clearTimeout(typingDebounceRef.current);
     }
 
-    // If not already typing, emit typing start
+    // If not already typing, emit typing start immediately
     if (!isTypingRef.current) {
       isTypingRef.current = true;
       socket.emit('typing', {
@@ -570,10 +764,10 @@ export function ChatWindow({ conversation, onBack }) {
       });
     }
 
-    // Set debounce to stop typing after 1 second of inactivity
+    // Set debounce to stop typing after 2 seconds of inactivity (better UX)
     typingDebounceRef.current = setTimeout(() => {
       stopTyping();
-    }, 500);
+    }, 2000);
   }, [socket, isConnected, conversation?.id]);
 
   const stopTyping = useCallback(() => {
@@ -696,7 +890,10 @@ export function ChatWindow({ conversation, onBack }) {
       )}
 
       {/* Messages */}
-      <ScrollArea className="flex-1 p-4 overflow-y-auto overflow-x-hidden" ref={scrollAreaRef}>
+      <ScrollArea 
+        className="flex-1 p-4 overflow-y-auto overflow-x-hidden" 
+        ref={scrollAreaRef}
+      >
         {loading ? (
           <div className="space-y-4">
             {[...Array(6)].map((_, index) => {
@@ -731,6 +928,12 @@ export function ChatWindow({ conversation, onBack }) {
           </div>
         ) : (
           <div className="space-y-4 w-full min-w-0">
+            {/* Loading indicator for older messages */}
+            {loadingOlderMessages && (
+              <div className="flex justify-center py-2">
+                <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+              </div>
+            )}
             {(() => {
               console.log("messages", messages);
               // Group conse
@@ -905,7 +1108,9 @@ export function ChatWindow({ conversation, onBack }) {
           value={messageContent}
           onChange={(value) => {
             setMessageContent(value);
-            // startTyping();
+            if (value.trim().length > 0) {
+              startTyping();
+            }
           }}
           onSend={handleSendMessage}
           // onBlur={stopTyping}

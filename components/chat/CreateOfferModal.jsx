@@ -101,11 +101,18 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
         toast.success('Offer sent to client!');
         
         // Send offer message to chat with offer ID in attachmentName
+        // Also emit event so ChatWindow can add optimistic message immediately
         if (socket && isConnected && offer) {
           const offerConversationId = offer.conversationId || conversationId;
           
           if (offerConversationId) {
             try {
+              // Emit offer:created event so ChatWindow can show optimistic message
+              socket.emit('offer:created', {
+                offer,
+                conversationId: offerConversationId,
+              });
+              
               // Send message with offer ID stored in attachmentName
               // This allows us to fetch offer data when loading messages
               socket.emit('send_message', {
