@@ -38,7 +38,7 @@ export function ChatWindow({ conversation, onBack }) {
   const [uploadProgress, setUploadProgress] = useState(new Map()); // fileId => progress
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [oldestMessageId, setOldestMessageId] = useState(null); // For cursor-based pagination
   const [isUserAtBottom, setIsUserAtBottom] = useState(true); // Track if user is at bottom
   const [failedMessages, setFailedMessages] = useState(new Map()); // Track failed messages for resend
   const messagesEndRef = useRef(null);
@@ -46,12 +46,17 @@ export function ChatWindow({ conversation, onBack }) {
   const typingDebounceRef = useRef(null);
   const isTypingRef = useRef(false);
   const scrollHeightRef = useRef(0); // Track scroll height for maintaining position
+  // Refs for pagination to avoid stale closures
+  const hasMoreMessagesRef = useRef(true);
+  const loadingOlderMessagesRef = useRef(false);
+  const oldestMessageIdRef = useRef(null);
   const { socket, isConnected } = useGlobalSocket();
   const { user } = useAuthStore();
   const role = user?.role?.toUpperCase();
 
-  // Track current conversation to avoid refetching when switching back
+  // Track current conversation and cached messages to avoid refetching
   const currentConversationRef = useRef(null);
+  const cachedMessagesRef = useRef(new Map()); // conversationId => messages
 
   useEffect(() => {
     if (!conversation) return;
@@ -64,12 +69,26 @@ export function ChatWindow({ conversation, onBack }) {
     
     if (conversationId) {
       if (isNewConversation) {
-        // New conversation - fetch messages (cache will be checked first in fetchMessages)
-        currentConversationRef.current = conversationId;
-        fetchMessages();
+        // New conversation - check if we have cached messages first
+        const cached = cachedMessagesRef.current.get(conversationId);
+        if (cached && cached.length > 0) {
+          // Use cached messages immediately (from Redis or previous load)
+          setMessages(cached);
+          setLoading(false);
+          setIsUserAtBottom(true);
+          requestAnimationFrame(() => {
+            setTimeout(scrollToBottom, 50);
+          });
+          // Still fetch in background to update cache (silent refresh)
+          currentConversationRef.current = conversationId;
+          fetchMessages(true); // Pass true to indicate silent refresh
+        } else {
+          // No cache - fetch messages (Redis cache will be checked on backend)
+          currentConversationRef.current = conversationId;
+          fetchMessages();
+        }
       } else {
-        // Same conversation - messages already loaded from cache, just set loading to false
-        // Don't refetch - use existing messages (WhatsApp behavior)
+        // Same conversation - use existing messages, no refetch
         setLoading(false);
       }
     } else {
@@ -278,17 +297,22 @@ export function ChatWindow({ conversation, onBack }) {
               newMap.delete(updated[optimisticIndex].id);
               return newMap;
             });
+            // Update cache ref
+            cachedMessagesRef.current.set(conversation.id, updated);
             return updated;
           }
           
           // Add message with order data if it's an offer message
-          return [...prev, data.message];
+          const newMessages = [...prev, data.message];
+          // Update cache ref
+          cachedMessagesRef.current.set(conversation.id, newMessages);
+          return newMessages;
         });
 
         // Only scroll if user is at bottom (WhatsApp style)
         if (isUserAtBottom) {
           requestAnimationFrame(() => {
-            scrollToBottom();
+        scrollToBottom();
           });
         }
       }
@@ -370,7 +394,7 @@ export function ChatWindow({ conversation, onBack }) {
     if (isUserAtBottom && messages.length > 0) {
       // Only auto-scroll if user is at bottom
       requestAnimationFrame(() => {
-        scrollToBottom();
+    scrollToBottom();
       });
     }
   }, [messages, isUserAtBottom]);
@@ -389,9 +413,38 @@ export function ChatWindow({ conversation, onBack }) {
       const atBottom = scrollHeight - scrollTop - clientHeight < 100;
       setIsUserAtBottom(atBottom);
       
-      // Load older messages when user scrolls near the top
-      if (scrollTop < 50 && hasMoreMessages && !loadingOlderMessages) {
+      // Load older messages when user scrolls near the top (WhatsApp style)
+      // Use refs to get latest values (avoid stale closures)
+      const hasMore = hasMoreMessagesRef.current;
+      const isLoading = loadingOlderMessagesRef.current;
+      const oldestId = oldestMessageIdRef.current;
+      
+      // Trigger when within 50px of top - more sensitive for better UX
+      const nearTop = scrollTop < 50;
+      
+      if (nearTop && hasMore && !isLoading && oldestId) {
+        console.log('🔄 Scroll detected - triggering pagination', {
+          scrollTop,
+          hasMore,
+          isLoading,
+          oldestId,
+          role: user?.role,
+          conversationId: conversation?.id,
+        });
         loadOlderMessages();
+      } else if (nearTop && !oldestId) {
+        console.warn('⚠️ Cannot paginate: missing oldestMessageId', {
+          scrollTop,
+          role: user?.role,
+          conversationId: conversation?.id,
+          hasMore,
+          isLoading,
+        });
+      } else if (nearTop && !hasMore) {
+        console.log('ℹ️ No more messages to load', {
+          scrollTop,
+          role: user?.role,
+        });
       }
     };
 
@@ -399,7 +452,7 @@ export function ChatWindow({ conversation, onBack }) {
     return () => {
       scrollElement.removeEventListener('scroll', handleScroll);
     };
-  }, [hasMoreMessages, loadingOlderMessages, conversation?.id]);
+  }, [hasMoreMessages, loadingOlderMessages, conversation?.id, oldestMessageId,  user?.role]);
 
   const scrollToBottom = () => {
     if (messagesEndRef.current) {
@@ -407,20 +460,23 @@ export function ChatWindow({ conversation, onBack }) {
     }
   };
 
-  const fetchMessages = () => {
+  const fetchMessages = (silentRefresh = false) => {
     if (!conversation || !conversation.id) {
       setLoading(false);
       return;
     }
 
+    // Don't show loading if silent refresh (cache already shown)
+    if (!silentRefresh) {
     setLoading(true);
-    setCurrentPage(1);
+    }
     setHasMoreMessages(true);
+    setOldestMessageId(null);
     
     // If socket is not ready, try to fetch via API as fallback
     if (!socket || !isConnected) {
       // Fallback: fetch via API
-      fetch(`/api/conversations/${conversation.id}/messages?page=1&limit=50`, {
+      fetch(`/api/conversations/${conversation.id}/messages?page=1&limit=20`, {
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`,
         },
@@ -430,6 +486,7 @@ export function ChatWindow({ conversation, onBack }) {
           if (data.messages) {
             setMessages(data.messages || []);
             setHasMoreMessages(data.hasMore !== false);
+            setOldestMessageId(data.oldestMessageId || null);
             setLoading(false);
             setIsUserAtBottom(true); // User is at bottom when first loading
             setTimeout(scrollToBottom, 100);
@@ -444,23 +501,67 @@ export function ChatWindow({ conversation, onBack }) {
     
     // Request messages via Socket.IO (preferred method)
     // Cache will be checked first on backend, then database if needed
+    // First time: fetch last 20 messages (WhatsApp style)
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
       page: 1,
-      limit: 50,
+      limit: 20, // WhatsApp style - 20 messages per page
     });
 
     // Listen for response
     const handleMessagesFetched = (data) => {
       if (data.conversationId === conversation.id) {
-        setMessages(data.messages || []);
+        const fetchedMessages = data.messages || [];
+        
+        // Store in cache ref for future use
+        cachedMessagesRef.current.set(conversation.id, fetchedMessages);
+        
+        // Only update state if not silent refresh (to avoid flicker)
+        if (!silentRefresh) {
+          setMessages(fetchedMessages);
+        } else {
+          // Silent refresh - only update if messages changed
+          setMessages((prev) => {
+            // Check if messages are different
+            if (prev.length !== fetchedMessages.length || 
+                prev[prev.length - 1]?.id !== fetchedMessages[fetchedMessages.length - 1]?.id) {
+              return fetchedMessages;
+            }
+            return prev;
+          });
+        }
+        
         setHasMoreMessages(data.hasMore !== false);
+        setOldestMessageId(data.oldestMessageId || null);
+        // Update refs for scroll handler
+        hasMoreMessagesRef.current = data.hasMore !== false;
+        oldestMessageIdRef.current = data.oldestMessageId || null;
         setLoading(false);
-        setIsUserAtBottom(true); // User is at bottom when first loading
-        // Use requestAnimationFrame for smooth scroll
-        requestAnimationFrame(() => {
-          setTimeout(scrollToBottom, 50);
+        
+        // Debug log for pagination
+        console.log('📋 Messages fetched:', {
+          conversationId: conversation.id,
+          messageCount: fetchedMessages.length,
+          hasMore: data.hasMore,
+          oldestMessageId: data.oldestMessageId,
+          cached: data.cached,
+          role: user?.role,
         });
+        
+        if (!silentRefresh) {
+          setIsUserAtBottom(true); // User is at bottom when first loading
+          // Use requestAnimationFrame for smooth scroll
+          requestAnimationFrame(() => {
+            setTimeout(scrollToBottom, 50);
+          });
+        }
+        
+        // Log cache status
+        if (data.cached) {
+          console.log('✅ Messages loaded from Redis cache (instant)');
+        } else {
+          console.log('📥 Messages loaded from database (cache updated)');
+        }
       }
     };
 
@@ -469,39 +570,71 @@ export function ChatWindow({ conversation, onBack }) {
     // Cleanup listener if component unmounts
     return () => {
       if (socket) {
-        socket.off('messages:fetched', handleMessagesFetched);
+      socket.off('messages:fetched', handleMessagesFetched);
       }
     };
   };
 
   // Load older messages when scrolling up (WhatsApp style pagination) - Maintain scroll position
-  const loadOlderMessages = () => {
-    if (!conversation?.id || !hasMoreMessages || loadingOlderMessages || !socket || !isConnected) {
+  const loadOlderMessages = useCallback(() => {
+    // Use refs to check latest values
+    const hasMore = hasMoreMessagesRef.current;
+    const isLoading = loadingOlderMessagesRef.current;
+    const oldestId = oldestMessageIdRef.current;
+    
+    if (!conversation?.id || !hasMore || isLoading || !socket || !isConnected || !oldestId) {
+      console.log('🚫 Pagination blocked:', {
+        conversationId: conversation?.id,
+        hasMore,
+        isLoading,
+        socket: !!socket,
+        isConnected,
+        oldestId,
+        role: user?.role,
+      });
       return;
     }
 
+    console.log('📥 Loading older messages...', {
+      conversationId: conversation.id,
+      oldestId,
+      currentMessages: messages.length,
+      role: user?.role,
+    });
+
     setLoadingOlderMessages(true);
-    const nextPage = currentPage + 1;
+    loadingOlderMessagesRef.current = true;
     
-    // Save current scroll position and height
+    // Save current scroll position and height for maintaining position
     const scrollElement = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
     const previousScrollHeight = scrollElement?.scrollHeight || 0;
     const previousScrollTop = scrollElement?.scrollTop || 0;
 
+    // Fetch previous 20 messages using cursor-based pagination
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
-      page: nextPage,
-      limit: 50,
+      page: 2, // Not first page
+      limit: 20, // 20 messages per page (WhatsApp style)
+      beforeMessageId: oldestId, // Fetch messages before this one
     });
 
     const handleOlderMessagesFetched = (data) => {
       if (data.conversationId === conversation.id) {
+        console.log('📥 Older messages received:', {
+          count: data.messages?.length || 0,
+          hasMore: data.hasMore,
+          oldestMessageId: data.oldestMessageId,
+        });
+
         if (data.messages && data.messages.length > 0) {
           // Prepend older messages to the beginning
           setMessages((prev) => {
             const newMessages = [...data.messages, ...prev];
             
-            // Restore scroll position after messages are added
+            // Update cache ref
+            cachedMessagesRef.current.set(conversation.id, newMessages);
+            
+            // Restore scroll position after messages are added (maintain position)
             requestAnimationFrame(() => {
               if (scrollElement) {
                 const newScrollHeight = scrollElement.scrollHeight;
@@ -510,19 +643,26 @@ export function ChatWindow({ conversation, onBack }) {
               }
             });
             
+            console.log(`✅ Loaded ${data.messages.length} older messages (total: ${newMessages.length})`);
             return newMessages;
           });
-          setCurrentPage(nextPage);
+          setOldestMessageId(data.oldestMessageId || null);
           setHasMoreMessages(data.hasMore !== false);
+          // Update refs
+          oldestMessageIdRef.current = data.oldestMessageId || null;
+          hasMoreMessagesRef.current = data.hasMore !== false;
         } else {
+          console.log('📭 No more older messages');
           setHasMoreMessages(false);
+          hasMoreMessagesRef.current = false;
         }
         setLoadingOlderMessages(false);
+        loadingOlderMessagesRef.current = false;
       }
     };
 
     socket.once('messages:fetched', handleOlderMessagesFetched);
-  };
+  }, [conversation?.id, hasMoreMessages, loadingOlderMessages, socket, isConnected, oldestMessageId, messages.length]);
 
   const handleFileSelect = async (file, type) => {
     // Legacy single file handler - kept for backward compatibility
@@ -824,7 +964,7 @@ export function ChatWindow({ conversation, onBack }) {
       setSending(false);
     }
   };
-  
+
   // Resend failed message
   const resendMessage = useCallback((messageId) => {
     const message = messages.find(m => m.id === messageId);
@@ -1036,8 +1176,15 @@ export function ChatWindow({ conversation, onBack }) {
             {loadingOlderMessages && (
               <div className="flex justify-center py-2">
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
+                <span className="ml-2 text-xs text-muted-foreground">Loading older messages...</span>
               </div>
             )}
+            {/* Debug info for pagination (remove in production) */}
+            {/* {process.env.NODE_ENV === 'development' && (
+              <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded mb-2">
+                Pagination: hasMore={hasMoreMessages ? 'Yes' : 'No'}, oldestId={oldestMessageId ? oldestMessageId.substring(0, 8) + '...' : 'None'}, loading={loadingOlderMessages ? 'Yes' : 'No'}, role={user?.role}
+              </div>
+            )} */}
             {(() => {
               console.log("messages", messages);
               // Group conse
