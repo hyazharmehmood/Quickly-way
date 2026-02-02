@@ -39,10 +39,13 @@ export function ChatWindow({ conversation, onBack }) {
   const [hasMoreMessages, setHasMoreMessages] = useState(true);
   const [loadingOlderMessages, setLoadingOlderMessages] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUserAtBottom, setIsUserAtBottom] = useState(true); // Track if user is at bottom
+  const [failedMessages, setFailedMessages] = useState(new Map()); // Track failed messages for resend
   const messagesEndRef = useRef(null);
   const scrollAreaRef = useRef(null);
   const typingDebounceRef = useRef(null);
   const isTypingRef = useRef(false);
+  const scrollHeightRef = useRef(0); // Track scroll height for maintaining position
   const { socket, isConnected } = useGlobalSocket();
   const { user } = useAuthStore();
   const role = user?.role?.toUpperCase();
@@ -61,11 +64,12 @@ export function ChatWindow({ conversation, onBack }) {
     
     if (conversationId) {
       if (isNewConversation) {
-        // New conversation - fetch messages
+        // New conversation - fetch messages (cache will be checked first in fetchMessages)
         currentConversationRef.current = conversationId;
         fetchMessages();
       } else {
-        // Same conversation - messages already loaded, just set loading to false
+        // Same conversation - messages already loaded from cache, just set loading to false
+        // Don't refetch - use existing messages (WhatsApp behavior)
         setLoading(false);
       }
     } else {
@@ -265,9 +269,15 @@ export function ChatWindow({ conversation, onBack }) {
           );
           
           if (optimisticIndex !== -1) {
-            // Replace optimistic message with real one (remove isOptimistic flag)
+            // Replace optimistic message with real one (remove isOptimistic flag and error state)
             const updated = [...prev];
-            updated[optimisticIndex] = { ...data.message, isOptimistic: false };
+            updated[optimisticIndex] = { ...data.message, isOptimistic: false, sendError: false };
+            // Remove from failed messages if it was there
+            setFailedMessages((prev) => {
+              const newMap = new Map(prev);
+              newMap.delete(updated[optimisticIndex].id);
+              return newMap;
+            });
             return updated;
           }
           
@@ -275,9 +285,32 @@ export function ChatWindow({ conversation, onBack }) {
           return [...prev, data.message];
         });
 
-        // Order data should already be included from backend (like sender data)
-
-        scrollToBottom();
+        // Only scroll if user is at bottom (WhatsApp style)
+        if (isUserAtBottom) {
+          requestAnimationFrame(() => {
+            scrollToBottom();
+          });
+        }
+      }
+    };
+    
+    // Listen for message send errors
+    const handleMessageError = (data) => {
+      if (data.conversationId === conversation?.id && data.tempId) {
+        // Mark message as failed
+        setMessages((prev) => 
+          prev.map((msg) => 
+            msg.id === data.tempId 
+              ? { ...msg, sendError: true, isOptimistic: true }
+              : msg
+          )
+        );
+        setFailedMessages((prev) => {
+          const newMap = new Map(prev);
+          newMap.set(data.tempId, data.error || 'Failed to send message');
+          return newMap;
+        });
+        setSending(false);
       }
     };
 
@@ -321,20 +354,28 @@ export function ChatWindow({ conversation, onBack }) {
     socket.on('user_typing', handleTyping);
     socket.on('message_read', handleMessageRead);
     socket.on('message:sent', handleMessageSent);
+    socket.on('message:error', handleMessageError);
 
     return () => {
       socket.off('new_message', handleNewMessage);
       socket.off('user_typing', handleTyping);
       socket.off('message_read', handleMessageRead);
       socket.off('message:sent', handleMessageSent);
+      socket.off('message:error', handleMessageError);
     };
-  }, [socket, isConnected, conversation?.id, user?.id]);
+  }, [socket, isConnected, conversation?.id, user?.id, isUserAtBottom]);
 
+  // Smart scroll - only auto-scroll if user is at bottom (WhatsApp style)
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isUserAtBottom && messages.length > 0) {
+      // Only auto-scroll if user is at bottom
+      requestAnimationFrame(() => {
+        scrollToBottom();
+      });
+    }
+  }, [messages, isUserAtBottom]);
 
-  // Handle scroll for pagination (WhatsApp style - load older messages when scrolling up)
+  // Handle scroll for pagination and track if user is at bottom
   useEffect(() => {
     if (!scrollAreaRef.current || !conversation?.id) return;
 
@@ -342,8 +383,14 @@ export function ChatWindow({ conversation, onBack }) {
     if (!scrollElement) return;
 
     const handleScroll = () => {
+      const { scrollTop, scrollHeight, clientHeight } = scrollElement;
+      
+      // Check if user is at bottom (within 100px)
+      const atBottom = scrollHeight - scrollTop - clientHeight < 100;
+      setIsUserAtBottom(atBottom);
+      
       // Load older messages when user scrolls near the top
-      if (scrollElement.scrollTop < 200 && hasMoreMessages && !loadingOlderMessages) {
+      if (scrollTop < 50 && hasMoreMessages && !loadingOlderMessages) {
         loadOlderMessages();
       }
     };
@@ -384,6 +431,7 @@ export function ChatWindow({ conversation, onBack }) {
             setMessages(data.messages || []);
             setHasMoreMessages(data.hasMore !== false);
             setLoading(false);
+            setIsUserAtBottom(true); // User is at bottom when first loading
             setTimeout(scrollToBottom, 100);
           }
         })
@@ -395,6 +443,7 @@ export function ChatWindow({ conversation, onBack }) {
     }
     
     // Request messages via Socket.IO (preferred method)
+    // Cache will be checked first on backend, then database if needed
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
       page: 1,
@@ -407,6 +456,7 @@ export function ChatWindow({ conversation, onBack }) {
         setMessages(data.messages || []);
         setHasMoreMessages(data.hasMore !== false);
         setLoading(false);
+        setIsUserAtBottom(true); // User is at bottom when first loading
         // Use requestAnimationFrame for smooth scroll
         requestAnimationFrame(() => {
           setTimeout(scrollToBottom, 50);
@@ -424,7 +474,7 @@ export function ChatWindow({ conversation, onBack }) {
     };
   };
 
-  // Load older messages when scrolling up (WhatsApp style pagination)
+  // Load older messages when scrolling up (WhatsApp style pagination) - Maintain scroll position
   const loadOlderMessages = () => {
     if (!conversation?.id || !hasMoreMessages || loadingOlderMessages || !socket || !isConnected) {
       return;
@@ -432,6 +482,11 @@ export function ChatWindow({ conversation, onBack }) {
 
     setLoadingOlderMessages(true);
     const nextPage = currentPage + 1;
+    
+    // Save current scroll position and height
+    const scrollElement = scrollAreaRef.current?.querySelector('[data-radix-scroll-area-viewport]');
+    const previousScrollHeight = scrollElement?.scrollHeight || 0;
+    const previousScrollTop = scrollElement?.scrollTop || 0;
 
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
@@ -443,7 +498,20 @@ export function ChatWindow({ conversation, onBack }) {
       if (data.conversationId === conversation.id) {
         if (data.messages && data.messages.length > 0) {
           // Prepend older messages to the beginning
-          setMessages((prev) => [...data.messages, ...prev]);
+          setMessages((prev) => {
+            const newMessages = [...data.messages, ...prev];
+            
+            // Restore scroll position after messages are added
+            requestAnimationFrame(() => {
+              if (scrollElement) {
+                const newScrollHeight = scrollElement.scrollHeight;
+                const heightDifference = newScrollHeight - previousScrollHeight;
+                scrollElement.scrollTop = previousScrollTop + heightDifference;
+              }
+            });
+            
+            return newMessages;
+          });
           setCurrentPage(nextPage);
           setHasMoreMessages(data.hasMore !== false);
         } else {
@@ -729,22 +797,58 @@ export function ChatWindow({ conversation, onBack }) {
     stopTyping();
 
     try {
-      // Send via Socket.IO
+      // Send via Socket.IO with tempId for error handling
       socket.emit('send_message', {
         conversationId: conversation.id,
         content,
+        tempId: optimisticMessage.id, // Send temp ID for error tracking
       });
 
       // The real message will replace the optimistic one via 'new_message' event
       setSending(false);
     } catch (error) {
       console.error('Error sending message:', error);
-      // Remove optimistic message on error
-      setMessages((prev) => prev.filter((msg) => msg.id !== optimisticMessage.id));
-      setMessageContent(content); // Restore message content
+      // Mark message as failed instead of removing
+      setMessages((prev) => 
+        prev.map((msg) => 
+          msg.id === optimisticMessage.id 
+            ? { ...msg, sendError: true, isOptimistic: true }
+            : msg
+        )
+      );
+      setFailedMessages((prev) => {
+        const newMap = new Map(prev);
+        newMap.set(optimisticMessage.id, error.message || 'Failed to send message');
+        return newMap;
+      });
       setSending(false);
     }
   };
+  
+  // Resend failed message
+  const resendMessage = useCallback((messageId) => {
+    const message = messages.find(m => m.id === messageId);
+    if (!message || !socket || !isConnected) return;
+    
+    // Remove error state
+    setMessages((prev) => 
+      prev.map((msg) => 
+        msg.id === messageId 
+          ? { ...msg, sendError: false, isOptimistic: true, resending: true }
+          : msg
+      )
+    );
+    
+    // Resend message
+    socket.emit('send_message', {
+      conversationId: conversation.id,
+      content: message.content,
+      type: message.type,
+      attachmentUrl: message.attachmentUrl,
+      attachmentName: message.attachmentName,
+      tempId: messageId,
+    });
+  }, [messages, socket, isConnected, conversation?.id]);
 
   // Debounced typing indicator - Improved with better timing
   const startTyping = useCallback(() => {
@@ -1043,6 +1147,7 @@ export function ChatWindow({ conversation, onBack }) {
                             isOptimistic={firstMessage.isOptimistic || isOptimistic}
                             showAvatar={true}
                             showName={!isOwnMessage}
+                            onResend={resendMessage}
                           />
                         )}
                       </>

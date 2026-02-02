@@ -107,7 +107,7 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
           
           if (offerConversationId) {
             try {
-              // Emit offer:created event so ChatWindow can show optimistic message
+              // Emit offer:created event so ChatWindow can show optimistic message immediately
               socket.emit('offer:created', {
                 offer,
                 conversationId: offerConversationId,
@@ -120,9 +120,11 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
                 content: '💼 Custom Offer', // Simple content, offer data will come from attachmentName
                 type: 'offer', // Special type for offer messages
                 attachmentName: offer.id, // Store offer ID here
+                tempId: `temp-offer-${Date.now()}`, // For error tracking
               });
             } catch (error) {
               console.error('Error sending offer message:', error);
+              toast.error('Offer created but failed to send message. Please refresh.');
             }
           }
         }
@@ -143,6 +145,7 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
         });
       }
     } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to create offer. Please try again.');
       console.error('Error creating offer:', error);
       const errorMessage = error.response?.data?.error || error.message || 'Failed to create offer';
       toast.error(errorMessage);

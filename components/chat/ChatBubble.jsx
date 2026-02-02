@@ -3,7 +3,8 @@
 import React, { useState } from 'react';
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
-import { Paperclip, X, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Paperclip, X, ChevronLeft, ChevronRight, Loader2, RefreshCw, AlertCircle } from "lucide-react";
 import { cn } from "@/utils";
 import moment from 'moment';
 
@@ -13,6 +14,7 @@ export function ChatBubble({
   isOptimistic,
   showAvatar = true,
   showName = true,
+  onResend,
 }) {
   // Check if message is optimistic (either from prop or message property)
   const isOptimisticMessage = isOptimistic !== undefined ? isOptimistic : message.isOptimistic;
@@ -150,8 +152,40 @@ export function ChatBubble({
           )}>
             {moment(message.createdAt).format('HH:mm A')}
           </p>
+          
+          {/* Error state with resend button (WhatsApp style) */}
+          {isOwnMessage && message.sendError && onResend && (
+            <div className="flex items-center gap-1">
+              <AlertCircle className="h-3 w-3 text-destructive" />
+              <Button
+                variant="ghost"
+                size="sm"
+                className="h-6 px-2 text-xs"
+                onClick={() => onResend(message.id)}
+                disabled={message.resending}
+              >
+                {message.resending ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <RefreshCw className="h-3 w-3 mr-1" />
+                    Resend
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+          
+          {/* Loading state */}
+          {isOwnMessage && message.isOptimistic && !message.sendError && (
+            <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />
+          )}
+          
           {/* WhatsApp-style ticks for own messages */}
-          {/* {isOwnMessage && !isOptimistic && (
+          {isOwnMessage && !isOptimisticMessage && !message.sendError && (
             <span className={cn(
               "text-xs inline-flex items-center",
               message.seenAt 
@@ -162,7 +196,7 @@ export function ChatBubble({
             )}>
               {message.seenAt || message.deliveredAt ? '✓✓' : '✓'}
             </span>
-          )} */}
+          )}
         </div>
       </div>
       
