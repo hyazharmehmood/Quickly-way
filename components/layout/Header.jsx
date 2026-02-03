@@ -12,9 +12,12 @@ import {
   Globe,
   Headphones,
   Search,
+  ArrowLeft,
+  Navigation,
 } from 'lucide-react';
 import { cn } from '@/utils';
 import useAuthStore from '@/store/useAuthStore';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -24,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { User as UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle } from 'lucide-react';
+import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle } from 'lucide-react';
 
 export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
@@ -42,7 +45,12 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('All Locations');
+  const [manualLocation, setManualLocation] = useState('');
+  const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const displayLocation = currentLocation;
+  
+  // Check if we can go back (not on home page)
+  const canGoBack = pathname !== '/' && pathname !== '/dashboard/freelancer' && !pathname.startsWith('/dashboard/freelancer') && pathname !== '/admin';
 
   // Use external search query if provided, otherwise use internal state
   const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
@@ -68,6 +76,45 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
     setIsLocationPickerOpen(false);
   };
 
+  const handleDetectLocation = () => {
+    setIsDetectingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          // Reverse geocoding would be needed to get location name
+          // For now, just set a generic detected location
+          setCurrentLocation('Detected Location');
+          setIsDetectingLocation(false);
+          setIsLocationPickerOpen(false);
+          toast.success('Location detected successfully');
+        },
+        (error) => {
+          console.error('Error detecting location:', error);
+          setIsDetectingLocation(false);
+          toast.error('Failed to detect location. Please enter manually.');
+        }
+      );
+    } else {
+      setIsDetectingLocation(false);
+      toast.error('Geolocation is not supported by your browser.');
+    }
+  };
+
+  const handleSetManualLocation = () => {
+    if (manualLocation.trim()) {
+      setCurrentLocation(manualLocation.trim());
+      setManualLocation('');
+      setIsLocationPickerOpen(false);
+      toast.success('Location set successfully');
+    } else {
+      toast.error('Please enter a location');
+    }
+  };
+
+  const handleBack = () => {
+    router.back();
+  };
+
   return (
     <div className="flex flex-col w-full relative">
       {/* Top Bar */}
@@ -75,7 +122,17 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
         <div className="max-w-7xl mx-auto flex items-center justify-start gap-8">
           {/* Navigation Icons Group */}
           <div className="flex items-center gap-6">
-
+            {/* Back Button - Show when not on home page */}
+            {canGoBack && (
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={handleBack}
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+            )}
 
             <Button
               variant="ghost"
@@ -97,43 +154,94 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           </div>
 
           {/* Location Picker */}
-          <div className="relative">
-            <Button
-              variant="ghost"
-              onClick={() => setIsLocationPickerOpen(!isLocationPickerOpen)}
-              className="gap-2"
-            >
-              <MapPin className="w-4 h-4" />
-              <span className="text-sm font-normal">
-                {displayLocation}
-              </span>
-            </Button>
-            {/* TODO: Add LocationPicker component */}
-            {isLocationPickerOpen && (
-              <div className="absolute top-full mt-2 bg-popover border border-border rounded-lg shadow-lg p-4 z-50 min-w-[200px]">
-                <div className="space-y-2">
-                  <button
-                    onClick={() => handleLocationChange('All Locations')}
-                    className="w-full text-left px-3 py-2 hover:bg-muted rounded-md text-sm text-popover-foreground"
+          <DropdownMenu className="" open={isLocationPickerOpen} onOpenChange={setIsLocationPickerOpen}>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="gap-2 "
+              >
+                <MapPin className="w-4 h-4" />
+                <span className="text-sm font-normal">
+                  {displayLocation}
+                </span>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className=" p-0 shadow-none rounded-[1rem] z-80" align="start">
+              <div className="p-4 space-y-3">
+                {/* Header */}
+                <div>
+                  <h3 className="text-lg font-semibold text-foreground">Set your location</h3>
+                  <p className="text-xs text-muted-foreground">Detect my location or enter manually</p>
+                </div>
+
+                {/* All World Option */}
+                <Button 
+                  variant="outline"
+                  onClick={() => handleLocationChange('All World')}
+                  className="w-full "
+                >
+     
+                    <Globe className="w-4 h-4 text-primary" />
+                 
+                All World
+                </Button>
+
+                {/* Detect Location Option */}
+                <Button 
+                  variant="outline"
+                  onClick={handleDetectLocation}
+                  disabled={isDetectingLocation}
+                  className="w-full"
+                >
+              
+                    <Navigation className="w-4 h-4 text-primary" />
+               
+           
+                    {isDetectingLocation ? 'Detecting...' : 'Detect my location'}
+                
+                </Button>
+
+                {/* Separator */}
+                <div className="relative my-4">
+                  <div className="absolute inset-0 flex items-center">
+                    <div className="w-full border-t border-border"></div>
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-popover px-2 text-muted-foreground">OR ENTER MANUALLY</span>
+                  </div>
+                </div>
+
+                {/* Manual Input */}
+                <div className="flex gap-1.5 items-center">
+                  <Input
+                    type="text"
+                    placeholder="Area, City, Country, Zip"
+                    value={manualLocation}
+                    onChange={(e) => setManualLocation(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') {
+                        handleSetManualLocation();
+                      }
+                    }}
+                    size="lg"
+             
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleSetManualLocation();
+                    }}
+                    size="lg"
+                    className="rounded-full"
+                    variant="default"
                   >
-                    All Locations
-                  </button>
-                  <button
-                    onClick={() => handleLocationChange('New York')}
-                    className="w-full text-left px-3 py-2 hover:bg-muted rounded-md text-sm text-popover-foreground"
-                  >
-                    New York
-                  </button>
-                  <button
-                    onClick={() => handleLocationChange('Los Angeles')}
-                    className="w-full text-left px-3 py-2 hover:bg-muted rounded-md text-sm text-popover-foreground"
-                  >
-                    Los Angeles
-                  </button>
+                    Set
+                  </Button>
                 </div>
               </div>
-            )}
-          </div>
+            </DropdownMenuContent>
+          </DropdownMenu>
 
           {/* Utility Buttons: Language & Support */}
           <div className="ml-auto flex items-center gap-6">
@@ -359,7 +467,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
             )}
           </div>
         </div>
-      </header >
-    </div >
+      </header>
+    </div>
   );
 }

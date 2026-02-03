@@ -46,6 +46,9 @@ model User {
   disputesAsFreelancer     Dispute[]                 @relation("DisputeFreelancer")
   reviewsGiven              Review[]                  @relation("Reviewer")
   reviewsReceived           Review[]                 @relation("Reviewee")
+  reviewsApproved           Review[]                 @relation("ReviewApprovedBy")
+  reviewsFlagged            Review[]                 @relation("ReviewFlaggedBy")
+  disputeComments           DisputeComment[]         @relation("DisputeCommentAuthor")
   rating                    Float?                   @default(0) // Average rating from reviews
   reviewCount               Int                       @default(0) // Total number of reviews received
 }
@@ -392,17 +395,41 @@ model Dispute {
   adminResolution       String?           // Admin's resolution text
   resolvedBy            String?           // Admin user ID
   resolvedAt            DateTime?
+  initialAttachments     Json?             // Array of attachment URLs from initial dispute
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   
   order                 Order             @relation(fields: [orderId], references: [id], onDelete: Cascade)
   client                User              @relation("DisputeClient", fields: [clientId], references: [id])
   freelancer            User              @relation("DisputeFreelancer", fields: [freelancerId], references: [id])
+  comments              DisputeComment[]
 
   @@index([orderId])
   @@index([status])
   @@index([clientId])
   @@index([freelancerId])
+}
+
+model DisputeComment {
+  id                    String            @id @default(uuid())
+  disputeId              String
+  userId                String            // User who wrote the comment
+  role                  DisputeCommentRole // CLIENT, FREELANCER, ADMIN
+  content               String            // Comment text
+  attachments           Json?             // Array of {url, name, type} objects
+  createdAt             DateTime          @default(now())
+  
+  dispute               Dispute           @relation(fields: [disputeId], references: [id], onDelete: Cascade)
+  user                  User              @relation("DisputeCommentAuthor", fields: [userId], references: [id])
+
+  @@index([disputeId, createdAt])
+  @@index([userId])
+}
+
+enum DisputeCommentRole {
+  CLIENT
+  FREELANCER
+  ADMIN
 }
 
 enum OrderStatus {
@@ -459,6 +486,14 @@ model Review {
   comment               String?            // Review text
   isOrderReview         Boolean            @default(true) // true = order-based, false = service-based
   isClientReview        Boolean            // true = client reviewing freelancer, false = freelancer reviewing client
+  isApproved             Boolean            @default(true) // Admin approval status
+  isFlagged              Boolean            @default(false) // Whether review is flagged for review
+  isFeatured             Boolean            @default(false) // Whether review is featured
+  flaggedReason          String?            // Reason for flagging
+  flaggedBy              String?            // Admin user ID who flagged
+  flaggedAt              DateTime?          // When review was flagged
+  approvedBy             String?            // Admin user ID who approved
+  approvedAt             DateTime?          // When review was approved
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
   
@@ -467,6 +502,8 @@ model Review {
   service               Service?           @relation("ServiceReviews", fields: [serviceId], references: [id], onDelete: Cascade)
   reviewer              User               @relation("Reviewer", fields: [reviewerId], references: [id])
   reviewee              User               @relation("Reviewee", fields: [revieweeId], references: [id])
+  approvedByUser        User?              @relation("ReviewApprovedBy", fields: [approvedBy], references: [id])
+  flaggedByUser         User?              @relation("ReviewFlaggedBy", fields: [flaggedBy], references: [id])
 
   @@unique([orderId, reviewerId, isClientReview]) // One review per order per reviewer type
   @@index([orderId])

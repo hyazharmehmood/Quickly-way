@@ -131,15 +131,16 @@ export default function ClientOrdersPage() {
                         <SelectTrigger className="h-11 w-32 rounded-xl border-border">
                             <SelectValue placeholder="Filter" />
                         </SelectTrigger>
-                        <SelectContent>
-                            <SelectItem value="all">All</SelectItem>
-                            <SelectItem value="PENDING_ACCEPTANCE">Pending</SelectItem>
-                            <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
-                            <SelectItem value="DELIVERED">Delivered</SelectItem>
-                            <SelectItem value="REVISION_REQUESTED">Revision</SelectItem>
-                            <SelectItem value="COMPLETED">Completed</SelectItem>
-                            <SelectItem value="CANCELLED">Cancelled</SelectItem>
-                        </SelectContent>
+                            <SelectContent>
+                                <SelectItem value="all">All</SelectItem>
+                                <SelectItem value="PENDING_ACCEPTANCE">Pending</SelectItem>
+                                <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+                                <SelectItem value="DELIVERED">Delivered</SelectItem>
+                                <SelectItem value="REVISION_REQUESTED">Revision</SelectItem>
+                                <SelectItem value="COMPLETED">Completed</SelectItem>
+                                <SelectItem value="CANCELLED">Cancelled</SelectItem>
+                                <SelectItem value="DISPUTED">Disputed</SelectItem>
+                            </SelectContent>
                     </Select>
                 </div>
             </div>
@@ -247,9 +248,16 @@ export default function ClientOrdersPage() {
                                             <Download className="w-4 h-4 mr-2" /> Download Assets
                                         </Button>
                                     )}
-                                    <Button size="lg" variant="ghost" className="w-full text-muted-foreground hover:text-destructive">
-                                        <AlertCircle className="w-3.5 h-3.5 mr-2" /> Report an Issue
-                                    </Button>
+                                    {(order.status === 'DELIVERED' || order.status === 'DISPUTED') && (
+                                        <Button 
+                                            size="lg" 
+                                            variant="ghost" 
+                                            className="w-full text-muted-foreground hover:text-destructive"
+                                            onClick={() => router.push(`/orders/${order.id}`)}
+                                        >
+                                            <AlertCircle className="w-3.5 h-3.5 mr-2" /> {order.status === 'DISPUTED' ? 'View Dispute' : 'Report an Issue'}
+                                        </Button>
+                                    )}
                                 </div>
                             </div>
                         </Card>

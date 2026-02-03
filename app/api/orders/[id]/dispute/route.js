@@ -49,7 +49,7 @@ export async function POST(request, { params }) {
     }
 
     const body = await request.json();
-    const { reason, description } = body;
+    const { reason, description, attachments } = body;
 
     if (!reason || !reason.trim()) {
       return NextResponse.json(
@@ -69,7 +69,8 @@ export async function POST(request, { params }) {
       id,
       user.id,
       reason.trim(),
-      description.trim()
+      description.trim(),
+      attachments || null
     );
 
     // Emit Socket.IO event

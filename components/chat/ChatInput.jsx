@@ -45,15 +45,26 @@ export function ChatInput({
   const handleSend = (e) => {
     e.preventDefault();
     if ((value.trim() || selectedFiles.length > 0) && !disabled && !sending) {
-      // If there are files selected, send them first
-      if (selectedFiles.length > 0 && onFilesChange) {
-        onFilesChange([...selectedFiles]);
+      // Pass files to onSend callback if available
+      // This allows the parent to handle file uploads before sending
+      const filesToSend = selectedFiles.length > 0 ? [...selectedFiles] : null;
+      
+      // Clear selected files before sending
+      if (filesToSend) {
         setSelectedFiles([]);
       }
-      // Then send text message if any
-      if (value.trim()) {
-        onSend(e);
+      
+      // Call onSend with event and files
+      // Parent component can handle file uploads in onSend
+      if (onSend) {
+        onSend(e, filesToSend);
       }
+      
+      // Also call onFilesChange for backward compatibility
+      if (filesToSend && onFilesChange) {
+        onFilesChange(filesToSend);
+      }
+      
       adjustHeight(true);
     }
   };

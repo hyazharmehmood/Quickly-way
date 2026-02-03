@@ -7,6 +7,7 @@ import {
     Calendar, DollarSign, FileText, RefreshCw, Star, Edit
 } from 'lucide-react';
 import { ReviewModal } from '@/components/review/ReviewModal';
+import DisputeThread from '@/components/dispute/DisputeThread';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -108,7 +109,7 @@ export default function FreelancerOrderDetailPage() {
 
     const fetchOrder = async () => {
         try {
-            setLoading(true);
+       
             const response = await api.get(`/orders/${params.id}`);
             if (response.data.success) {
                 setOrder(response.data.order);
@@ -211,35 +212,53 @@ export default function FreelancerOrderDetailPage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     {/* Main Content Skeleton */}
                     <div className="lg:col-span-2 space-y-6">
-                        {/* Order Info Card Skeleton */}
+                        {/* Order Overview Card Skeleton */}
                         <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
+                            <CardHeader className="pb-4">
                                 <div className="flex items-center justify-between">
-                                    <Skeleton className="h-6 w-48" />
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-7 w-64" />
+                                        <Skeleton className="h-4 w-32" />
+                                    </div>
                                     <Skeleton className="h-6 w-24 rounded-full" />
                                 </div>
                             </CardHeader>
                             <CardContent className="space-y-6">
-                                <Skeleton className="h-4 w-full" />
-                                <Skeleton className="h-4 w-3/4" />
-                                <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-8 w-32" />
+                                {/* Summary Grid Skeleton */}
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-secondary/30 rounded-xl">
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-3 w-16" />
+                                        <Skeleton className="h-6 w-20" />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-5 w-28" />
-                                    </div>
-                                    <div className="space-y-2">
+                                    <div className="space-y-1">
                                         <Skeleton className="h-3 w-20" />
-                                        <Skeleton className="h-5 w-24" />
+                                        <Skeleton className="h-5 w-16" />
                                     </div>
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-5 w-32" />
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-3 w-16" />
+                                        <Skeleton className="h-5 w-12" />
                                     </div>
+                                    <div className="space-y-1">
+                                        <Skeleton className="h-3 w-20" />
+                                        <Skeleton className="h-5 w-20" />
+                                    </div>
+                                </div>
+
+                                <Separator />
+
+                                {/* Delivery Info Skeleton */}
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <Skeleton className="h-20 rounded-xl" />
+                                    <Skeleton className="h-20 rounded-xl" />
+                                </div>
+
+                                {/* Service Description Skeleton */}
+                                <Separator />
+                                <div className="space-y-2">
+                                    <Skeleton className="h-3 w-32" />
+                                    <Skeleton className="h-4 w-full" />
+                                    <Skeleton className="h-4 w-5/6" />
+                                    <Skeleton className="h-4 w-4/6" />
                                 </div>
                             </CardContent>
                         </Card>
@@ -247,36 +266,102 @@ export default function FreelancerOrderDetailPage() {
                         {/* Deliverables Skeleton */}
                         <Card className="rounded-[2rem] border-none">
                             <CardHeader>
-                                <Skeleton className="h-6 w-32" />
+                                <div className="flex items-center gap-2">
+                                    <Skeleton className="h-5 w-5" />
+                                    <Skeleton className="h-6 w-40" />
+                                </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {[...Array(2)].map((_, index) => (
-                                    <div key={index} className="p-4 bg-secondary/30 rounded-xl border border-border/50">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <Skeleton className="h-5 w-32" />
-                                            <Skeleton className="h-4 w-24" />
+                                    <div key={index} className="p-5 bg-secondary/30 rounded-xl border border-border/50">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <Skeleton className="h-10 w-10 rounded-lg" />
+                                                <div className="space-y-2">
+                                                    <div className="flex items-center gap-2">
+                                                        <Skeleton className="h-4 w-24" />
+                                                        <Skeleton className="h-5 w-16 rounded-full" />
+                                                        <Skeleton className="h-5 w-12 rounded-full" />
+                                                    </div>
+                                                    <Skeleton className="h-3 w-32" />
+                                                </div>
+                                            </div>
+                                            <Skeleton className="h-5 w-16 rounded-full" />
                                         </div>
-                                        <Skeleton className="h-4 w-full mt-2" />
-                                        <Skeleton className="h-4 w-3/4 mt-2" />
+                                        <Skeleton className="h-16 w-full rounded-lg" />
+                                        <Skeleton className="h-9 w-32 rounded-lg mt-3" />
                                     </div>
                                 ))}
+                            </CardContent>
+                        </Card>
+
+                        {/* Timeline Skeleton */}
+                        <Card className="rounded-[2rem] border-none">
+                            <CardHeader>
+                                <div className="flex items-center gap-2">
+                                    <Skeleton className="h-5 w-5" />
+                                    <Skeleton className="h-6 w-32" />
+                                </div>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-0">
+                                    {[...Array(3)].map((_, index) => (
+                                        <div key={index}>
+                                            <div className="flex items-start gap-4 py-4">
+                                                <Skeleton className="h-3 w-3 rounded-full mt-1" />
+                                                <div className="flex-1 space-y-2">
+                                                    <Skeleton className="h-4 w-3/4" />
+                                                    <Skeleton className="h-3 w-32" />
+                                                </div>
+                                            </div>
+                                            {index < 2 && <Separator className="ml-7" />}
+                                        </div>
+                                    ))}
+                                </div>
                             </CardContent>
                         </Card>
                     </div>
 
                     {/* Sidebar Skeleton */}
                     <div className="space-y-6">
+                        {/* Order Summary Skeleton */}
+                        <Card className="rounded-[2rem] border-none">
+                            <CardHeader>
+                                <Skeleton className="h-6 w-32" />
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                                <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                        <Skeleton className="h-4 w-12" />
+                                        <Skeleton className="h-5 w-16 rounded-full" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                        <Skeleton className="h-4 w-20" />
+                                        <Skeleton className="h-4 w-16" />
+                                    </div>
+                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-4 w-8" />
+                                    </div>
+                                </div>
+                            </CardContent>
+                        </Card>
+
                         {/* Client Info Skeleton */}
                         <Card className="rounded-[2rem] border-none">
                             <CardHeader>
-                                <Skeleton className="h-6 w-40" />
+                                <div className="flex items-center gap-2">
+                                    <Skeleton className="h-5 w-5" />
+                                    <Skeleton className="h-6 w-20" />
+                                </div>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 <div className="flex items-center gap-4">
-                                    <Skeleton className="w-12 h-12 rounded-full" />
+                                    <Skeleton className="w-14 h-14 rounded-full" />
                                     <div className="flex-1 space-y-2">
                                         <Skeleton className="h-4 w-32" />
                                         <Skeleton className="h-3 w-40" />
+                                        <Skeleton className="h-3 w-28" />
                                     </div>
                                 </div>
                             </CardContent>
@@ -285,9 +370,10 @@ export default function FreelancerOrderDetailPage() {
                         {/* Actions Skeleton */}
                         <Card className="rounded-[2rem] border-none">
                             <CardHeader>
-                                <Skeleton className="h-6 w-32" />
+                                <Skeleton className="h-6 w-24" />
                             </CardHeader>
                             <CardContent className="space-y-3">
+                                <Skeleton className="h-10 w-full rounded-lg" />
                                 <Skeleton className="h-10 w-full rounded-lg" />
                                 <Skeleton className="h-10 w-full rounded-lg" />
                             </CardContent>
@@ -337,153 +423,206 @@ export default function FreelancerOrderDetailPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
-                    {/* Order Info Card */}
+                    {/* Order Overview Card */}
                     <Card className="rounded-[2rem] border-none">
-                        <CardHeader>
+                        <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-xl font-normal">
+                                <div>
+                                    <CardTitle className="text-2xl font-normal mb-2">
                                     {order.service?.title || 'Service'}
                                 </CardTitle>
+                                    <p className="text-sm text-muted-foreground">
+                                        Order #{order.orderNumber}
+                                    </p>
+                                </div>
                                 {getStatusBadge(order.status)}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
-                            {order.service?.description && (
-                                <div>
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Description</Label>
-                                    <p className="mt-2 text-sm text-foreground">{order.service.description}</p>
-                                </div>
-                            )}
-
-                            <Separator />
-
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            {/* Order Summary Grid */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-secondary/30 rounded-xl">
                                 <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Project Amount</Label>
-                                    <p className="text-2xl font-normal text-foreground">
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Amount</Label>
+                                    <p className="text-lg font-semibold text-foreground">
                                         {formatCurrency(order.price, order.currency)}
                                     </p>
                                 </div>
                                 <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Delivery Date</Label>
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Delivery Time</Label>
+                                    <div className="flex items-center gap-1.5">
+                                        <Clock className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <p className="text-sm font-medium text-foreground">
+                                            {order.deliveryTime || 'N/A'} days
+                                        </p>
+                                    </div>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Revisions</Label>
+                                    <p className="text-sm font-medium text-foreground">
+                                        {order.revisionsUsed || 0} / {order.revisionsIncluded || 0}
+                                    </p>
+                                </div>
+                                <div className="space-y-1">
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Order Date</Label>
+                                    <div className="flex items-center gap-1.5">
+                                        <Calendar className="w-3.5 h-3.5 text-muted-foreground" />
+                                        <p className="text-sm font-medium text-foreground">
+                                            {format(new Date(order.createdAt), 'MMM d, yyyy')}
+                                        </p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <Separator />
+
+                            {/* Delivery Date & Completion Info */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="p-4 bg-secondary/20 rounded-xl border border-border/50">
+                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block">Expected Delivery</Label>
                                     <div className="flex items-center gap-2">
-                                        <Calendar className="w-4 h-4 text-muted-foreground" />
-                                        <p className="text-sm font-normal text-foreground">
+                                        <Calendar className="w-4 h-4 text-primary" />
+                                        <p className="text-sm font-medium text-foreground">
                                             {order.deliveryDate 
                                                 ? format(new Date(order.deliveryDate), 'MMM d, yyyy')
                                                 : 'Not set'}
                                         </p>
                                     </div>
                                 </div>
-                                <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Revisions</Label>
-                                    <p className="text-sm font-normal text-foreground">
-                                        {order.revisionsUsed || 0} / {order.revisionsIncluded || 0} used
-                                    </p>
-                                </div>
-                                <div className="space-y-1">
-                                    <Label className="text-xs text-muted-foreground uppercase tracking-widest">Order Date</Label>
-                                    <p className="text-sm font-normal text-foreground">
-                                        {format(new Date(order.createdAt), 'MMM d, yyyy HH:mm')}
-                                    </p>
-                                </div>
                                 {order.completedAt && (
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest">Completed At</Label>
-                                        <p className="text-sm font-normal text-foreground">
-                                            {format(new Date(order.completedAt), 'MMM d, yyyy HH:mm')}
-                                        </p>
+                                    <div className="p-4 bg-green-50 dark:bg-green-950/20 rounded-xl border border-green-200 dark:border-green-800/50">
+                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block">Completed On</Label>
+                                        <div className="flex items-center gap-2">
+                                            <CheckCircle2 className="w-4 h-4 text-green-600" />
+                                            <p className="text-sm font-medium text-foreground">
+                                                {format(new Date(order.completedAt), 'MMM d, yyyy')}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                                 {order.cancelledAt && (
-                                    <div className="space-y-1">
-                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest">Cancelled At</Label>
-                                        <p className="text-sm font-normal text-foreground">
-                                            {format(new Date(order.cancelledAt), 'MMM d, yyyy HH:mm')}
-                                        </p>
+                                    <div className="p-4 bg-red-50 dark:bg-red-950/20 rounded-xl border border-red-200 dark:border-red-800/50">
+                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block">Cancelled On</Label>
+                                        <div className="flex items-center gap-2">
+                                            <XCircle className="w-4 h-4 text-red-600" />
+                                            <p className="text-sm font-medium text-foreground">
+                                                {format(new Date(order.cancelledAt), 'MMM d, yyyy')}
+                                            </p>
+                                        </div>
                                     </div>
                                 )}
                             </div>
 
+                          
+
+                            {/* Cancellation Reason */}
                             {order.cancellationReason && (
                                 <>
                                     <Separator />
                                     <div>
-                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest">Cancellation Reason</Label>
-                                        <p className="mt-2 text-sm text-foreground">{order.cancellationReason}</p>
+                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest mb-2 block">Cancellation Reason</Label>
+                                        <p className="text-sm text-foreground">{order.cancellationReason}</p>
                                     </div>
                                 </>
                             )}
                         </CardContent>
                     </Card>
 
-                    {/* Deliverables */}
+                    {/* Deliverables - Show first as it's most important */}
                     {order.deliverables && order.deliverables.length > 0 && (
                         <Card className="rounded-[2rem] border-none">
                             <CardHeader>
-                                <CardTitle className="text-lg font-normal">Deliverables</CardTitle>
+                                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                                    <Package className="w-5 h-5" />
+                                    Deliverables ({order.deliverables.length})
+                                </CardTitle>
                             </CardHeader>
                             <CardContent className="space-y-4">
                                 {order.deliverables.map((deliverable, index) => (
-                                    <div key={deliverable.id} className="p-4 bg-secondary/30 rounded-xl border border-border/50">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <div className="flex items-center gap-2">
+                                    <div key={deliverable.id} className="p-5 bg-secondary/30 rounded-xl border border-border/50 hover:border-border transition-colors">
+                                        <div className="flex items-start justify-between mb-3">
+                                            <div className="flex items-center gap-3">
+                                                <div className="p-2 bg-primary/10 rounded-lg">
                                                 <Package className="w-4 h-4 text-primary" />
-                                                <span className="text-sm font-normal text-foreground">
+                                                </div>
+                                                <div>
+                                            <div className="flex items-center gap-2">
+                                                        <span className="text-sm font-semibold text-foreground">
                                                     Delivery #{order.deliverables.length - index}
                                                 </span>
                                                 {deliverable.isRevision && (
                                                     <Badge variant="outline" className="text-xs">
-                                                        Revision
+                                                                Revision {deliverable.revisionNumber || ''}
                                                     </Badge>
                                                 )}
+                                                        <Badge variant="secondary" className="text-xs">
+                                                            {deliverable.type}
+                                                        </Badge>
                                             </div>
+                                                    <div className="flex items-center gap-2 mt-1">
+                                                        <Clock className="w-3 h-3 text-muted-foreground" />
                                             <span className="text-xs text-muted-foreground">
-                                                {format(new Date(deliverable.deliveredAt), 'MMM d, yyyy HH:mm')}
+                                                            {format(new Date(deliverable.deliveredAt), 'MMM d, yyyy h:mm a')}
                                             </span>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {deliverable.acceptedAt && (
+                                                <Badge variant="outline" className="text-xs bg-green-50 text-green-700 border-green-200">
+                                                    Accepted
+                                                </Badge>
+                                            )}
+                                            {deliverable.rejectedAt && (
+                                                <Badge variant="outline" className="text-xs bg-red-50 text-red-700 border-red-200">
+                                                    Rejected
+                                                </Badge>
+                                            )}
                                         </div>
                                         {deliverable.message && (
-                                            <p className="text-sm text-muted-foreground mt-2">{deliverable.message}</p>
+                                            <div className="mt-3 p-3 bg-background rounded-lg border border-border/30">
+                                                <p className="text-sm text-foreground leading-relaxed whitespace-pre-wrap">
+                                                    {deliverable.message}
+                                                </p>
+                                            </div>
                                         )}
                                         {deliverable.fileUrl && (
+                                            <div className="mt-3">
                                             <a
                                                 href={deliverable.fileUrl}
                                                 target="_blank"
                                                 rel="noopener noreferrer"
-                                                className="text-sm text-primary hover:underline mt-2 inline-flex items-center gap-1"
+                                                    className="inline-flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors text-sm font-medium"
                                             >
-                                                <Download className="w-3 h-3" />
+                                                    <Download className="w-4 h-4" />
                                                 Download File
                                             </a>
-                                        )}
                                     </div>
-                                ))}
+                                        )}
+                                        {deliverable.rejectionReason && (
+                                            <div className="mt-3 p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800/50">
+                                                <p className="text-xs font-medium text-red-700 dark:text-red-400 mb-1">Rejection Reason:</p>
+                                                <p className="text-sm text-red-600 dark:text-red-300">
+                                                    {deliverable.rejectionReason}
+                                                </p>
+                                            </div>
+                                        )}
+                                        </div>
+                                    ))}
                             </CardContent>
                         </Card>
                     )}
 
-                    {/* Order Events/History */}
-                    {order.events && order.events.length > 0 && (
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <CardTitle className="text-lg font-normal">Order History</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-4">
-                                    {order.events.map((event, index) => (
-                                        <div key={event.id} className="flex items-start gap-4 pb-4 border-b border-border/50 last:border-0 last:pb-0">
-                                            <div className="w-2 h-2 rounded-full bg-primary mt-2 flex-shrink-0" />
-                                            <div className="flex-1">
-                                                <p className="text-sm font-normal text-foreground">{event.description || event.type}</p>
-                                                <p className="text-xs text-muted-foreground mt-1">
-                                                    {format(new Date(event.createdAt), 'MMM d, yyyy HH:mm')}
-                                                </p>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
+                    {/* Disputes Section - Show when order has disputes */}
+                    {order.disputes && order.disputes.length > 0 && (
+                        <>
+                            {order.disputes.map((dispute) => (
+                                <DisputeThread 
+                                    key={dispute.id} 
+                                    dispute={dispute} 
+                                    order={order}
+                                    onCommentAdded={() => fetchOrder()}
+                                />
+                            ))}
+                        </>
                     )}
 
                     {/* Reviews Section - Show for completed orders */}
@@ -582,56 +721,132 @@ export default function FreelancerOrderDetailPage() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* Order Timeline - Show at bottom for historical reference */}
+                    {order.events && order.events.length > 0 && (
+                        <Card className="rounded-[2rem] border-none">
+                            <CardHeader>
+                                <CardTitle className="text-lg font-normal flex items-center gap-2">
+                                    <Clock className="w-5 h-5" />
+                                    Order Timeline
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent>
+                                <div className="space-y-0">
+                                    {order.events.map((event, index) => (
+                                        <div key={event.id}>
+                                            <div className="flex items-start gap-4 py-4">
+                                                {/* Green dot */}
+                                                <div className="flex-shrink-0 mt-1">
+                                                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                                                </div>
+                                                
+                                                {/* Event content */}
+                                                <div className="flex-1 min-w-0">
+                                                    <p className="text-sm font-semibold text-foreground mb-1">
+                                                        {event.description || event.eventType?.replace(/_/g, ' ') || event.type}
+                                                    </p>
+                                                    <p className="text-xs text-muted-foreground">
+                                                        {format(new Date(event.createdAt), 'MMM d, yyyy')} {format(new Date(event.createdAt), 'HH:mm')}
+                                                    </p>
+                                                </div>
+                                            </div>
+                                            
+                                            {/* Separator line */}
+                                            {index < order.events.length - 1 && (
+                                                <Separator className="ml-7" />
+                                            )}
+                                        </div>
+                                    ))}
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
 
                 {/* Sidebar */}
                 <div className="space-y-6">
-                    {/* Client Info - Enhanced Profile */}
+                    {/* Order Summary Stats */}
                     <Card className="rounded-[2rem] border-none">
                         <CardHeader>
-                            <CardTitle className="text-lg font-normal">Client Profile</CardTitle>
+                            <CardTitle className="text-lg font-normal">Order Summary</CardTitle>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            <div className="space-y-3">
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Status</span>
+                                    {getStatusBadge(order.status)}
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Total Amount</span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {formatCurrency(order.price, order.currency)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
+                                    <span className="text-sm text-muted-foreground">Deliverables</span>
+                                    <span className="text-sm font-semibold text-foreground">
+                                        {order.deliverables?.length || 0}
+                                    </span>
+                                </div>
+                                {order.disputes && order.disputes.length > 0 && (
+                                    <div className="flex items-center justify-between p-3 bg-red-50 dark:bg-red-950/20 rounded-lg border border-red-200 dark:border-red-800/50">
+                                        <span className="text-sm text-muted-foreground">Disputes</span>
+                                        <Badge variant="destructive" className="text-xs">
+                                            {order.disputes.length}
+                                        </Badge>
+                                    </div>
+                                )}
+                            </div>
+                        </CardContent>
+                    </Card>
+
+                    {/* Client Info */}
+                    <Card className="rounded-[2rem] border-none">
+                        <CardHeader>
+                            <CardTitle className="text-lg font-normal flex items-center gap-2">
+                                <User className="w-5 h-5" />
+                                Client
+                            </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
-                                <div className="w-16 h-16 rounded-full bg-secondary border-2 border-border flex items-center justify-center overflow-hidden">
+                                <div className="w-14 h-14 rounded-full bg-secondary border border-border flex items-center justify-center flex-shrink-0">
                                     {order.client?.profileImage ? (
                                         <img 
                                             src={order.client.profileImage} 
                                             alt={order.client.name}
-                                            className="w-16 h-16 rounded-full object-cover"
+                                            className="w-14 h-14 rounded-full object-cover"
                                         />
                                     ) : (
-                                        <User className="w-8 h-8 text-primary" />
+                                        <User className="w-7 h-7 text-primary" />
                                     )}
                                 </div>
-                                <div className="flex-1">
-                                    <p className="font-semibold text-foreground text-base">
+                                <div className="min-w-0 flex-1">
+                                    <p className="font-medium text-foreground truncate">
                                         {order.client?.name || 'Unknown Client'}
                                     </p>
-                                    <p className="text-xs text-muted-foreground mt-0.5">
+                                    <p className="text-xs text-muted-foreground truncate">
                                         {order.client?.email || 'No email'}
                                     </p>
+                                    {order.client?.location && (
+                                        <p className="text-xs text-muted-foreground mt-1">
+                                            {order.client.location}
+                                        </p>
+                                    )}
                                     {order.client?.rating && (
                                         <div className="flex items-center gap-1.5 mt-2">
-                                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                                            <span className="text-sm font-medium text-foreground">
+                                            <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
+                                            <span className="text-xs font-medium text-foreground">
                                                 {typeof order.client.rating === 'number' ? order.client.rating.toFixed(1) : order.client.rating}
                                             </span>
                                             <span className="text-xs text-muted-foreground">
-                                                ({order.client.reviewCount || 0} reviews)
+                                                ({order.client.reviewCount || 0})
                                             </span>
                                         </div>
                                     )}
                                 </div>
                             </div>
-                            {order.client?.location && (
-                                <div className="pt-3 border-t border-border">
-                                    <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                                        <Calendar className="w-4 h-4" />
-                                        <span>{order.client.location}</span>
-                                    </div>
-                                </div>
-                            )}
                         </CardContent>
                     </Card>
 
