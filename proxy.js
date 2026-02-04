@@ -22,6 +22,7 @@ export function proxy(request) {
         if (pathname.startsWith('/dashboard/freelancer')) {
             const normalizedRole = role ? role.toUpperCase() : '';
             if (normalizedRole !== 'FREELANCER' && normalizedRole !== 'ADMIN') {
+                // Unauthorized user - redirect to home
                 return NextResponse.redirect(new URL('/', request.url));
             }
         }
@@ -51,3 +52,4 @@ export function proxy(request) {
 export const config = {
     matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup'],
 };
+

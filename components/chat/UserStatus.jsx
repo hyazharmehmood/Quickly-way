@@ -1,8 +1,8 @@
 "use client";
 
 import React from 'react';
-import { Circle } from 'lucide-react';
 import usePresenceStore from '@/store/usePresenceStore';
+import usePublicPresenceStore from '@/store/usePublicPresenceStore';
 import useAuthStore from '@/store/useAuthStore';
 
 /**
@@ -10,12 +10,19 @@ import useAuthStore from '@/store/useAuthStore';
  * Status logic:
  * - 🟢 Online: User socket is connected (logged in and connected)
  * - ⚫ Offline: User socket is disconnected (logged out or disconnected)
+ * 
+ * For authenticated users: Uses usePresenceStore (full data)
+ * For guest users: Uses usePublicPresenceStore (freelancer IDs only)
  */
 export function UserStatus({ userId, showLabel = false, size = 'sm' }) {
-  const { getUserStatus } = usePresenceStore();
-  const { user: currentUser } = useAuthStore();
+  const { getUserStatus: getAuthStatus } = usePresenceStore();
+  const { getUserStatus: getPublicStatus } = usePublicPresenceStore();
+  const { user: currentUser, isLoggedIn } = useAuthStore();
   
-  const status = getUserStatus(userId, currentUser?.id);
+  // Use authenticated store if logged in, otherwise use public store
+  const status = isLoggedIn 
+    ? getAuthStatus(userId, currentUser?.id)
+    : getPublicStatus(userId);
   
   const statusConfig = {
     online: {

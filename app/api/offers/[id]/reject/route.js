@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
+const { emitOfferEvent } = require('@/lib/socket');
 
 /**
  * POST /api/offers/[id]/reject - Reject offer by client (no order created)
@@ -65,7 +66,6 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO event
     try {
-      const { emitOfferEvent } = require('@/lib/socket');
       emitOfferEvent('OFFER_REJECTED', offer);
     } catch (socketError) {
       console.error('Failed to emit offer event:', socketError);

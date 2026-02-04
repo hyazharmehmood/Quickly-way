@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
-const { emitOrderEvent } = require('@/lib/socket');
+const { emitOrderEvent, emitOfferEvent } = require('@/lib/socket');
 
 /**
  * POST /api/offers/[id]/accept - Accept offer by client (creates order)
@@ -61,7 +61,6 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO events
     try {
-      const { emitOfferEvent, emitOrderEvent } = require('@/lib/socket');
       // Emit offer update
       emitOfferEvent('OFFER_ACCEPTED', offer);
       // Emit order created event

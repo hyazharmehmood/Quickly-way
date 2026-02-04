@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
-const { emitOrderEvent } = require('@/lib/socket');
+const { emitOrderEvent, emitOfferEvent } = require('@/lib/socket');
 
 /**
  * POST /api/offers - Create a new offer (freelancer sends offer to client)
@@ -79,7 +79,6 @@ export async function POST(request) {
 
     // Emit Socket.IO event for new offer
     try {
-      const { emitOfferEvent } = require('@/lib/socket');
       emitOfferEvent('OFFER_CREATED', offer);
     } catch (socketError) {
       console.error('Failed to emit offer event:', socketError);
