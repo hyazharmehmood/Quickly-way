@@ -29,6 +29,7 @@ export async function GET(request, { params }) {
                 languages: true,
                 availability: true,
                 createdAt: true,
+                role: true,
                 // rating: true,        // Uncomment after migration
                 // reviewCount: true,   // Uncomment after migration
             }
@@ -36,7 +37,15 @@ export async function GET(request, { params }) {
 
         if (!freelancer) {
             return NextResponse.json(
-                { error: 'Freelancer not found' },
+                { success: false, error: 'Freelancer not found' },
+                { status: HTTP_STATUS.NOT_FOUND }
+            );
+        }
+
+        // Check if user is actually a freelancer
+        if (freelancer.role !== 'FREELANCER' && freelancer.role !== 'ADMIN') {
+            return NextResponse.json(
+                { success: false, error: 'User is not a freelancer' },
                 { status: HTTP_STATUS.NOT_FOUND }
             );
         }

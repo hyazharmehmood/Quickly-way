@@ -17,6 +17,9 @@ module.exports = {
       },
     },
     extend: {
+      fontFamily: {
+        sans: ['var(--font-poppins)', 'system-ui', '-apple-system', 'sans-serif'],
+      },
       maxWidth: {
         '7xl': '1440px',
       },
