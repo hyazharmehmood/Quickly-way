@@ -997,7 +997,7 @@ export default function OrderDetailPage() {
                                 className="w-full border-border"
                                 onClick={handleChat}
                             >
-                                <MessageSquare className="w-4 h-4 mr-2" /> Open Chat
+                                <MessageSquare className="w-4 h-4 " /> Open Chat
                             </Button>
 
                             {isFreelancer && (order.status === 'IN_PROGRESS' || order.status === 'REVISION_REQUESTED') && (
@@ -1005,7 +1005,7 @@ export default function OrderDetailPage() {
                                     className="w-full bg-primary text-primary-foreground"
                                     onClick={() => setShowDeliverDialog(true)}
                                 >
-                                    <Package className="w-4 h-4 mr-2" /> Deliver Order
+                                    <Package className="w-4 h-4 " /> Deliver Order
                                 </Button>
                             )}
 
@@ -1018,7 +1018,7 @@ export default function OrderDetailPage() {
                                                 className="w-full bg-primary text-primary-foreground"
                                                 onClick={handleAcceptDelivery}
                                             >
-                                                <CheckCircle2 className="w-4 h-4 mr-2" /> Accept & Complete
+                                                <CheckCircle2 className="w-4 h-4 " /> Accept & Complete
                                             </Button>
                                             {order.revisionsUsed < order.revisionsIncluded && (
                                                 <Button
@@ -1026,7 +1026,7 @@ export default function OrderDetailPage() {
                                                     className="w-full border-border"
                                                     onClick={() => setShowRevisionDialog(true)}
                                                 >
-                                                    <RefreshCw className="w-4 h-4 mr-2" /> Request Revision
+                                                    <RefreshCw className="w-4 h-4 " /> Request Revision
                                                 </Button>
                                             )}
                                             {/* Only show dispute button if no active dispute exists */}
@@ -1036,7 +1036,7 @@ export default function OrderDetailPage() {
                                                 className="w-full border-destructive text-destructive hover:bg-destructive/10"
                                                 onClick={() => setShowDisputeDialog(true)}
                                             >
-                                                <AlertCircle className="w-4 h-4 mr-2" /> Open Dispute
+                                                <AlertCircle className="w-4 h-4 " /> Open Dispute
                                             </Button>
                                             )}
                                         </>
@@ -1060,7 +1060,7 @@ export default function OrderDetailPage() {
                                             className="w-full border-destructive text-destructive hover:bg-destructive/10"
                                             onClick={() => setShowDisputeDialog(true)}
                                         >
-                                            <AlertCircle className="w-4 h-4 mr-2" /> Open Dispute
+                                            <AlertCircle className="w-4 h-4 " /> Open Dispute
                                         </Button>
                                     )}
                                 </>
@@ -1073,7 +1073,7 @@ export default function OrderDetailPage() {
                                     className="w-full text-destructive hover:text-destructive"
                                     onClick={() => setShowCancelDialog(true)}
                                 >
-                                    <XCircle className="w-4 h-4 mr-2" /> Cancel Order
+                                    <XCircle className="w-4 h-4 " /> Cancel Order
                                 </Button>
                             )}
 
@@ -1087,7 +1087,7 @@ export default function OrderDetailPage() {
                                         className="w-full bg-primary text-primary-foreground"
                                         onClick={() => setShowDeliverDialog(true)}
                                     >
-                                        <Package className="w-4 h-4 mr-2" /> Re-deliver
+                                        <Package className="w-4 h-4 " /> Re-deliver
                                     </Button>
                                 </div>
                             )}
@@ -1097,7 +1097,7 @@ export default function OrderDetailPage() {
                                     variant="secondary"
                                     className="w-full bg-primary/10 text-primary border border-primary/20"
                                 >
-                                    <Download className="w-4 h-4 mr-2" /> Download Assets
+                                    <Download className="w-4 h-4 " /> Download Assets
                                 </Button>
                             )}
 
@@ -1111,7 +1111,7 @@ export default function OrderDetailPage() {
                                                     className="w-full bg-primary text-primary-foreground"
                                                     onClick={() => setShowReviewModal(true)}
                                                 >
-                                                    <Star className="w-4 h-4 mr-2" /> Create Review
+                                                    <Star className="w-4 h-4 " /> Create Review
                                                 </Button>
                                             )}
                                             {/* Edit Review button removed for clients - reviews cannot be edited */}
@@ -1124,7 +1124,7 @@ export default function OrderDetailPage() {
                                                     className="w-full bg-primary text-primary-foreground"
                                                     onClick={() => setShowReviewModal(true)}
                                                 >
-                                                    <Star className="w-4 h-4 mr-2" /> Review Client
+                                                    <Star className="w-4 h-4 " /> Review Client
                                                 </Button>
                                             )}
                                             {/* Edit Review button removed - reviews cannot be edited */}
