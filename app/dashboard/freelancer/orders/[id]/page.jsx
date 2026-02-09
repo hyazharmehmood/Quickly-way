@@ -2,54 +2,28 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    ArrowLeft, ShoppingBag, Clock, CheckCircle2, XCircle,
-    MessageSquare, Download, Package, AlertCircle, User,
-    Calendar, DollarSign, FileText, RefreshCw, Star, Edit
+    ArrowLeft, Clock, CheckCircle2, XCircle,
+    MessageSquare, Download, Package, User,
+    Calendar, Star, Edit
 } from 'lucide-react';
 import { ReviewModal } from '@/components/review/ReviewModal';
 import DisputeThread from '@/components/dispute/DisputeThread';
+import {
+    OrderDetailSkeleton,
+    OrderStatusBadge,
+    DeliverDialog,
+    CancelOrderDialog,
+} from '@/components/order';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { Separator } from "@/components/ui/separator";
 import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-    DialogFooter,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
-const STATUS_CONFIG = {
-    PENDING_ACCEPTANCE: { label: 'PENDING', color: 'bg-orange-100 text-orange-600 border-orange-200' },
-    IN_PROGRESS: { label: 'IN PROGRESS', color: 'bg-blue-100 text-blue-600 border-blue-200' },
-    DELIVERED: { label: 'DELIVERED', color: 'bg-purple-100 text-purple-600 border-purple-200' },
-    REVISION_REQUESTED: { label: 'REVISION', color: 'bg-yellow-100 text-yellow-600 border-yellow-200' },
-    COMPLETED: { label: 'COMPLETED', color: 'bg-green-100 text-green-600 border-green-200' },
-    CANCELLED: { label: 'CANCELLED', color: 'bg-red-100 text-red-600 border-red-200' },
-    DISPUTED: { label: 'DISPUTED', color: 'bg-red-200 text-red-700 border-red-300' },
-};
 
 export default function FreelancerOrderDetailPage() {
     const router = useRouter();
@@ -59,8 +33,6 @@ export default function FreelancerOrderDetailPage() {
     const [loading, setLoading] = useState(true);
     const [showDeliverDialog, setShowDeliverDialog] = useState(false);
     const [showCancelDialog, setShowCancelDialog] = useState(false);
-    const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
-    const [cancelReason, setCancelReason] = useState('');
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [canReview, setCanReview] = useState({ canReview: false, reason: null });
@@ -123,63 +95,34 @@ export default function FreelancerOrderDetailPage() {
         }
     };
 
-    const getStatusBadge = (status) => {
-        const config = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING_ACCEPTANCE;
-        return (
-            <Badge variant="secondary" className={config.color}>
-                {config.label}
-            </Badge>
-        );
-    };
-
-    const handleDeliver = async () => {
-        if (!order) return;
-        if (deliveryData.type === 'MESSAGE' && !deliveryData.message.trim()) {
-            toast.error('Please enter a delivery message');
-            return;
-        }
-        if (deliveryData.type === 'FILE' && !deliveryData.fileUrl.trim()) {
-            toast.error('Please provide a file URL');
-            return;
-        }
-
+    const handleDeliver = async (payload) => {
+        if (!order) return {};
         try {
-            const response = await api.post(`/orders/${order.id}/deliver`, {
-                type: deliveryData.type,
-                message: deliveryData.message,
-                fileUrl: deliveryData.fileUrl,
-                isRevision: order.status === 'REVISION_REQUESTED',
-            });
+            const response = await api.post(`/orders/${order.id}/deliver`, payload);
             if (response.data.success) {
                 toast.success('Delivery submitted successfully');
-                setShowDeliverDialog(false);
-                setDeliveryData({ type: 'MESSAGE', message: '', fileUrl: '' });
-                fetchOrder();
+                await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to submit delivery');
         }
+        return {};
     };
 
-    const handleCancel = async () => {
-        if (!order || !cancelReason.trim()) {
-            toast.error('Please provide a cancellation reason');
-            return;
-        }
-
+    const handleCancel = async (reason) => {
+        if (!order) return {};
         try {
-            const response = await api.post(`/orders/${order.id}/cancel`, {
-                reason: cancelReason.trim(),
-            });
+            const response = await api.post(`/orders/${order.id}/cancel`, { reason });
             if (response.data.success) {
                 toast.success('Order cancelled successfully');
-                setShowCancelDialog(false);
-                setCancelReason('');
-                fetchOrder();
+                await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to cancel order');
         }
+        return {};
     };
 
     const handleChat = () => {
@@ -197,111 +140,11 @@ export default function FreelancerOrderDetailPage() {
         }).format(amount || 0);
     };
 
-    if (loading) {
-        return (
-            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
-                {/* Header Skeleton */}
-                <div className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-xl" />
-                    <div className="space-y-2">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-32" />
-                    </div>
-                </div>
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content Skeleton */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Order Info Card Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <div className="flex items-center justify-between">
-                                    <Skeleton className="h-6 w-48" />
-                                    <Skeleton className="h-6 w-24 rounded-full" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                <Skeleton className="h-4 w-full" />
-                                <Skeleton className="h-4 w-3/4" />
-                                <Separator />
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-8 w-32" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-5 w-28" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-20" />
-                                        <Skeleton className="h-5 w-24" />
-                                    </div>
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-3 w-24" />
-                                        <Skeleton className="h-5 w-32" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Deliverables Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <Skeleton className="h-6 w-32" />
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {[...Array(2)].map((_, index) => (
-                                    <div key={index} className="p-4 bg-secondary/30 rounded-xl border border-border/50">
-                                        <div className="flex items-center justify-between mb-2">
-                                            <Skeleton className="h-5 w-32" />
-                                            <Skeleton className="h-4 w-24" />
-                                        </div>
-                                        <Skeleton className="h-4 w-full mt-2" />
-                                        <Skeleton className="h-4 w-3/4 mt-2" />
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Sidebar Skeleton */}
-                    <div className="space-y-6">
-                        {/* Client Info Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <Skeleton className="h-6 w-40" />
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <Skeleton className="w-12 h-12 rounded-full" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-32" />
-                                        <Skeleton className="h-3 w-40" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Actions Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <Skeleton className="h-6 w-32" />
-                            </CardHeader>
-                            <CardContent className="space-y-3">
-                                <Skeleton className="h-10 w-full rounded-lg" />
-                                <Skeleton className="h-10 w-full rounded-lg" />
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <OrderDetailSkeleton />;
 
     if (!order) {
         return (
-            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
+            <div className="max-w-7xl mx-auto ">
                 <Card className="rounded-[2rem] border-none">
                     <CardContent className="p-8 text-center">
                         <p className="text-muted-foreground">Order not found</p>
@@ -315,7 +158,7 @@ export default function FreelancerOrderDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
+        <div className="max-w-7xl mx-auto py-6 animate-in fade-in duration-500 space-y-6">
             <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
@@ -326,10 +169,10 @@ export default function FreelancerOrderDetailPage() {
                     <ArrowLeft className="w-5 h-5" />
                 </Button>
                 <div>
-                    <h1 className="text-2xl font-normal text-foreground tracking-tight">
+                    <h1 className="text-xl font-normal text-foreground tracking-tight">
                         Order Details
                     </h1>
-                    <p className="text-sm text-muted-foreground mt-1">
+                    <p className="text-sm text-muted-foreground">
                         {order.orderNumber || order.id.slice(0, 8)}
                     </p>
                 </div>
@@ -350,7 +193,6 @@ export default function FreelancerOrderDetailPage() {
                                         Order #{order.orderNumber}
                                     </p>
                                 </div>
-                                {getStatusBadge(order.status)}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -690,7 +532,7 @@ export default function FreelancerOrderDetailPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                                     <span className="text-sm text-muted-foreground">Status</span>
-                                    {getStatusBadge(order.status)}
+                                    <OrderStatusBadge status={order.status} />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                                     <span className="text-sm text-muted-foreground">Total Amount</span>
@@ -832,90 +674,18 @@ export default function FreelancerOrderDetailPage() {
                 />
             )}
 
-            {/* Deliver Dialog */}
-            <Dialog open={showDeliverDialog} onOpenChange={setShowDeliverDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Submit Delivery</DialogTitle>
-                        <DialogDescription>
-                            Submit your work for order {order?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Delivery Type</Label>
-                            <Select 
-                                value={deliveryData.type} 
-                                onValueChange={(value) => setDeliveryData({ ...deliveryData, type: value })}
-                            >
-                                <SelectTrigger className="mt-2">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="MESSAGE">Message</SelectItem>
-                                    <SelectItem value="FILE">File URL</SelectItem>
-                                    <SelectItem value="LINK">Link</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {deliveryData.type === 'MESSAGE' && (
-                            <div>
-                                <Label>Delivery Message</Label>
-                                <Textarea
-                                    value={deliveryData.message}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, message: e.target.value })}
-                                    placeholder="Describe what you've delivered..."
-                                    rows={4}
-                                    className="mt-2"
-                                />
-                            </div>
-                        )}
-                        {(deliveryData.type === 'FILE' || deliveryData.type === 'LINK') && (
-                            <div>
-                                <Label>{deliveryData.type === 'FILE' ? 'File URL' : 'Link'}</Label>
-                                <Input
-                                    value={deliveryData.fileUrl}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, fileUrl: e.target.value })}
-                                    placeholder={deliveryData.type === 'FILE' ? 'https://...' : 'https://...'}
-                                    className="mt-2"
-                                />
-                            </div>
-                        )}
-                    </div>
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setShowDeliverDialog(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleDeliver}>
-                            Submit Delivery
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
-
-            {/* Cancel Dialog */}
-            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Please provide a reason for cancelling order {order?.orderNumber}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="space-y-4">
-                        <Textarea
-                            value={cancelReason}
-                            onChange={(e) => setCancelReason(e.target.value)}
-                            placeholder="Reason for cancellation..."
-                            rows={4}
-                        />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCancel}>Confirm Cancellation</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
+            <DeliverDialog
+                open={showDeliverDialog}
+                onOpenChange={setShowDeliverDialog}
+                order={order}
+                onSuccess={handleDeliver}
+            />
+            <CancelOrderDialog
+                open={showCancelDialog}
+                onOpenChange={setShowCancelDialog}
+                order={order}
+                onConfirm={handleCancel}
+            />
         </div>
     );
 }

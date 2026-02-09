@@ -2,53 +2,30 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-    ArrowLeft, ShoppingBag, Clock, CheckCircle2, XCircle,
+    ArrowLeft, Clock, CheckCircle2, XCircle,
     MessageSquare, Download, Package, AlertCircle, User,
-    Calendar, DollarSign, FileText, RefreshCw, Star, Edit
+    Calendar, RefreshCw, Star
 } from 'lucide-react';
 import { ReviewModal } from '@/components/review/ReviewModal';
 import DisputeThread from '@/components/dispute/DisputeThread';
+import {
+    OrderDetailSkeleton,
+    OrderStatusBadge,
+    DeliverDialog,
+    CancelOrderDialog,
+    RevisionDialog,
+    DisputeDialog,
+} from '@/components/order';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from "@/components/ui/label";
 import { Separator } from "@/components/ui/separator";
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
-import {
-    Dialog,
-    DialogContent,
-    DialogHeader,
-    DialogTitle,
-    DialogDescription,
-} from "@/components/ui/dialog";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
-import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-
-const STATUS_CONFIG = {
-    PENDING_ACCEPTANCE: { label: 'PENDING', color: 'bg-orange-100 text-orange-600 border-orange-200' },
-    IN_PROGRESS: { label: 'IN PROGRESS', color: 'bg-blue-100 text-blue-600 border-blue-200' },
-    DELIVERED: { label: 'DELIVERED', color: 'bg-purple-100 text-purple-600 border-purple-200' },
-    REVISION_REQUESTED: { label: 'REVISION', color: 'bg-yellow-100 text-yellow-600 border-yellow-200' },
-    COMPLETED: { label: 'COMPLETED', color: 'bg-green-100 text-green-600 border-green-200' },
-    CANCELLED: { label: 'CANCELLED', color: 'bg-red-100 text-red-600 border-red-200' },
-    DISPUTED: { label: 'DISPUTED', color: 'bg-red-200 text-red-700 border-red-300' },
-};
 
 export default function OrderDetailPage() {
     const router = useRouter();
@@ -60,12 +37,6 @@ export default function OrderDetailPage() {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [showRevisionDialog, setShowRevisionDialog] = useState(false);
     const [showDisputeDialog, setShowDisputeDialog] = useState(false);
-    const [deliveryData, setDeliveryData] = useState({ type: 'MESSAGE', message: '', fileUrl: '' });
-    const [cancelReason, setCancelReason] = useState('');
-    const [revisionReason, setRevisionReason] = useState('');
-    const [disputeReason, setDisputeReason] = useState('');
-    const [disputeDescription, setDisputeDescription] = useState('');
-    const [disputeAttachments, setDisputeAttachments] = useState([]);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [canReview, setCanReview] = useState({ canReview: false, reason: null });
@@ -112,84 +83,49 @@ export default function OrderDetailPage() {
         }
     };
 
-    const getStatusBadge = (status) => {
-        const config = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING_ACCEPTANCE;
-        return (
-            <Badge variant="secondary" className={config.color}>
-                {config.label}
-            </Badge>
-        );
-    };
-
-    const handleDeliver = async () => {
-        if (!order) return;
-        if (deliveryData.type === 'MESSAGE' && !deliveryData.message.trim()) {
-            toast.error('Please enter a delivery message');
-            return;
-        }
-        if (deliveryData.type === 'FILE' && !deliveryData.fileUrl.trim()) {
-            toast.error('Please provide a file URL');
-            return;
-        }
-
+    const handleDeliver = async (payload) => {
+        if (!order) return {};
         try {
-            const response = await api.post(`/orders/${order.id}/deliver`, {
-                type: deliveryData.type,
-                message: deliveryData.message,
-                fileUrl: deliveryData.fileUrl,
-                isRevision: order.status === 'REVISION_REQUESTED',
-            });
+            const response = await api.post(`/orders/${order.id}/deliver`, payload);
             if (response.data.success) {
                 toast.success('Delivery submitted successfully');
-                setShowDeliverDialog(false);
-                setDeliveryData({ type: 'MESSAGE', message: '', fileUrl: '' });
-                fetchOrder();
+                await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to submit delivery');
         }
+        return {};
     };
 
-    const handleCancel = async () => {
-        if (!order || !cancelReason.trim()) {
-            toast.error('Please provide a cancellation reason');
-            return;
-        }
-
+    const handleCancel = async (reason) => {
+        if (!order) return {};
         try {
-            const response = await api.post(`/orders/${order.id}/cancel`, {
-                reason: cancelReason.trim(),
-            });
+            const response = await api.post(`/orders/${order.id}/cancel`, { reason });
             if (response.data.success) {
                 toast.success('Order cancelled successfully');
-                setShowCancelDialog(false);
-                setCancelReason('');
-                fetchOrder();
+                await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to cancel order');
         }
+        return {};
     };
 
-    const handleRequestRevision = async () => {
-        if (!order || !revisionReason.trim()) {
-            toast.error('Please provide a revision reason');
-            return;
-        }
-
+    const handleRequestRevision = async (reason) => {
+        if (!order) return {};
         try {
-            const response = await api.post(`/orders/${order.id}/revision`, {
-                reason: revisionReason.trim(),
-            });
+            const response = await api.post(`/orders/${order.id}/revision`, { reason });
             if (response.data.success) {
                 toast.success('Revision requested successfully');
-                setShowRevisionDialog(false);
-                setRevisionReason('');
-                fetchOrder();
+                await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to request revision');
         }
+        return {};
     };
 
     const fetchReviews = async () => {
@@ -262,44 +198,34 @@ export default function OrderDetailPage() {
         return reviews.find(r => r.isClientReview === false && r.reviewerId === user?.id);
     };
 
-    const handleOpenDispute = async () => {
-        if (!order || !disputeReason.trim() || !disputeDescription.trim()) {
-            toast.error('Please provide both reason and description for the dispute');
-            return;
-        }
-
+    const handleOpenDispute = async ({ reason, description, attachments: files }) => {
+        if (!order) return {};
         try {
-            // Upload attachments if any
             let attachments = null;
-            if (disputeAttachments.length > 0) {
+            if (files?.length > 0) {
                 const { uploadToCloudinary } = await import('@/utils/cloudinary');
-                const uploadPromises = disputeAttachments.map(async (file) => {
-                    const url = await uploadToCloudinary(file);
-                    return {
-                        url,
+                attachments = await Promise.all(
+                    files.map(async (file) => ({
+                        url: await uploadToCloudinary(file),
                         name: file.name,
                         type: file.type.startsWith('image/') ? 'image' : 'file',
-                    };
-                });
-                attachments = await Promise.all(uploadPromises);
+                    }))
+                );
             }
-
             const response = await api.post(`/orders/${order.id}/dispute`, {
-                reason: disputeReason.trim(),
-                description: disputeDescription.trim(),
+                reason,
+                description,
                 attachments,
             });
             if (response.data.success) {
-                toast.success('Dispute opened successfully. Chat is now locked. Use the dispute thread to communicate.');
-                setShowDisputeDialog(false);
-                setDisputeReason('');
-                setDisputeDescription('');
-                setDisputeAttachments([]);
+                toast.success('Dispute opened. Use the dispute thread to communicate.');
                 await fetchOrder();
+                return response.data;
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to open dispute');
         }
+        return {};
     };
 
     const handleChat = () => {
@@ -313,209 +239,7 @@ export default function OrderDetailPage() {
         }
     };
 
-    if (loading) {
-        return (
-            <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
-                {/* Header Skeleton */}
-                {/* <div className="flex items-center gap-4">
-                    <Skeleton className="h-10 w-10 rounded-xl" />
-                    <div className="space-y-2">
-                        <Skeleton className="h-8 w-48" />
-                        <Skeleton className="h-4 w-32" />
-                    </div>
-                </div> */}
-
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Main Content Skeleton */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Order Overview Card Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader className="pb-4">
-                                <div className="flex items-center justify-between">
-                                    <div className="space-y-2">
-                                        <Skeleton className="h-7 w-64" />
-                                        <Skeleton className="h-4 w-32" />
-                                    </div>
-                                    <Skeleton className="h-6 w-24 rounded-full" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
-                                {/* Summary Grid Skeleton */}
-                                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 p-4 bg-secondary/30 rounded-xl">
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-3 w-16" />
-                                        <Skeleton className="h-6 w-20" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-3 w-20" />
-                                        <Skeleton className="h-5 w-16" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-3 w-16" />
-                                        <Skeleton className="h-5 w-12" />
-                                    </div>
-                                    <div className="space-y-1">
-                                        <Skeleton className="h-3 w-20" />
-                                        <Skeleton className="h-5 w-20" />
-                                    </div>
-                                </div>
-
-                                <Separator />
-
-                                {/* Delivery Info Skeleton */}
-                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                    <Skeleton className="h-20 rounded-xl" />
-                                    <Skeleton className="h-20 rounded-xl" />
-                                </div>
-
-                                {/* Service Description Skeleton */}
-                                <Separator />
-                                <div className="space-y-2">
-                                    <Skeleton className="h-3 w-32" />
-                                    <Skeleton className="h-4 w-full" />
-                                    <Skeleton className="h-4 w-5/6" />
-                                    <Skeleton className="h-4 w-4/6" />
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Deliverables Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-5 w-5" />
-                                    <Skeleton className="h-6 w-40" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                {[...Array(2)].map((_, index) => (
-                                    <div key={index} className="p-5 bg-secondary/30 rounded-xl border border-border/50">
-                                        <div className="flex items-start justify-between mb-3">
-                                            <div className="flex items-center gap-3">
-                                                <Skeleton className="h-10 w-10 rounded-lg" />
-                                                <div className="space-y-2">
-                                                    <div className="flex items-center gap-2">
-                                                        <Skeleton className="h-4 w-24" />
-                                                        <Skeleton className="h-5 w-16 rounded-full" />
-                                                        <Skeleton className="h-5 w-12 rounded-full" />
-                                                    </div>
-                                                    <Skeleton className="h-3 w-32" />
-                                                </div>
-                                            </div>
-                                            <Skeleton className="h-5 w-16 rounded-full" />
-                                        </div>
-                                        <Skeleton className="h-16 w-full rounded-lg" />
-                                        <Skeleton className="h-9 w-32 rounded-lg mt-3" />
-                                    </div>
-                                ))}
-                            </CardContent>
-                        </Card>
-
-                        {/* Timeline Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-5 w-5" />
-                                    <Skeleton className="h-6 w-32" />
-                                </div>
-                            </CardHeader>
-                            <CardContent>
-                                <div className="space-y-0">
-                                    {[...Array(3)].map((_, index) => (
-                                        <div key={index}>
-                                            <div className="flex items-start gap-4 py-4">
-                                                <Skeleton className="h-3 w-3 rounded-full mt-1" />
-                                                <div className="flex-1 space-y-2">
-                                                    <Skeleton className="h-4 w-3/4" />
-                                                    <Skeleton className="h-3 w-32" />
-                                                </div>
-                                            </div>
-                                            {index < 2 && <Separator className="ml-7" />}
-                                        </div>
-                                    ))}
-                                </div>
-                            </CardContent>
-                        </Card>
-                    </div>
-
-                    {/* Sidebar Skeleton */}
-                    <div className="space-y-6">
-                        {/* Order Summary Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <Skeleton className="h-6 w-32" />
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="space-y-3">
-                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                                        <Skeleton className="h-4 w-12" />
-                                        <Skeleton className="h-5 w-16 rounded-full" />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                                        <Skeleton className="h-4 w-20" />
-                                        <Skeleton className="h-4 w-16" />
-                                    </div>
-                                    <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
-                                        <Skeleton className="h-4 w-24" />
-                                        <Skeleton className="h-4 w-8" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Client Info Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-5 w-5" />
-                                    <Skeleton className="h-6 w-20" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <Skeleton className="w-14 h-14 rounded-full" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-32" />
-                                        <Skeleton className="h-3 w-40" />
-                                        <Skeleton className="h-3 w-28" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Freelancer Info Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardHeader>
-                                <div className="flex items-center gap-2">
-                                    <Skeleton className="h-5 w-5" />
-                                    <Skeleton className="h-6 w-28" />
-                                </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                                <div className="flex items-center gap-4">
-                                    <Skeleton className="w-14 h-14 rounded-full" />
-                                    <div className="flex-1 space-y-2">
-                                        <Skeleton className="h-4 w-32" />
-                                        <Skeleton className="h-3 w-40" />
-                                        <Skeleton className="h-3 w-28" />
-                                    </div>
-                                </div>
-                            </CardContent>
-                        </Card>
-
-                        {/* Actions Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
-                            <CardContent className="p-6 space-y-3">
-                                <Skeleton className="h-10 w-full rounded-lg" />
-                                <Skeleton className="h-10 w-full rounded-lg" />
-                                <Skeleton className="h-10 w-full rounded-lg" />
-                            </CardContent>
-                        </Card>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    if (loading) return <OrderDetailSkeleton />;
 
     if (!order) {
         return (
@@ -533,7 +257,7 @@ export default function OrderDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
+        <div className="max-w-7xl mx-auto  animate-in fade-in duration-500 space-y-6">
             {/* <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
@@ -568,7 +292,7 @@ export default function OrderDetailPage() {
                                         Order #{order.orderNumber}
                                     </p>
                                 </div>
-                                {getStatusBadge(order.status)}
+                                <OrderStatusBadge status={order.status} />
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
@@ -887,7 +611,7 @@ export default function OrderDetailPage() {
                             <div className="space-y-3">
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                                     <span className="text-sm text-muted-foreground">Status</span>
-                                    {getStatusBadge(order.status)}
+                                    <OrderStatusBadge status={order.status} />
                                 </div>
                                 <div className="flex items-center justify-between p-3 bg-secondary/30 rounded-lg">
                                     <span className="text-sm text-muted-foreground">Total Amount</span>
@@ -1152,191 +876,30 @@ export default function OrderDetailPage() {
                 />
             )}
 
-            {/* Deliver Dialog */}
-            <Dialog open={showDeliverDialog} onOpenChange={setShowDeliverDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Submit Delivery</DialogTitle>
-                        <DialogDescription>
-                            Submit your work for order {order?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Delivery Type</Label>
-                            <Select 
-                                value={deliveryData.type} 
-                                onValueChange={(value) => setDeliveryData({ ...deliveryData, type: value })}
-                            >
-                                <SelectTrigger>
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="MESSAGE">Message</SelectItem>
-                                    <SelectItem value="FILE">File URL</SelectItem>
-                                    <SelectItem value="LINK">Link</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        {deliveryData.type === 'MESSAGE' && (
-                            <div>
-                                <Label>Delivery Message</Label>
-                                <Textarea
-                                    value={deliveryData.message}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, message: e.target.value })}
-                                    placeholder="Describe what you've delivered..."
-                                    rows={4}
-                                />
-                            </div>
-                        )}
-                        {(deliveryData.type === 'FILE' || deliveryData.type === 'LINK') && (
-                            <div>
-                                <Label>{deliveryData.type === 'FILE' ? 'File URL' : 'Link'}</Label>
-                                <Input
-                                    value={deliveryData.fileUrl}
-                                    onChange={(e) => setDeliveryData({ ...deliveryData, fileUrl: e.target.value })}
-                                    placeholder={deliveryData.type === 'FILE' ? 'https://...' : 'https://...'}
-                                />
-                            </div>
-                        )}
-                        <div className="flex gap-2 pt-4">
-                            <Button variant="outline" onClick={() => setShowDeliverDialog(false)} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button onClick={handleDeliver} className="flex-1">
-                                Submit Delivery
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Cancel Dialog */}
-            <AlertDialog open={showCancelDialog} onOpenChange={setShowCancelDialog}>
-                <AlertDialogContent>
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Cancel Order</AlertDialogTitle>
-                        <AlertDialogDescription>
-                            Please provide a reason for cancelling order {order?.orderNumber}
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <div className="space-y-4">
-                        <Textarea
-                            value={cancelReason}
-                            onChange={(e) => setCancelReason(e.target.value)}
-                            placeholder="Reason for cancellation..."
-                            rows={4}
-                        />
-                    </div>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleCancel}>Confirm Cancellation</AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
-
-            {/* Revision Dialog */}
-            <Dialog open={showRevisionDialog} onOpenChange={setShowRevisionDialog}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Request Revision</DialogTitle>
-                        <DialogDescription>
-                            Request a revision for order {order?.orderNumber}
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Revision Reason</Label>
-                            <Textarea
-                                value={revisionReason}
-                                onChange={(e) => setRevisionReason(e.target.value)}
-                                placeholder="What needs to be revised?"
-                                rows={4}
-                            />
-                        </div>
-                        <div className="flex gap-2 pt-4">
-                            <Button variant="outline" onClick={() => setShowRevisionDialog(false)} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button onClick={handleRequestRevision} className="flex-1">
-                                Request Revision
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
-
-            {/* Dispute Dialog */}
-            <Dialog open={showDisputeDialog} onOpenChange={setShowDisputeDialog}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Open Dispute</DialogTitle>
-                        <DialogDescription>
-                            Open a dispute for order {order?.orderNumber}. This will lock normal chat and create a dispute thread where you, the freelancer, and admin can communicate.
-                        </DialogDescription>
-                    </DialogHeader>
-                    <div className="space-y-4">
-                        <div>
-                            <Label>Dispute Reason *</Label>
-                            <Input
-                                value={disputeReason}
-                                onChange={(e) => setDisputeReason(e.target.value)}
-                                placeholder="Brief reason for the dispute..."
-                            />
-                        </div>
-                        <div>
-                            <Label>Description *</Label>
-                            <Textarea
-                                value={disputeDescription}
-                                onChange={(e) => setDisputeDescription(e.target.value)}
-                                placeholder="Provide detailed information about the dispute..."
-                                rows={5}
-                            />
-                        </div>
-                        <div>
-                            <Label>Attachments (Optional)</Label>
-                            <Input
-                                type="file"
-                                multiple
-                                accept="image/*,.pdf,.doc,.docx,.txt"
-                                onChange={(e) => {
-                                    const files = Array.from(e.target.files);
-                                    if (files.length > 0) {
-                                        setDisputeAttachments(files);
-                                    }
-                                }}
-                            />
-                            {disputeAttachments.length > 0 && (
-                                <div className="mt-2 flex flex-wrap gap-2">
-                                    {disputeAttachments.map((file, idx) => (
-                                        <Badge key={idx} variant="outline" className="text-xs">
-                                            {file.name}
-                                        </Badge>
-                                    ))}
-                                </div>
-                            )}
-                            <p className="text-xs text-muted-foreground mt-1">
-                                You can upload screenshots, documents, or other evidence (max 5 files, 10MB each)
-                            </p>
-                        </div>
-                        <div className="flex gap-2 pt-4">
-                            <Button variant="outline" onClick={() => {
-                                setShowDisputeDialog(false);
-                                setDisputeAttachments([]);
-                            }} className="flex-1">
-                                Cancel
-                            </Button>
-                            <Button 
-                                onClick={handleOpenDispute} 
-                                className="flex-1 bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                                disabled={!disputeReason.trim() || !disputeDescription.trim()}
-                            >
-                                Open Dispute
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
+            <DeliverDialog
+                open={showDeliverDialog}
+                onOpenChange={setShowDeliverDialog}
+                order={order}
+                onSuccess={handleDeliver}
+            />
+            <CancelOrderDialog
+                open={showCancelDialog}
+                onOpenChange={setShowCancelDialog}
+                order={order}
+                onConfirm={handleCancel}
+            />
+            <RevisionDialog
+                open={showRevisionDialog}
+                onOpenChange={setShowRevisionDialog}
+                order={order}
+                onConfirm={handleRequestRevision}
+            />
+            <DisputeDialog
+                open={showDisputeDialog}
+                onOpenChange={setShowDisputeDialog}
+                order={order}
+                onSubmit={handleOpenDispute}
+            />
         </div>
     );
 }
