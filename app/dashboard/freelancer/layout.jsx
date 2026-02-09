@@ -15,7 +15,7 @@ const freelancerMenu = [
     { icon: <MessageSquare />, label: "Messages", href: "/dashboard/freelancer/messages" },
     // { icon: <Star />, label: "Reviews", href: "/dashboard/freelancer/reviews" },
     // { icon: <Clock />, label: "Availability", href: "/dashboard/freelancer/availability" },
-    { icon: <Settings />, label: "Settings", href: "/dashboard/freelancer/settings" },
+    // { icon: <Settings />, label: "Settings", href: "/dashboard/freelancer/settings" },
 ];
 
 export default function FreelancerDashboardLayout({ children }) {

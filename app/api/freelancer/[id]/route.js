@@ -30,8 +30,7 @@ export async function GET(request, { params }) {
                 availability: true,
                 createdAt: true,
                 role: true,
-                // rating: true,        // Uncomment after migration
-                // reviewCount: true,   // Uncomment after migration
+                isSeller: true,
             }
         });
 
@@ -42,8 +41,9 @@ export async function GET(request, { params }) {
             );
         }
 
-        // Check if user is actually a freelancer
-        if (freelancer.role !== 'FREELANCER' && freelancer.role !== 'ADMIN') {
+        // User is a freelancer if role FREELANCER/ADMIN or CLIENT with approved seller
+        const isFreelancer = freelancer.role === 'FREELANCER' || freelancer.role === 'ADMIN' || (freelancer.role === 'CLIENT' && freelancer.isSeller);
+        if (!isFreelancer) {
             return NextResponse.json(
                 { success: false, error: 'User is not a freelancer' },
                 { status: HTTP_STATUS.NOT_FOUND }

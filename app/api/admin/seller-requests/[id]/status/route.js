@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
-import { SELLER_STATUS, USER_ROLES, HTTP_STATUS } from '@/lib/shared/constants';
+import { SELLER_STATUS, HTTP_STATUS } from '@/lib/shared/constants';
 
 export async function PATCH(request, { params }) {
     try {
@@ -24,11 +24,11 @@ export async function PATCH(request, { params }) {
             data: updateData,
         });
 
-        // Update User model based on status
+        // Update User model: keep role as CLIENT so user keeps client access (orders, messages).
+        // isSeller = true grants access to freelancer dashboard; user has both client + seller access.
         const userUpdate = { sellerStatus: status };
         if (status === SELLER_STATUS.APPROVED) {
             userUpdate.isSeller = true;
-            userUpdate.role = USER_ROLES.FREELANCER;
         }
 
         await prisma.user.update({

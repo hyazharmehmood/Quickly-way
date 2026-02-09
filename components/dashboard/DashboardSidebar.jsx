@@ -27,9 +27,8 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
     const [isOpen, setIsOpen] = useState(true);
     const pathname = usePathname();
     const router = useRouter();
-    const { user, isSeller, sellerStatus } = useAuthStore();
+  
 
-    const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
 
 
     const handleLogout = () => {

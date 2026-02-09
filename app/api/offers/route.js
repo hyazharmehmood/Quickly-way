@@ -28,7 +28,7 @@ export async function POST(request) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, role: true },
+      select: { id: true, role: true, isSeller: true },
     });
 
     if (!user) {
@@ -38,8 +38,9 @@ export async function POST(request) {
       );
     }
 
-    // Only freelancers can create offers
-    if (user.role !== 'FREELANCER') {
+    // Freelancers or approved sellers (CLIENT + isSeller) can create offers
+    const canCreateOffers = user.role === 'FREELANCER' || (user.role === 'CLIENT' && user.isSeller);
+    if (!canCreateOffers) {
       return NextResponse.json(
         { error: 'Only freelancers can create offers' },
         { status: 403 }

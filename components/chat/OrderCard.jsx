@@ -73,7 +73,8 @@ const STATUS_CONFIG = {
 };
 
 export function OrderCard({ order, conversationId, onOrderUpdate }) {
-  const { user, role } = useAuthStore();
+  const { user, role, isSeller } = useAuthStore();
+  const normalizedRole = role ? role.toUpperCase() : '';
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
@@ -109,8 +110,8 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
   
   // Get status config - should always have a valid config now
   const statusConfig = STATUS_CONFIG[orderStatus] || STATUS_CONFIG.PENDING_ACCEPTANCE;
-  const isClient = role === 'CLIENT';
-  const isFreelancer = role === 'FREELANCER';
+  const isClient = normalizedRole === 'CLIENT';
+  const isFreelancer = normalizedRole === 'FREELANCER' || (normalizedRole === 'CLIENT' && isSeller);
   const isClientOrder = order.clientId === user?.id;
   const isFreelancerOrder = order.freelancerId === user?.id;
 
@@ -367,7 +368,7 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
       <Button
         size="sm"
         onClick={() => {
-          if (role === 'FREELANCER') {
+          if (isFreelancer) {
             router.push(`/dashboard/freelancer/orders`);
           } else {
             router.push(`/orders/${order.id}`);

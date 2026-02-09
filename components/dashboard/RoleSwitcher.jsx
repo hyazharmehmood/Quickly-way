@@ -20,29 +20,25 @@ export const RoleSwitcher = ({ currentRole, onSwitch, isOpen, className = "px-4 
 
     return (
         <div className={`${className} animate-in slide-in-from-left-2 duration-300`}>
-            <div className="relative bg-primary p-1 rounded-full flex items-center h-10 w-full select-none shadow-md overflow-hidden">
-                {/* Sliding background */}
+            <div className="relative bg-primary p-[0.2rem]  rounded-full flex items-center  w-full select-none shadow-md overflow-hidden">
+       
                 <div
-                    className="absolute h-8 bg-white rounded-full transition-all duration-300 ease-in-out shadow-sm"
-                    style={{
-                        width: 'calc(45% - 0px)',
-                        transform: `translateX(${isFreelancer ? 'calc(100% + 8px)' : '0px'})`,
-                        left: '3px'
-                    }}
+                    className=" flex justify-between items-center"
+                    
                 />
 
                 {/* Client Option */}
                 <button
                     onClick={() => isFreelancer && onSwitch()}
-                    className={`relative flex-1 text-sm font-semibold tracking-wide transition-colors duration-300 z-10 ${!isFreelancer ? 'text-primary' : 'text-white'}`}
+                    className={` w-full px-2 py-1.5 rounded-full text-[13px]  transition-colors duration-300 z-10 ${!isFreelancer ? 'text-primary  bg-white' : 'text-white '}`}
                 >
-                    Buyer
+                    Client
                 </button>
 
                 {/* Seller Option */}
                 <button
                     onClick={() => !isFreelancer && onSwitch()}
-                    className={`relative flex-1 text-sm font-semibold tracking-wide transition-colors duration-300 z-10 ${isFreelancer ? 'text-primary' : 'text-white'}`}
+                    className={` w-full px-2 py-1.5 rounded-full text-[13px]   transition-colors duration-300 z-10 ${isFreelancer ? 'text-primary  bg-white' : 'text-white '}`}
                 >
                     Seller
                 </button>

@@ -32,8 +32,7 @@ export const Sidebar = ({ onLogout }) => {
     const menuItems = [
         { icon: <LayoutDashboard />, label: "Dashboard", href: "/admin" },
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
-        // { icon: <ShieldCheck />, label: "Admins", href: "/admin/admins" },
-        // { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
+        { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
         { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
         { icon: <Star />, label: "Reviews", href: "/admin/reviews" },

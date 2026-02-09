@@ -51,6 +51,7 @@
     "dotenv": "^17.2.3",
     "embla-carousel-react": "^8.6.0",
     "emblor": "^1.4.8",
+    "formik": "^2.4.9",
     "input-otp": "^1.4.2",
     "jsonwebtoken": "^9.0.3",
     "lucide-react": "^0.454.0",
@@ -70,6 +71,7 @@
     "sonner": "^2.0.7",
     "tailwind-merge": "^2.5.4",
     "vaul": "^1.1.2",
+    "yup": "^1.7.1",
     "zod": "^4.3.5",
     "zustand": "^5.0.9"
   },

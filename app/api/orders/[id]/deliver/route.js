@@ -31,7 +31,7 @@ export async function POST(request, { params }) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, role: true },
+      select: { id: true, role: true, isSeller: true },
     });
 
     if (!user) {
@@ -41,7 +41,8 @@ export async function POST(request, { params }) {
       );
     }
 
-    if (user.role !== 'FREELANCER' && user.role !== 'ADMIN') {
+    const canDeliver = user.role === 'FREELANCER' || user.role === 'ADMIN' || (user.role === 'CLIENT' && user.isSeller);
+    if (!canDeliver) {
       return NextResponse.json(
         { error: 'Only freelancers can submit deliveries' },
         { status: 403 }

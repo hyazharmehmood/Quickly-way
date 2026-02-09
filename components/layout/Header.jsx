@@ -27,7 +27,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle } from 'lucide-react';
+import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store } from 'lucide-react';
+import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 
 export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
@@ -36,11 +37,15 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const { isLoggedIn, role, isSeller, sellerStatus, user, logout } = useAuthStore();
   const normalizedRole = role ? role.toUpperCase() : '';
   const isAdmin = normalizedRole === 'ADMIN';
-  const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'A');
-  const userRoleDisplay = normalizedRole === 'ADMIN' ? 'Super User' : (isSeller && sellerStatus === 'APPROVED' ? 'Freelancer' : 'Client');
+  const userRoleDisplay = normalizedRole === 'ADMIN' ? 'Super User' : (isSeller && sellerStatus === 'APPROVED' ? 'Client & Seller' : 'Client');
   const displayName = user?.name || 'User';
+  const canAccessFreelancerDashboard = isSeller && sellerStatus === 'APPROVED';
+  const showRoleToggle = canAccessFreelancerDashboard || normalizedRole === 'FREELANCER';
+  const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
+  const switchToClient = () => router.push('/');
+  const switchToSeller = () => router.push('/dashboard/freelancer');
 
   const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
@@ -309,7 +314,31 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
           {/* Auth Buttons */}
           <div className="flex items-center gap-6 w-full md:w-auto justify-end md:min-w-[200px]">
             {isLoggedIn ? (
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
+                {/* Become seller: show for clients who are not approved sellers */}
+                {!isAdmin && normalizedRole === 'CLIENT' && !canAccessFreelancerDashboard && sellerStatus !== 'PENDING' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/become-seller')}
+                    className="rounded-full text-sm font-medium"
+                  >
+                    <Store className="w-4 h-4 mr-1.5" />
+                    Become seller
+                  </Button>
+                )}
+                {!isAdmin && normalizedRole === 'CLIENT' && sellerStatus === 'PENDING' && (
+                  <span className="text-xs text-muted-foreground px-3 py-1.5 rounded-full bg-muted">Request pending</span>
+                )}
+                {/* Client | Seller toggle when user has both accesses */}
+                {showRoleToggle && (
+                  <RoleSwitcher
+                    currentRole={isFreelancerView ? 'freelancer' : 'client'}
+                    onSwitch={isFreelancerView ? switchToClient : switchToSeller}
+                    isOpen={true}
+                    className="mb-0 w-auto min-w-[140px]"
+                  />
+                )}
                 {/* Profile Section with Dropdown */}
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
@@ -380,6 +409,14 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                             </div>
                             <span className="text-sm font-medium">Help & Support</span>
                           </DropdownMenuItem>
+                          {canAccessFreelancerDashboard && (
+                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer')} className="cursor-pointer">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                <LayoutDashboard className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">Seller dashboard</span>
+                            </DropdownMenuItem>
+                          )}
                         </>
                       )}
 
@@ -451,14 +488,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                   Log in
                 </Button>
                 <Button
-                  onClick={() => router.push('/signup?role=1')}
-                  variant="ghost"
-                  className="text-sm font-medium text-foreground hover:text-muted-foreground hover:bg-muted px-4 py-2.5 rounded-full h-auto"
-                >
-                  Join as Freelancer
-                </Button>
-                <Button
-                  onClick={() => router.push('/signup?role=0')}
+                  onClick={() => router.push('/signup')}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-sm font-medium px-6 py-2.5 rounded-full shadow-sm h-auto transition-colors"
                 >
                   Join as Client

@@ -18,11 +18,12 @@ export function proxy(request) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // Freelancer-specific protection
+        // Freelancer dashboard: allow ADMIN, FREELANCER, or CLIENT with approved seller (isSeller)
         if (pathname.startsWith('/dashboard/freelancer')) {
             const normalizedRole = role ? role.toUpperCase() : '';
-            if (normalizedRole !== 'FREELANCER' && normalizedRole !== 'ADMIN') {
-                // Unauthorized user - redirect to home
+            const isSeller = request.cookies.get('isSeller')?.value === 'true';
+            const allowed = normalizedRole === 'ADMIN' || normalizedRole === 'FREELANCER' || (normalizedRole === 'CLIENT' && isSeller);
+            if (!allowed) {
                 return NextResponse.redirect(new URL('/', request.url));
             }
         }
@@ -45,11 +46,16 @@ export function proxy(request) {
         }
     }
 
+    // 5. Become seller page: login required
+    if (pathname === '/become-seller' && !token) {
+        return NextResponse.redirect(new URL('/login', request.url));
+    }
+
     return NextResponse.next();
 }
 
 // Config to match only relevant paths
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup', '/become-seller'],
 };
 

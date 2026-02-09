@@ -53,18 +53,19 @@ const STATUS_CONFIG = {
 };
 
 export function OfferCard({ offer, conversationId, onOfferUpdate }) {
-  const { user, role } = useAuthStore();
+  const { user, role, isSeller } = useAuthStore();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
+  const normalizedRole = role ? role.toUpperCase() : '';
 
   if (!offer) return null;
 
   const offerStatus = offer.status || 'PENDING';
   const statusConfig = STATUS_CONFIG[offerStatus] || STATUS_CONFIG.PENDING;
-  const isClient = role === 'CLIENT';
-  const isFreelancer = role === 'FREELANCER';
+  const isClient = normalizedRole === 'CLIENT';
+  const isFreelancer = normalizedRole === 'FREELANCER' || (normalizedRole === 'CLIENT' && isSeller);
   const isClientOffer = offer.clientId === user?.id;
   const isFreelancerOffer = offer.freelancerId === user?.id;
 

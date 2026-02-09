@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from 'react';
+import { useFormik } from 'formik';
+import * as Yup from 'yup';
 import { User, Shield, Save, Loader2, Eye, EyeOff, Camera, MapPin, Trash2, Clock } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -11,6 +13,16 @@ import api from '@/utils/api';
 import { toast } from 'sonner';
 import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
 import { Skeleton } from "@/components/ui/skeleton";
+
+const passwordChangeSchema = Yup.object({
+    currentPassword: Yup.string().required('Current password is required'),
+    newPassword: Yup.string()
+        .min(6, 'Password must be at least 6 characters')
+        .required('New password is required'),
+    confirmPassword: Yup.string()
+        .required('Please confirm your new password')
+        .oneOf([Yup.ref('newPassword')], 'Passwords must match'),
+});
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 
@@ -55,13 +67,32 @@ export default function FreelancerSettings() {
 
     const profileInputRef = useRef(null);
 
-    // Password form state
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
+    // Password form visibility toggles
     const [showCurrentPassword, setShowCurrentPassword] = useState(false);
     const [showNewPassword, setShowNewPassword] = useState(false);
     const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const passwordFormik = useFormik({
+        initialValues: { currentPassword: '', newPassword: '', confirmPassword: '' },
+        validationSchema: passwordChangeSchema,
+        validateOnBlur: true,
+        validateOnChange: true,
+        onSubmit: async (values) => {
+            setIsLoading(true);
+            try {
+                await api.put('/auth/change-password', {
+                    currentPassword: values.currentPassword,
+                    newPassword: values.newPassword,
+                });
+                toast.success('Password changed successfully');
+                passwordFormik.resetForm();
+            } catch (err) {
+                toast.error(err.response?.data?.message || 'Failed to change password');
+            } finally {
+                setIsLoading(false);
+            }
+        },
+    });
 
     // Fetch profile only if not logged in to avoid global loading loop
     useEffect(() => {
@@ -187,42 +218,6 @@ export default function FreelancerSettings() {
             setIsLoading(false);
         }
     };
-
-    // ... handlePasswordChange remains same ...
-
-    const handlePasswordChange = async (e) => {
-        e.preventDefault();
-
-        if (!currentPassword || !newPassword || !confirmPassword) {
-            toast.error('Please fill in all fields');
-            return;
-        }
-
-        if (newPassword.length < 6) {
-            toast.error('Password must be at least 6 characters long');
-            return;
-        }
-
-        if (newPassword !== confirmPassword) {
-            toast.error('New passwords do not match');
-            return;
-        }
-
-        setIsLoading(true);
-
-        try {
-            await api.put('/auth/change-password', { currentPassword, newPassword });
-            toast.success('Password changed successfully');
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to change password');
-        } finally {
-            setIsLoading(false);
-        }
-    };
-
 
     if (isLoadingProfile) {
         return (
@@ -535,12 +530,12 @@ export default function FreelancerSettings() {
                                     >
                                         {isLoading ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                <Loader2 className="w-4 h-4 animate-spin" />
                                                 Saving...
                                             </>
                                         ) : (
                                             <>
-                                                <Save className="w-4 h-4 mr-2" /> Save Changes
+                                                <Save className="w-4 h-4" /> Save Changes
                                             </>
                                         )}
                                     </Button>
@@ -549,26 +544,29 @@ export default function FreelancerSettings() {
                         </>
                     ) : (
                         <>
-                            <div className="flex items-center gap-2 mb-4">
+                            <div  className="flex items-center gap-2 mb-4 max-w-md">
                                 <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
                                     <Shield className="w-6 h-6" />
                                 </div>
                                 <CardTitle className="text-xl font-normal">Change Password</CardTitle>
                             </div>
 
-                            <form onSubmit={handlePasswordChange}>
-                                <div className="space-y-4">
+                            <form onSubmit={passwordFormik.handleSubmit} className="max-w-md">
+                                <div className="space-y-4 ">
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Current Password</label>
+                                        <label htmlFor="currentPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Current Password</label>
                                         <div className="relative">
                                             <Input
+                                                id="currentPassword"
+                                                name="currentPassword"
                                                 type={showCurrentPassword ? 'text' : 'password'}
-                                                value={currentPassword}
-                                                onChange={(e) => setCurrentPassword(e.target.value)}
-                                                disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
-                                                required
-                                            />
+                                                value={passwordFormik.values.currentPassword}
+                                                onChange={passwordFormik.handleChange}
+                                                onBlur={passwordFormik.handleBlur}  
+                                               disabled={isLoading}
+
+                                                className="h-10 pr-12"
+                                           />
                                             <button
                                                 type="button"
                                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
@@ -577,18 +575,22 @@ export default function FreelancerSettings() {
                                                 {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
+                                        {passwordFormik.touched.currentPassword && passwordFormik.errors.currentPassword && (
+                                            <p className="text-xs text-destructive">{passwordFormik.errors.currentPassword}</p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">New Password</label>
+                                        <label htmlFor="newPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">New Password</label>
                                         <div className="relative">
                                             <Input
+                                                id="newPassword"
+                                                name="newPassword"
                                                 type={showNewPassword ? 'text' : 'password'}
-                                                value={newPassword}
-                                                onChange={(e) => setNewPassword(e.target.value)}
+                                                value={passwordFormik.values.newPassword}
+                                                onChange={passwordFormik.handleChange}
+                                                onBlur={passwordFormik.handleBlur}  
                                                 disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
-                                                required
-                                                minLength={6}
+                                                className="h-10 pr-12"
                                             />
                                             <button
                                                 type="button"
@@ -598,19 +600,24 @@ export default function FreelancerSettings() {
                                                 {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
-                                        <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+                                        {passwordFormik.touched.newPassword && passwordFormik.errors.newPassword ? (
+                                            <p className="text-xs text-destructive">{passwordFormik.errors.newPassword}</p>
+                                        ) : (
+                                            <p className="text-xs text-muted-foreground">Must be at least 6 characters</p>
+                                        )}
                                     </div>
                                     <div className="space-y-2">
-                                        <label className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Confirm New Password</label>
+                                        <label htmlFor="confirmPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Confirm New Password</label>
                                         <div className="relative">
                                             <Input
+                                                id="confirmPassword"
+                                                name="confirmPassword"
                                                 type={showConfirmPassword ? 'text' : 'password'}
-                                                value={confirmPassword}
-                                                onChange={(e) => setConfirmPassword(e.target.value)}
-                                                disabled={isLoading}
-                                                className="h-12 bg-secondary/50 border-none rounded-xl pr-12"
-                                                required
-                                                minLength={6}
+                                                value={passwordFormik.values.confirmPassword}
+                                                onChange={passwordFormik.handleChange}
+                                                onBlur={passwordFormik.handleBlur}  
+                                               disabled={isLoading}
+                                                className="h-10 pr-12"
                                             />
                                             <button
                                                 type="button"
@@ -620,6 +627,9 @@ export default function FreelancerSettings() {
                                                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                                             </button>
                                         </div>
+                                        {passwordFormik.touched.confirmPassword && passwordFormik.errors.confirmPassword && (
+                                            <p className="text-xs text-destructive">{passwordFormik.errors.confirmPassword}</p>
+                                        )}
                                     </div>
                                 </div>
 
@@ -632,7 +642,7 @@ export default function FreelancerSettings() {
                                     >
                                         {isLoading ? (
                                             <>
-                                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                                <Loader2 className="w-4 h-4 animate-spin" />
                                                 Changing...
                                             </>
                                         ) : (

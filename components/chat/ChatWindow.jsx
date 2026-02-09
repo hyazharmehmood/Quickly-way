@@ -40,8 +40,9 @@ export function ChatWindow({ conversation, onBack }) {
   const typingDebounceRef = useRef(null);
   const isTypingRef = useRef(false);
   const { socket, isConnected } = useGlobalSocket();
-  const { user } = useAuthStore();
+  const { user, isSeller } = useAuthStore();
   const role = user?.role?.toUpperCase();
+  const isFreelancer = role === 'FREELANCER' || (role === 'CLIENT' && isSeller);
 
   useEffect(() => {
     if (!conversation) return;
@@ -665,7 +666,7 @@ export function ChatWindow({ conversation, onBack }) {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                {role === 'FREELANCER' && (
+                {isFreelancer && (
                   <DropdownMenuItem
                     onClick={() => setShowCreateOfferModal(true)}
                     className="cursor-pointer"
@@ -682,7 +683,7 @@ export function ChatWindow({ conversation, onBack }) {
       </div>
 
       {/* Create Offer Modal */}
-      {role === 'FREELANCER' && otherUser && (
+      {isFreelancer && otherUser && (
         <CreateOfferModal
           isOpen={showCreateOfferModal}
           onClose={() => setShowCreateOfferModal(false)}

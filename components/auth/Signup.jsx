@@ -8,8 +8,6 @@ import useAuthStore from '@/store/useAuthStore';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
 
-import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
-
 const Signup = ({ onSignInClick, onPostServiceClick }) => {
     const [showPassword, setShowPassword] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
@@ -24,11 +22,7 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // Initialize role from URL or default to CLIENT
-    const [selectedRole, setSelectedRole] = useState(() => {
-        const param = searchParams.get('role');
-        return param === '1' ? 'FREELANCER' : 'CLIENT';
-    });
+    // All signups create CLIENT accounts. To become a seller, user applies after login.
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -38,9 +32,9 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
                 name: `${firstName} ${lastName}`,
                 email,
                 password,
-                role: selectedRole,
-                isSeller: selectedRole === 'FREELANCER',
-                sellerStatus: selectedRole === 'FREELANCER' ? 'APPROVED' : 'NONE'
+                role: 'CLIENT',
+                isSeller: false,
+                sellerStatus: 'NONE'
             });
             toast.success("Account created successfully!");
             router.push('/');
@@ -87,15 +81,9 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
             {/* Form Container */}
             <div className="bg-card rounded-xl shadow-none">
 
-                {/* Role Switcher */}
-                <div className="mb-6">
-                    <Tabs value={selectedRole} onValueChange={setSelectedRole} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2">
-                            <TabsTrigger value="CLIENT">Join as Client</TabsTrigger>
-                            <TabsTrigger value="FREELANCER">Join as Freelancer</TabsTrigger>
-                        </TabsList>
-                    </Tabs>
-                </div>
+                <p className="text-sm text-muted-foreground mb-4 text-center">
+                    Create a client account. You can apply to become a seller later from your account.
+                </p>
 
                 {/* Social Login Section */}
                 <div className="mb-4">

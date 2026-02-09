@@ -42,6 +42,7 @@ const useAuthStore = create(
                     isLoading: false // Stop loading when user is set
                 });
                 if (user?.role) setCookie('role', user.role, 7);
+                setCookie('isSeller', user?.isSeller ? 'true' : 'false', 7);
             },
 
             setToken: (token, refreshToken) => {
@@ -79,6 +80,7 @@ const useAuthStore = create(
                 localStorage.setItem('refreshToken', refreshToken);
                 setCookie('token', token, 7);
                 setCookie('role', user.role, 7);
+                setCookie('isSeller', user.isSeller ? 'true' : 'false', 7);
                 return response.data;
             },
 
@@ -99,6 +101,7 @@ const useAuthStore = create(
                 localStorage.setItem('refreshToken', refreshToken);
                 setCookie('token', token, 7);
                 setCookie('role', user.role, 7);
+                setCookie('isSeller', user.isSeller ? 'true' : 'false', 7);
                 return response.data;
             },
 
@@ -118,6 +121,7 @@ const useAuthStore = create(
                 localStorage.removeItem('auth-storage');
                 removeCookie('token');
                 removeCookie('role');
+                removeCookie('isSeller');
             },
 
             refreshSession: async () => {
@@ -155,6 +159,7 @@ const useAuthStore = create(
                             role: user.role,
                         });
                         setCookie('role', user.role, 7);
+                        setCookie('isSeller', user.isSeller ? 'true' : 'false', 7);
                     } catch (profileError) {
                         // If profile fetch fails, token might still be invalid
                         console.error('Failed to fetch profile after refresh:', profileError);
@@ -202,6 +207,7 @@ const useAuthStore = create(
                         isLoading: false
                     });
                     setCookie('role', user.role, 7);
+                    setCookie('isSeller', user.isSeller ? 'true' : 'false', 7);
                 } catch (error) {
                     set({ isLoading: false }); // Ensure loading stops even on error
                     if (error.response?.status === 401) {
@@ -222,6 +228,7 @@ const useAuthStore = create(
                         role: user.role,
                     });
                     setCookie('role', user.role, 7);
+                    setCookie('isSeller', user.isSeller ? 'true' : 'false', 7);
                 } catch (error) {
                     if (error.response?.status === 401) {
                         set({ showExpiryDialog: true });

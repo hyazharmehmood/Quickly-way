@@ -19,11 +19,13 @@ import { RoleSwitcher } from './RoleSwitcher';
 export const DashboardHeader = () => {
     const pathname = usePathname();
     const router = useRouter();
-    const { user, logout, isSeller, sellerStatus } = useAuthStore();
+    const { user, logout, isSeller, sellerStatus, role } = useAuthStore();
+    const normalizedRole = role ? role.toUpperCase() : '';
+    const canAccessBoth = (isSeller && sellerStatus === 'APPROVED') || normalizedRole === 'FREELANCER';
 
     const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
     const dashboardPath = isFreelancerView ? '/dashboard/freelancer' : '/orders';
-    const otherDashboardPath = isFreelancerView ? '/orders' : '/dashboard/freelancer';
+    const otherDashboardPath = isFreelancerView ? '/' : '/dashboard/freelancer';
 
     const getSectionName = () => {
         const parts = pathname.split('/');
@@ -54,14 +56,14 @@ export const DashboardHeader = () => {
             </div>
 
             <div className="flex items-center gap-5">
-                {/* {isSeller && sellerStatus === 'APPROVED' && (
+                {canAccessBoth && (
                     <RoleSwitcher
                         currentRole={isFreelancerView ? 'freelancer' : 'client'}
                         onSwitch={handleSwitch}
                         isOpen={true}
                         className="w-38 mb-0"
                     />
-                )} */}
+                )}
 
                 <button className="relative text-muted-foreground hover:text-foreground transition-colors">
                     <Bell className="w-6 h-6" />
@@ -93,15 +95,7 @@ export const DashboardHeader = () => {
                         <DropdownMenuSeparator className="bg-border mx-2" />
 
                         <div className="p-1 space-y-1">
-                            <DropdownMenuItem
-                                onClick={() => router.push(dashboardPath)}
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                    <LayoutDashboard className="w-4 h-4" />
-                                </div>
-                                <span className="text-sm font-medium">My Dashboard</span>
-                            </DropdownMenuItem>
-
+                         
                             <DropdownMenuItem
                                 onClick={() => router.push(`${dashboardPath}/settings`)}
                             >

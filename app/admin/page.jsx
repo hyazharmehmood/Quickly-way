@@ -1,11 +1,29 @@
 "use client";
 
-import React from 'react';
-import { Users, Briefcase, ShoppingCart, DollarSign } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import Link from 'next/link';
+import { Users, Briefcase, ShoppingCart, DollarSign, UserCheck, ArrowRight } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from '@/components/ui/button';
+import api from '@/utils/api';
 
 export default function AdminPage() {
+    const [pendingSellers, setPendingSellers] = useState(0);
+
+    useEffect(() => {
+        const fetch = async () => {
+            try {
+                const res = await api.get('/admin/seller-requests');
+                const pending = (res.data || []).filter((r) => r.status === 'PENDING').length;
+                setPendingSellers(pending);
+            } catch {
+                // ignore
+            }
+        };
+        fetch();
+    }, []);
+
     return (
         <div className="space-y-4">
             <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Overview</h2>
@@ -35,6 +53,28 @@ export default function AdminPage() {
                     icon={<DollarSign />}
                 />
             </div>
+
+            {/* Seller Requests - View & Approve */}
+            <Card className="border-none rounded-[2rem]">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <CardTitle className="text-lg font-normal flex items-center gap-2">
+                        <UserCheck className="w-5 h-5 text-primary" />
+                        Become-seller requests
+                    </CardTitle>
+                    <Button asChild variant="default" size="sm" className="rounded-lg">
+                        <Link href="/admin/seller-requests" className="flex items-center gap-1.5">
+                            View & approve
+                            <ArrowRight className="w-4 h-4" />
+                        </Link>
+                    </Button>
+                </CardHeader>
+                <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                        <span className="font-semibold text-foreground">{pendingSellers}</span> application{pendingSellers !== 1 ? 's' : ''} pending review.
+                        Open seller requests to view details and approve or reject.
+                    </p>
+                </CardContent>
+            </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card className="border-none rounded-[2rem]">
