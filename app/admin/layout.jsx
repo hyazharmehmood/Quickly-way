@@ -10,7 +10,7 @@ export default function AdminLayout({ children }) {
 
     const handleLogout = () => {
         useAuthStore.getState().logout();
-        router.push('/login');
+        router.replace('/login');
     };
 
     return (

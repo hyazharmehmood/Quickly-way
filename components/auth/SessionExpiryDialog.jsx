@@ -29,11 +29,11 @@ export const SessionExpiryDialog = () => {
                 // The axios interceptor will use the new token from localStorage on next request
             } else {
                 // If refresh fails, refreshSession already calls logout
-                router.push('/login');
+                router.replace('/login');
             }
         } catch (error) {
             console.error('Error refreshing session:', error);
-            router.push('/login');
+            router.replace('/login');
         } finally {
             setIsRefreshing(false);
         }
@@ -42,7 +42,7 @@ export const SessionExpiryDialog = () => {
     const handleLogout = () => {
         logout();
         setShowExpiryDialog(false);
-        router.push('/login');
+        router.replace('/login');
     };
 
     return (

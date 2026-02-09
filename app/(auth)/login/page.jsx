@@ -11,11 +11,11 @@ export default function LoginPage() {
     };
 
     const handleCreateAccount = () => {
-        router.push('/signup');
+        router.replace('/signup');
     };
 
     const handleForgotPassword = () => {
-        router.push('/forgot-password');
+        router.replace('/forgot-password');
     };
 
     return (

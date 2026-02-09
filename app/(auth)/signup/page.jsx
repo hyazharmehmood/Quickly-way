@@ -9,13 +9,13 @@ export default function SignupPage() {
     const router = useRouter();
 
     const handleSignIn = () => {
-        router.push('/login');
+        router.replace('/login');
     };
 
     const handlePostService = () => {
         // TODO: Implement post service flow
         console.log('Post service clicked');
-        router.push('/post-service');
+        router.replace('/post-service');
     };
 
     return (

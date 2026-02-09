@@ -38,7 +38,7 @@ export const DashboardHeader = () => {
 
     const handleLogout = () => {
         logout();
-        router.push('/login');
+        router.replace('/login');
     };
 
     const handleSwitch = () => {

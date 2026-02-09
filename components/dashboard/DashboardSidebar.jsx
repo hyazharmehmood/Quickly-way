@@ -34,7 +34,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
 
     const handleLogout = () => {
         useAuthStore.getState().logout();
-        router.push('/login');
+        router.replace('/login');
     };
 
     return (
