@@ -100,12 +100,12 @@ export function ChatContainer() {
       };
 
       const timeoutId = setTimeout(() => {
-        if (isLoadingFromUrlRef.current) {
-          isLoadingFromUrlRef.current = false;
-          setIsLoadingConversation(false);
-          setShowChatWindow(false);
-        }
-      }, 12000);
+        // if (isLoadingFromUrlRef.current) {
+        //   isLoadingFromUrlRef.current = false;
+        //   setIsLoadingConversation(false);
+        //   setShowChatWindow(false);
+        // }
+      }, 100);
 
       socket.once('conversation:fetched', handleConversationFetched);
       socket.once('error', handleError);

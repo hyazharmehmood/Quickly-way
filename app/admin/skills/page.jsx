@@ -51,14 +51,13 @@ export default function SkillsPage() {
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [formData, setFormData] = useState({ name: '', categoryId: '', mainCategoryId: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [filterCategory, setFilterCategory] = useState(null);
   const [filterActive, setFilterActive] = useState(null);
   const [togglingSkills, setTogglingSkills] = useState(new Set());
 
   // Fetch categories with subcategories
   const fetchCategories = async () => {
     try {
-      setCategoriesLoading(true);
+    
       const response = await api.get('/admin/categories?includeSkills=true');
       if (response.data.success) {
         // Filter to show only root categories (parentId is null)
@@ -83,21 +82,16 @@ export default function SkillsPage() {
     }
   };
 
-  // Fetch skills
+  // Fetch all skills (optional filter: isActive only)
   const fetchSkills = async () => {
     try {
 
       const params = new URLSearchParams();
-      if (filterCategory) {
-        params.append('categoryId', filterCategory);
-      }
-      if (filterActive !== null) {
-        params.append('isActive', filterActive.toString());
-      }
-      
+      if (filterActive !== null) params.append('isActive', filterActive.toString());
+
       const response = await api.get(`/admin/skills?${params.toString()}`);
       if (response.data.success) {
-        setSkills(response.data.skills);
+        setSkills(response.data.skills || []);
       }
     } catch (error) {
       console.error('Error fetching skills:', error);
@@ -113,7 +107,7 @@ export default function SkillsPage() {
 
   useEffect(() => {
     fetchSkills();
-  }, [filterCategory, filterActive]);
+  }, [filterActive]);
 
   // Filter skills by search query
   const filteredSkills = skills.filter(skill =>
@@ -276,7 +270,9 @@ export default function SkillsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
           <h2 className="text-2xl font-bold tracking-tight text-foreground">Skills</h2>
-          <p className="text-muted-foreground text-sm mt-1">Manage skills within categories</p>
+          <p className="text-muted-foreground text-sm mt-1">
+            {loading ? 'Loading...' : `Showing all skills (${filteredSkills.length}${searchQuery ? ' matching search' : ''})`}
+          </p>
         </div>
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
@@ -289,35 +285,23 @@ export default function SkillsPage() {
 
       <Card className="border-none rounded-[2rem]">
         <CardHeader className="p-8 border-b border-border">
-          <div className="flex justify-between gap-4">
-          <div className="relative ">
+          <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
+            <div className="relative flex-1 max-w-sm">
+              <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
                 type="text"
                 placeholder="Search skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-4 h-11 bg-secondary/50 rounded-[1rem] border-none focus-visible:ring-primary/20"
+                className="pl-9 pr-4 h-11 bg-secondary/50 rounded-[1rem] border-border focus-visible:ring-primary/20"
               />
-              <Search className="w-4 h-4 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
             </div>
-            <div className="flex flex-wrap items-center gap-2 justify-end">
-              <Select value={filterCategory || 'all'} onValueChange={(value) => setFilterCategory(value === 'all' ? null : value)}>
-                <SelectTrigger className="w-[200px] h-11 rounded-[1rem]">
-                  <SelectValue placeholder="All Subcategories" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Subcategories</SelectItem>
-                  {subcategories.filter(sub => sub.isActive).map((subcategory) => (
-                    <SelectItem key={subcategory.id} value={subcategory.id}>
-                      {subcategory.mainCategoryName} → {subcategory.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+            <div className="flex items-center gap-1.5">
               <Button
                 variant={filterActive === null ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(null)}
+                className="rounded-[0.75rem]"
               >
                 All
               </Button>
@@ -325,6 +309,7 @@ export default function SkillsPage() {
                 variant={filterActive === true ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(true)}
+                className="rounded-[0.75rem]"
               >
                 Active
               </Button>
@@ -332,6 +317,7 @@ export default function SkillsPage() {
                 variant={filterActive === false ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(false)}
+                className="rounded-[0.75rem]"
               >
                 Inactive
               </Button>
@@ -344,39 +330,32 @@ export default function SkillsPage() {
               <Table>
                 <TableHeader>
                   <TableRow className="bg-secondary/40 hover:bg-secondary/40">
-                    <TableHead className="pl-4">Name</TableHead>
-                    <TableHead>Category</TableHead>
+                    <TableHead className="pl-6">Name</TableHead>
                     <TableHead>Slug</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead>Created</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {[...Array(5)].map((_, i) => (
+                  {[...Array(8)].map((_, i) => (
                     <TableRow key={i} className="border-b border-border">
-                      <TableCell className="pl-4">
-                        <Skeleton className="h-5 w-32" />
+                      <TableCell className="pl-6">
+                        <Skeleton className="h-5 w-36" />
                       </TableCell>
                       <TableCell>
-                        <div className="flex flex-col gap-1">
-                          <Skeleton className="h-5 w-24" />
-                          <Skeleton className="h-5 w-20" />
-                        </div>
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-24" />
+                        <Skeleton className="h-4 w-28" />
                       </TableCell>
                       <TableCell>
                         <Skeleton className="h-6 w-16 rounded-full" />
                       </TableCell>
                       <TableCell>
-                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-4 w-24" />
                       </TableCell>
-                      <TableCell className="text-right">
+                      <TableCell className="text-right pr-6">
                         <div className="flex items-center justify-end gap-2">
-                          <Skeleton className="h-8 w-8 rounded" />
-                          <Skeleton className="h-8 w-8 rounded" />
+                          <Skeleton className="h-8 w-8 rounded-lg" />
+                          <Skeleton className="h-8 w-8 rounded-lg" />
                         </div>
                       </TableCell>
                     </TableRow>
@@ -389,65 +368,38 @@ export default function SkillsPage() {
               <p className="text-muted-foreground">No skills found</p>
             </div>
           ) : (
-            <Table >
+            <Table>
               <TableHeader>
-                <TableRow>
-                  <TableHead className="pl-4">Name</TableHead>
-                  <TableHead>Category</TableHead>
+                <TableRow className="bg-secondary/40 hover:bg-secondary/40">
+                  <TableHead className="pl-6">Name</TableHead>
                   <TableHead>Slug</TableHead>
                   <TableHead>Status</TableHead>
                   <TableHead>Created</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
+                  <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow>
               </TableHeader>
-              <TableBody >
+              <TableBody>
                 {filteredSkills.map((skill) => (
-                  <TableRow key={skill.id} className="">
-                    <TableCell className="font-medium pl-4">{skill.name}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-col gap-1">
-                        {(() => {
-                          const mainCategory = categories.find(c => 
-                            c.children?.some(child => child.id === skill.categoryId)
-                          );
-                          const subcategory = skill.category;
-                          
-                          if (mainCategory && subcategory) {
-                            return (
-                              <>
-                                <Badge variant="outline" className="text-xs w-fit">
-                                  {mainCategory.name}
-                                </Badge>
-                                <Badge variant="secondary" className="text-xs w-fit">
-                                  {subcategory.name}
-                                </Badge>
-                              </>
-                            );
-                          }
-                          return <Badge variant="outline">{subcategory?.name || 'N/A'}</Badge>;
-                        })()}
-                      </div>
-                    </TableCell>
+                  <TableRow key={skill.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
+                    <TableCell className="pl-6 font-medium text-foreground">{skill.name}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{skill.slug}</TableCell>
                     <TableCell>
-                      <Badge
-                        variant={skill.isActive ? "default" : "secondary"}
-                        className={skill.isActive ? "" : ""}
-                      >
+                      <Badge variant={skill.isActive ? "default" : "secondary"} className="rounded-full">
                         {skill.isActive ? 'Active' : 'Inactive'}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(skill.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex items-center justify-end">
+                    <TableCell className="text-right pr-6">
+                      <div className="flex items-center justify-end gap-0.5">
                         <Button
                           variant="ghost"
                           size="icon"
                           onClick={() => handleToggleActive(skill)}
                           title={skill.isActive ? 'Disable' : 'Enable'}
                           disabled={togglingSkills.has(skill.id)}
+                          className="h-8 w-8 rounded-lg"
                         >
                           {togglingSkills.has(skill.id) ? (
                             <Loader2 className="w-4 h-4 animate-spin text-muted-foreground" />
@@ -461,17 +413,10 @@ export default function SkillsPage() {
                           variant="ghost"
                           size="icon"
                           onClick={() => handleEdit(skill)}
+                          className="h-8 w-8 rounded-lg"
                         >
                           <Edit2 className="w-4 h-4 text-muted-foreground" />
                         </Button>
-                        {/* <Button
-                          disabled
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(skill)}
-                        >
-                          <Trash2 className="w-4 h-4 text-destructive sr-only " />
-                        </Button> */}
                       </div>
                     </TableCell>
                   </TableRow>
@@ -569,7 +514,7 @@ export default function SkillsPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Creating...
                 </>
               ) : (
@@ -668,7 +613,7 @@ export default function SkillsPage() {
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Loader2 className="w-4 h-4 animate-spin" />
                   Updating...
                 </>
               ) : (

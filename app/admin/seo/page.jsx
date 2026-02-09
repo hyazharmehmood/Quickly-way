@@ -27,13 +27,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import {
-    Select,
-    SelectContent,
-    SelectItem,
-    SelectTrigger,
-    SelectValue,
-} from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from 'sonner';
 import api from '@/utils/api';
@@ -49,10 +43,6 @@ export default function SEOPage() {
     const [togglingKeywords, setTogglingKeywords] = useState(new Set());
     const [formData, setFormData] = useState({
         keyword: '',
-        volume: '',
-        difficulty: '',
-        rank: '',
-        trend: 'stable',
         isActive: true,
     });
 
@@ -85,24 +75,17 @@ export default function SEOPage() {
         try {
             const response = await api.post('/admin/keywords', {
                 keyword: formData.keyword.trim(),
-                volume: formData.volume || null,
-                difficulty: formData.difficulty || null,
-                rank: formData.rank ? parseInt(formData.rank) : null,
-                trend: formData.trend || null,
+                volume: null,
+                difficulty: null,
+                rank: null,
+                trend: null,
                 isActive: formData.isActive,
             });
 
             if (response.data.success) {
                 toast.success('Keyword created successfully');
                 setIsCreateDialogOpen(false);
-                setFormData({
-                    keyword: '',
-                    volume: '',
-                    difficulty: '',
-                    rank: '',
-                    trend: 'stable',
-                    isActive: true,
-                });
+                setFormData({ keyword: '', isActive: true });
                 fetchKeywords();
             }
         } catch (error) {
@@ -117,10 +100,6 @@ export default function SEOPage() {
         setSelectedKeyword(keyword);
         setFormData({
             keyword: keyword.keyword,
-            volume: keyword.volume || '',
-            difficulty: keyword.difficulty || '',
-            rank: keyword.rank?.toString() || '',
-            trend: keyword.trend || 'stable',
             isActive: keyword.isActive,
         });
         setIsEditDialogOpen(true);
@@ -136,10 +115,6 @@ export default function SEOPage() {
         try {
             const response = await api.patch(`/admin/keywords/${selectedKeyword.id}`, {
                 keyword: formData.keyword.trim(),
-                volume: formData.volume || null,
-                difficulty: formData.difficulty || null,
-                rank: formData.rank ? parseInt(formData.rank) : null,
-                trend: formData.trend || null,
                 isActive: formData.isActive,
             });
 
@@ -147,14 +122,7 @@ export default function SEOPage() {
                 toast.success('Keyword updated successfully');
                 setIsEditDialogOpen(false);
                 setSelectedKeyword(null);
-                setFormData({
-                    keyword: '',
-                    volume: '',
-                    difficulty: '',
-                    rank: '',
-                    trend: 'stable',
-                    isActive: true,
-                });
+                setFormData({ keyword: '', isActive: true });
                 fetchKeywords();
             }
         } catch (error) {
@@ -449,7 +417,7 @@ export default function SEOPage() {
                     <DialogHeader>
                         <DialogTitle>Add Keyword</DialogTitle>
                         <DialogDescription>
-                            Add a new keyword for freelancers to use when creating gigs.
+                            Add a keyword for freelancers to use when creating gigs. Volume, difficulty, and rank will be auto-calculated later.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -462,60 +430,15 @@ export default function SEOPage() {
                                 className="mt-2"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between rounded-lg border border-border p-4">
                             <div>
-                                <Label>Monthly Volume</Label>
-                                <Input
-                                    value={formData.volume}
-                                    onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
-                                    placeholder="e.g., 12k"
-                                    className="mt-2"
-                                />
+                                <Label className="text-base">Active</Label>
+                                <p className="text-sm text-muted-foreground">Show this keyword to freelancers</p>
                             </div>
-                            <div>
-                                <Label>Difficulty</Label>
-                                <Select
-                                    value={formData.difficulty}
-                                    onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
-                                >
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue placeholder="Select difficulty" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Low">Low</SelectItem>
-                                        <SelectItem value="Medium">Medium</SelectItem>
-                                        <SelectItem value="High">High</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label>Current Rank</Label>
-                                <Input
-                                    type="number"
-                                    value={formData.rank}
-                                    onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
-                                    placeholder="e.g., 1"
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label>Trend</Label>
-                                <Select
-                                    value={formData.trend}
-                                    onValueChange={(value) => setFormData({ ...formData, trend: value })}
-                                >
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="up">Up</SelectItem>
-                                        <SelectItem value="down">Down</SelectItem>
-                                        <SelectItem value="stable">Stable</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Switch
+                                checked={formData.isActive}
+                                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                            />
                         </div>
                     </div>
                     <DialogFooter>
@@ -523,14 +446,7 @@ export default function SEOPage() {
                             variant="outline"
                             onClick={() => {
                                 setIsCreateDialogOpen(false);
-                                setFormData({
-                                    keyword: '',
-                                    volume: '',
-                                    difficulty: '',
-                                    rank: '',
-                                    trend: 'stable',
-                                    isActive: true,
-                                });
+                                setFormData({ keyword: '', isActive: true });
                             }}
                             disabled={isSubmitting}
                         >
@@ -542,7 +458,7 @@ export default function SEOPage() {
                         >
                             {isSubmitting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     Creating...
                                 </>
                             ) : (
@@ -559,7 +475,7 @@ export default function SEOPage() {
                     <DialogHeader>
                         <DialogTitle>Edit Keyword</DialogTitle>
                         <DialogDescription>
-                            Update the keyword information.
+                            Update the keyword and active status. Volume, difficulty, and rank are auto-calculated (coming later).
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -572,60 +488,15 @@ export default function SEOPage() {
                                 className="mt-2"
                             />
                         </div>
-                        <div className="grid grid-cols-2 gap-4">
+                        <div className="flex items-center justify-between rounded-lg border border-border p-4">
                             <div>
-                                <Label>Monthly Volume</Label>
-                                <Input
-                                    value={formData.volume}
-                                    onChange={(e) => setFormData({ ...formData, volume: e.target.value })}
-                                    placeholder="e.g., 12k"
-                                    className="mt-2"
-                                />
+                                <Label className="text-base">Active</Label>
+                                <p className="text-sm text-muted-foreground">Show this keyword to freelancers</p>
                             </div>
-                            <div>
-                                <Label>Difficulty</Label>
-                                <Select
-                                    value={formData.difficulty}
-                                    onValueChange={(value) => setFormData({ ...formData, difficulty: value })}
-                                >
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue placeholder="Select difficulty" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="Low">Low</SelectItem>
-                                        <SelectItem value="Medium">Medium</SelectItem>
-                                        <SelectItem value="High">High</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                        <div className="grid grid-cols-2 gap-4">
-                            <div>
-                                <Label>Current Rank</Label>
-                                <Input
-                                    type="number"
-                                    value={formData.rank}
-                                    onChange={(e) => setFormData({ ...formData, rank: e.target.value })}
-                                    placeholder="e.g., 1"
-                                    className="mt-2"
-                                />
-                            </div>
-                            <div>
-                                <Label>Trend</Label>
-                                <Select
-                                    value={formData.trend}
-                                    onValueChange={(value) => setFormData({ ...formData, trend: value })}
-                                >
-                                    <SelectTrigger className="mt-2">
-                                        <SelectValue />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="up">Up</SelectItem>
-                                        <SelectItem value="down">Down</SelectItem>
-                                        <SelectItem value="stable">Stable</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
+                            <Switch
+                                checked={formData.isActive}
+                                onCheckedChange={(checked) => setFormData({ ...formData, isActive: checked })}
+                            />
                         </div>
                     </div>
                     <DialogFooter>
@@ -634,14 +505,7 @@ export default function SEOPage() {
                             onClick={() => {
                                 setIsEditDialogOpen(false);
                                 setSelectedKeyword(null);
-                                setFormData({
-                                    keyword: '',
-                                    volume: '',
-                                    difficulty: '',
-                                    rank: '',
-                                    trend: 'stable',
-                                    isActive: true,
-                                });
+                                setFormData({ keyword: '', isActive: true });
                             }}
                             disabled={isSubmitting}
                         >
@@ -653,7 +517,7 @@ export default function SEOPage() {
                         >
                             {isSubmitting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                     Updating...
                                 </>
                             ) : (
@@ -678,7 +542,7 @@ export default function SEOPage() {
                         <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
                             {isSubmitting ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <Loader2 className="w-4 h-4  animate-spin" />
                                     Deleting...
                                 </>
                             ) : (
