@@ -21,6 +21,7 @@ export function ChatContainer() {
   const isLoadingFromUrlRef = useRef(false);
 
   const handleSelectConversation = (conversation) => {
+    setIsLoadingConversation(false); // Always clear URL-loading state when user picks a chat
     setSelectedConversation(conversation);
     setShowChatWindow(true);
     // Clear URL parameter when manually selecting
@@ -41,6 +42,10 @@ export function ChatContainer() {
     }
   };
 
+  // Track current selected id in ref so we don't re-run effect when we set conversation (avoids cleanup removing listeners before response)
+  const selectedConversationIdRef = useRef(selectedConversation?.id);
+  selectedConversationIdRef.current = selectedConversation?.id;
+
   // Load conversation from URL if provided (via Socket.IO)
   // This happens when user clicks "Contact Me" button
   useEffect(() => {
@@ -52,13 +57,13 @@ export function ChatContainer() {
     // If we have conversationId, load that conversation
     if (conversationIdFromUrl) {
       // If conversation is already selected and matches URL, just open window
-      if (selectedConversation?.id === conversationIdFromUrl) {
+      if (selectedConversationIdRef.current === conversationIdFromUrl) {
         setShowChatWindow(true);
         isLoadingFromUrlRef.current = false;
         return;
       }
 
-      // Prevent multiple loads
+      // Prevent overlapping loads for the same conversationId (allow retry after cleanup)
       if (isLoadingFromUrlRef.current) {
         return;
       }
@@ -94,14 +99,25 @@ export function ChatContainer() {
         }
       };
 
+      const timeoutId = setTimeout(() => {
+        if (isLoadingFromUrlRef.current) {
+          isLoadingFromUrlRef.current = false;
+          setIsLoadingConversation(false);
+          setShowChatWindow(false);
+        }
+      }, 12000);
+
       socket.once('conversation:fetched', handleConversationFetched);
       socket.once('error', handleError);
 
       return () => {
+        clearTimeout(timeoutId);
         socket.off('conversation:fetched', handleConversationFetched);
         socket.off('error', handleError);
+        // Allow next effect run to retry (e.g. after Strict Mode cleanup or socket reconnect)
+        isLoadingFromUrlRef.current = false;
       };
-    } 
+    }
     // If we have otherUserId but no conversationId, create empty conversation state
     else if (otherUserIdFromUrl) {
       setIsLoadingConversation(true);
@@ -127,7 +143,7 @@ export function ChatContainer() {
           setShowChatWindow(true);
         });
     }
-  }, [conversationIdFromUrl, otherUserIdFromUrl, socket, isConnected, selectedConversation?.id]);
+  }, [conversationIdFromUrl, otherUserIdFromUrl, socket, isConnected]);
 
   return (
     <Card className="animate-in rounded-2xl md:rounded-[2.5rem] fade-in duration-500 flex flex-col md:flex-row border-border bg-card shadow-sm overflow-hidden h-[calc(100vh-9.5rem)]">
