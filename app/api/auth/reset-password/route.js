@@ -7,15 +7,9 @@ import { HTTP_STATUS } from '@/lib/shared/constants';
 
 export async function POST(request) {
     try {
-        const { token, password, passwordConfirm } = await request.json();
+        const { token, password } = await request.json();
 
-        if (password !== passwordConfirm) {
-            return NextResponse.json(
-                { message: 'Passwords do not match.' },
-                { status: HTTP_STATUS.BAD_REQUEST }
-            );
-        }
-
+     
         const hashedToken = crypto
             .createHash('sha256')
             .update(token)
