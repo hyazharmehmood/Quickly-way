@@ -1,7 +1,7 @@
 "use client";
 
-import React from 'react';
-import { Bell, Activity, User as UserIcon, Settings, LogOut, LayoutDashboard } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Bell, LogOut, LayoutDashboard } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 import {
@@ -18,6 +18,8 @@ export const AdminHeader = () => {
     const pathname = usePathname();
     const router = useRouter();
     const { user, logout } = useAuthStore();
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => setMounted(true), []);
 
     // Derived section name from pathname
     const getSectionName = () => {
@@ -50,57 +52,75 @@ export const AdminHeader = () => {
                     <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-primary-foreground text-[9px] flex items-center justify-center rounded-full border border-background font-normal">3</span>
                 </button>
 
-                <DropdownMenu modal={false}>
-                    <DropdownMenuTrigger asChild>
-                        <div className="flex items-center gap-3 cursor-pointer group outline-none select-none">
-                            <div className="text-right hidden sm:block">
-                                <p className="text-xs font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">{displayName}</p>
-                                <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRole}</p>
-                            </div>
-                            <Avatar className="w-10 h-10 border border-border shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
-                                <AvatarImage src={user?.avatar} />
-                                <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
-                                    {userInitial}
-                                </AvatarFallback>
-                            </Avatar>
-                        </div>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-card border border-border shadow-xl" align="end">
-                        <DropdownMenuLabel className="font-normal p-3">
-                            <div className="flex flex-col space-y-1">
-                                <p className="text-sm font-semibold leading-none text-foreground">{displayName}</p>
-                                <p className="text-[11px] leading-none text-muted-foreground">{user?.email}</p>
-                            </div>
-                        </DropdownMenuLabel>
-                        <DropdownMenuSeparator className="bg-border mx-2" />
-
-                        <div className="p-1 space-y-1">
-                            <DropdownMenuItem
-                                onClick={() => router.push('/admin')}
-                                className=""
+                {mounted ? (
+                    <DropdownMenu modal={false}>
+                        <DropdownMenuTrigger asChild>
+                            <button
+                                type="button"
+                                className="flex items-center gap-3 cursor-pointer group outline-none select-none border-0 bg-transparent p-0 text-left"
                             >
-                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                                    <LayoutDashboard className="w-4 h-4" />
+                                <div className="text-right hidden sm:block">
+                                    <p className="text-xs font-semibold text-foreground leading-tight group-hover:text-primary transition-colors">{displayName}</p>
+                                    <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRole}</p>
                                 </div>
-                                <span className="text-sm font-medium">Admin Dashboard</span>
-                            </DropdownMenuItem>
-                        </div>
-
-                        <DropdownMenuSeparator className="bg-border mx-2" />
-
-                        <div className="p-1">
-                            <DropdownMenuItem
-                                onClick={handleLogout}
-                                className="cursor-pointer text-muted-foreground focus:text-foreground hover:bg-secondary focus:bg-secondary transition-colors"
-                            >
-                                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
-                                    <LogOut className="w-4 h-4" />
+                                <Avatar className="w-10 h-10 border border-border shadow-sm transition-transform group-hover:scale-105 rounded-lg overflow-hidden">
+                                    <AvatarImage src={user?.avatar} />
+                                    <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
+                                        {userInitial}
+                                    </AvatarFallback>
+                                </Avatar>
+                            </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent className="w-64 mt-2 rounded-2xl bg-card border border-border shadow-xl" align="end">
+                            <DropdownMenuLabel className="font-normal p-3">
+                                <div className="flex flex-col space-y-1">
+                                    <p className="text-sm font-semibold leading-none text-foreground">{displayName}</p>
+                                    <p className="text-[11px] leading-none text-muted-foreground">{user?.email}</p>
                                 </div>
-                                <span className="text-sm font-medium">Logout</span>
-                            </DropdownMenuItem>
+                            </DropdownMenuLabel>
+                            <DropdownMenuSeparator className="bg-border mx-2" />
+
+                            <div className="p-1 space-y-1">
+                                <DropdownMenuItem
+                                    onClick={() => router.push('/admin')}
+                                    className=""
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                                        <LayoutDashboard className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-sm font-medium">Admin Dashboard</span>
+                                </DropdownMenuItem>
+                            </div>
+
+                            <DropdownMenuSeparator className="bg-border mx-2" />
+
+                            <div className="p-1">
+                                <DropdownMenuItem
+                                    onClick={handleLogout}
+                                    className="cursor-pointer text-muted-foreground focus:text-foreground hover:bg-secondary focus:bg-secondary transition-colors"
+                                >
+                                    <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
+                                        <LogOut className="w-4 h-4" />
+                                    </div>
+                                    <span className="text-sm font-medium">Logout</span>
+                                </DropdownMenuItem>
+                            </div>
+                        </DropdownMenuContent>
+                    </DropdownMenu>
+                ) : (
+                    <div className="flex items-center gap-3 cursor-pointer group outline-none select-none" aria-hidden>
+                        <div className="text-right hidden sm:block">
+                            <p className="text-xs font-semibold text-foreground leading-tight">{displayName}</p>
+                            <p className="text-[10px] text-muted-foreground font-normal uppercase tracking-wider">{userRole}</p>
                         </div>
-                    </DropdownMenuContent>
-                </DropdownMenu>
+                        <Avatar className="w-10 h-10 border border-border shadow-sm rounded-lg overflow-hidden">
+                            <AvatarImage src={user?.avatar} />
+                            <AvatarFallback className="bg-primary text-primary-foreground rounded-lg text-sm font-medium">
+                                {userInitial}
+                            </AvatarFallback>
+                        </Avatar>
+                    </div>
+                )}
             </div>
         </header>
     );
