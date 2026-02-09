@@ -450,11 +450,12 @@ export function ChatWindow({ conversation, onBack }) {
           // Now send the message with the new conversation ID
           const optimisticMessage = {
             id: `temp-${Date.now()}`,
+            type: 'text',
             content,
             senderId: user.id,
             conversationId: data.conversation.id,
             isRead: false,
-            isOptimistic: true, // Mark as optimistic
+            isOptimistic: true,
             createdAt: new Date().toISOString(),
             sender: {
               id: user.id,
@@ -507,14 +508,15 @@ export function ChatWindow({ conversation, onBack }) {
       return;
     }
 
-    // Create optimistic message for immediate display
+    // Create optimistic message for immediate display (WhatsApp-style: show text right away)
     const optimisticMessage = {
       id: `temp-${Date.now()}`,
+      type: 'text',
       content,
       senderId: user.id,
       conversationId: conversation.id,
       isRead: false,
-      isOptimistic: true, // Mark as optimistic
+      isOptimistic: true,
       createdAt: new Date().toISOString(),
       sender: {
         id: user.id,

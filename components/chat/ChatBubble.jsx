@@ -113,8 +113,8 @@ export function ChatBubble({
             </div>
           )}
           
-          {/* Text Content (only if not image/video or if image/video has no content) */}
-          {message.type === 'text' && message.content && (
+          {/* Text content: show for type 'text' or when type is missing (optimistic sent message) so text appears immediately like WhatsApp */}
+          {(message.type === 'text' || !message.type) && message.content && (
             <p className="text-sm whitespace-pre-wrap break-words break-all overflow-wrap-anywhere word-break-break-all hyphens-auto">
               {message.content}
             </p>
