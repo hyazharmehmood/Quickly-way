@@ -145,46 +145,33 @@ export function ChatWindow({ conversation, onBack }) {
     };
   }, [socket, isConnected, conversation?.id]);
 
-  // Listen for offer updates via Socket.IO
+  // Listen for offer updates via Socket.IO (accept/reject - update freelancer's chat in real-time)
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     const handleOfferUpdate = (data) => {
-      console.log('💼 Offer update received:', {
-        offerId: data.offer?.id,
-        status: data.offer?.status,
-        conversationId: data.offer?.conversationId,
-        currentConversationId: conversation?.id,
-        eventType: data.eventType,
-      });
+      if (!data?.offer) return;
 
-      if (data.offer && data.offer.conversationId === conversation?.id) {
-        // Update offer in messages
-        setMessages((prev) => {
-          const updated = prev.map((msg) => {
-            if (msg.offer && msg.offer.id === data.offer.id) {
-              console.log('✅ Updating offer in message:', {
-                messageId: msg.id,
-                oldStatus: msg.offer.status,
-                newStatus: data.offer.status,
-              });
-              return {
-                ...msg,
-                offer: data.offer,
-                order: data.offer?.order || msg.order,
-              };
-            }
-            return msg;
-          });
-          return updated;
-        });
+      const otherUserId = conversation?.otherParticipant?.id;
+      // Match by conversationId OR by participants (fallback when conversationId missing)
+      const isRelevantOffer =
+        data.offer.conversationId === conversation?.id ||
+        (otherUserId &&
+          ((user?.id === data.offer.freelancerId && otherUserId === data.offer.clientId) ||
+            (user?.id === data.offer.clientId && otherUserId === data.offer.freelancerId)));
 
-        console.log('✅ Offer updated in chat window');
-      } else {
-        console.log('⚠️ Offer update ignored - conversation mismatch:', {
-          offerConversationId: data.offer?.conversationId,
-          currentConversationId: conversation?.id,
-        });
+      if (isRelevantOffer) {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.offer?.id === data.offer.id
+              ? {
+                  ...msg,
+                  offer: data.offer,
+                  order: data.offer?.order ?? msg.order,
+                }
+              : msg
+          )
+        );
       }
     };
 
@@ -195,7 +182,7 @@ export function ChatWindow({ conversation, onBack }) {
       socket.off('offer:updated', handleOfferUpdate);
       socket.off('offer:created', handleOfferUpdate);
     };
-  }, [socket, isConnected, conversation?.id]);
+  }, [socket, isConnected, conversation?.id, conversation?.otherParticipant?.id, user?.id]);
 
   useEffect(() => {
     if (!socket || !isConnected) return;
