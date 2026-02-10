@@ -134,7 +134,7 @@ export async function GET(request) {
 
     const user = await prisma.user.findUnique({
       where: { id: decoded.id },
-      select: { id: true, role: true },
+      select: { id: true, role: true, isSeller: true, sellerStatus: true },
     });
 
     if (!user) {
@@ -150,7 +150,10 @@ export async function GET(request) {
     const limit = parseInt(searchParams.get('limit') || '50');
     const skip = parseInt(searchParams.get('skip') || '0');
 
+    const isApprovedSeller = user.role === 'CLIENT' && user.isSeller && user.sellerStatus === 'APPROVED';
+
     const result = await orderService.getUserOrders(user.id, user.role, {
+      isApprovedSeller,
       status,
       serviceId,
       limit,

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { CURRENCIES } from '@/utils/constants';
 import { Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const PostServicePrice = (props) => {
     const {
@@ -17,27 +18,20 @@ const PostServicePrice = (props) => {
     const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
     const [isManualPriceEdit, setIsManualPriceEdit] = useState(false);
 
-    // Auto-calculate total price from breakdowns
+    // Auto-calculate total price from breakdowns (deferred to avoid setState-during-render)
     useEffect(() => {
-        // Only auto-update if user hasn't manually edited the price
-        if (!isManualPriceEdit) {
-            const total = priceBreakdowns.reduce((sum, breakdown) => {
-                const price = breakdown.price ? parseFloat(breakdown.price) : 0;
-                return sum + (isNaN(price) ? 0 : price);
-            }, 0);
-            
-            // Update priceStr with the calculated total (as integer string)
-            if (total > 0) {
-                const newPriceStr = Math.round(total).toString();
-                if (newPriceStr !== priceStr) {
-                    setPriceStr(newPriceStr);
-                }
-            } else if (priceBreakdowns.every(b => !b.price || b.price === '')) {
-                // If all breakdowns are empty, clear the price
-                if (priceStr !== '') {
-                    setPriceStr('');
-                }
-            }
+        if (isManualPriceEdit) return;
+        const total = priceBreakdowns.reduce((sum, breakdown) => {
+            const price = breakdown.price ? parseFloat(breakdown.price) : 0;
+            return sum + (isNaN(price) ? 0 : price);
+        }, 0);
+        const newPriceStr = total > 0 ? Math.round(total).toString() : '';
+        const shouldUpdate =
+            (total > 0 && newPriceStr !== priceStr) ||
+            (total === 0 && priceBreakdowns.every(b => !b.price || b.price === '') && priceStr !== '');
+        if (shouldUpdate) {
+            const id = setTimeout(() => setPriceStr(newPriceStr), 0);
+            return () => clearTimeout(id);
         }
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [priceBreakdowns]);
@@ -79,13 +73,13 @@ const PostServicePrice = (props) => {
 
     const handlePaymentMethodsFocus = () => {
         if (!paymentMethods) {
-            setPaymentMethods("I accept payments via Cash");
+            setTimeout(() => setPaymentMethods("I accept payments via Cash"), 0);
         }
     };
 
     const handlePaymentMethodsBlur = () => {
         if (paymentMethods === "I accept payments via Cash") {
-            setPaymentMethods("");
+            setTimeout(() => setPaymentMethods(""), 0);
         }
     };
 
@@ -262,18 +256,19 @@ const PostServicePrice = (props) => {
 
             {/* Actions */}
             <div className="flex items-center gap-4">
-                <button
+                <Button
                     type="button"
+                    variant="outline"
                     onClick={onCancel}
-                    className="flex-1 py-3.5 border border-gray-300 rounded-full text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                    className="flex-1 h-11"
                 >
                     Cancel
-                </button>
-                <button
+                </Button>
+                <Button
                     type="submit"
                     onClick={onSave}
                     disabled={isLoading}
-                    className="flex-1 py-3.5 bg-[#10b981] text-white rounded-full font-bold hover:bg-green-600 transition-colors shadow-sm disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                    className="flex-1 h-11 py-3.5  disabled:opacity-50 disabled:cursor-not-allowed "
                 >
                     {isLoading ? (
                         <>
@@ -283,7 +278,7 @@ const PostServicePrice = (props) => {
                     ) : (
                         "Save Service"
                     )}
-                </button>
+                </Button>
             </div>
         </div>
     );

@@ -3,8 +3,33 @@
 import React, { useState, useEffect } from 'react';
 import PostService from '@/components/service/post-service/PostService';
 import { useRouter, useParams } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent } from '@/components/ui/card';
 import { toast } from 'sonner';
+
+function EditServiceSkeleton() {
+    return (
+        <Card className="border-none shadow-none">
+            <CardContent className="">
+                <div className="space-y-6">
+                    <Skeleton className="h-8 w-48" />
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-28" />
+                        <Skeleton className="h-11 w-full" />
+                    </div>
+                    <div className="space-y-2">
+                        <Skeleton className="h-4 w-20" />
+                        <Skeleton className="h-32 w-full" />
+                    </div>
+                    <div className="flex gap-3 pt-4">
+                        <Skeleton className="h-11 flex-1 rounded-full" />
+                        <Skeleton className="h-11 flex-1 rounded-full" />
+                    </div>
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function EditServicePage() {
     const router = useRouter();
@@ -20,11 +45,9 @@ export default function EditServicePage() {
                 const response = await fetch(`/api/services/${id}`);
                 if (response.ok) {
                     const data = await response.json();
-                    console.log(">>>>", data);
                     setService(data);
                 } else {
                     console.error("Failed to fetch service");
-                    // router.push('/dashboard/freelancer/services'); 
                 }
             } catch (error) {
                 console.error("Error loading service", error);
@@ -48,11 +71,7 @@ export default function EditServicePage() {
     };
 
     if (loading) {
-        return (
-            <div className="flex items-center justify-center min-h-[50vh]">
-                <Loader2 className="w-8 h-8 animate-spin text-green-500" />
-            </div>
-        );
+        return <EditServiceSkeleton />;
     }
 
     if (!service) {

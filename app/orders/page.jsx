@@ -54,6 +54,7 @@ export default function ClientOrdersPage() {
                 params.status = statusFilter;
             }
             const response = await api.get('/orders', { params });
+            console.log(">>>>", response.data);
             if (response.data.success) {
                 setOrders(response.data.orders || []);
             }

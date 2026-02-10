@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Search, Check } from 'lucide-react';
 import { SkillsSelector } from './SkillsSelector';
 import { KeywordSelector } from './KeywordSelector';
+import { Button } from '@/components/ui/button';
 
 const PostServiceSkills = (props) => {
     const {
@@ -45,18 +46,22 @@ const PostServiceSkills = (props) => {
 
 
             <div className="flex items-center gap-4 mt-8">
-                <button
+                <Button
+                    type="button"
+                    variant="outline"
                     onClick={onBack}
-                    className="flex-1 py-3.5 border border-gray-300 rounded-full text-gray-700 font-bold hover:bg-gray-50 transition-colors"
+                    className="flex-1 h-11"
                 >
                     Back
-                </button>
-                <button
+                </Button>
+                <Button
+                    type="button"
+                    variant="default"
                     onClick={onNext}
-                    className="flex-1 py-3.5 bg-[#10b981] text-white rounded-full font-bold hover:bg-green-600 transition-colors shadow-sm"
+                    className="flex-1 h-11"
                 >
                     Next
-                </button>
+                </Button>
             </div>
         </div>
     );

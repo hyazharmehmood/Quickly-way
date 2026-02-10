@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Plus, MoreVertical, Edit2, Trash2, Eye, Power } from 'lucide-react';
+import { Plus, MoreVertical,  Eye, Power, Pencil } from 'lucide-react';
 import Link from 'next/link';
 import { ServiceCard } from '@/components/service/ServiceCard';
 import { Button } from "@/components/ui/button";
@@ -133,7 +133,7 @@ export default function FreelancerServicesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                 {myServices.map((service) => (
                     <div key={service.id} className="relative group">
-                        <div className="absolute top-2 right-2 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
                                     <Button variant="outline" size="icon" className="h-8 w-8 rounded-full backdrop-blur-sm">
@@ -143,14 +143,14 @@ export default function FreelancerServicesPage() {
                                 <DropdownMenuContent align="end">
                                     <Link href={`/dashboard/freelancer/services/${service.id}/edit`}>
                                         <DropdownMenuItem className="cursor-pointer">
-                                            <Edit2 className="mr-2 h-4 w-4" />
+                                            <Pencil className=" h-4 w-4" />
                                             <span className="text-primary">Edit</span>   
                                         </DropdownMenuItem>
                                     </Link>
-                                    <DropdownMenuItem className="text-red-600 cursor-pointer">
-                                        <Trash2 className="mr-2 h-4 w-4" />
+                                    {/* <DropdownMenuItem className="text-red-600 cursor-pointer">
+                                        <Trash2 className="m h-4 w-4" />
                                         <span className="text-red-600">Delete</span> 
-                                    </DropdownMenuItem>
+                                    </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>

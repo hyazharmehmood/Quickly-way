@@ -1,149 +1,200 @@
-import React, { useRef, useState, useEffect } from 'react';
-import { Camera, AlertCircle } from 'lucide-react';
+"use client";
+
+import React, { useState, useCallback } from "react";
+import { AlertCircle } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/utils";
+
+const TITLE_MIN = 50;
+const TITLE_MAX = 150;
+const ABOUT_MIN = 300;
+const ABOUT_MAX = 800;
 
 const PostServiceTitle = (props) => {
-    const {
-        serviceTitle, setServiceTitle,
-        aboutText, setAboutText,
-        onBack, onNext
-    } = props;
+  const {
+    serviceTitle,
+    setServiceTitle,
+    aboutText,
+    setAboutText,
+    onBack,
+    onNext,
+  } = props;
 
-    const [serviceTitleError, setServiceTitleError] = useState("");
-    const [aboutError, setAboutError] = useState("");
-    const titleTextareaRef = useRef(null);
+  const [serviceTitleError, setServiceTitleError] = useState("");
+  const [aboutError, setAboutError] = useState("");
 
-    // Auto-resize service title textarea to accommodate wrapping text
-    useEffect(() => {
-        if (titleTextareaRef.current) {
-            titleTextareaRef.current.style.height = 'auto';
-            titleTextareaRef.current.style.height = `${titleTextareaRef.current.scrollHeight}px`;
-        }
-    }, [serviceTitle]);
+  const validateServiceTitle = useCallback((title) => {
+    if (!title.trim()) return "Service title is required";
+    if (title.length < TITLE_MIN) return `Minimum ${TITLE_MIN} characters required`;
+    if (title.length > TITLE_MAX) return `Maximum ${TITLE_MAX} characters allowed`;
+    return "";
+  }, []);
 
-    const validateServiceTitle = (title) => {
-        if (!title.trim()) return "Service title is required";
-        if (title.length < 50) return "Minimum 50 characters required";
-        if (title.length > 150) return "Maximum 150 characters allowed";
-        return "";
-    };
+  const validateAbout = useCallback((text) => {
+    if (!text.trim()) return "About text is required";
+    if (text.length < ABOUT_MIN) return `Minimum ${ABOUT_MIN} characters required`;
+    if (text.length > ABOUT_MAX) return `Maximum ${ABOUT_MAX} characters allowed`;
+    return "";
+  }, []);
 
-    const validateAbout = (text) => {
-        if (!text.trim()) return "About text is required";
-        if (text.length < 50) return "Minimum 50 characters required";
-        if (text.length > 800) return "Maximum 800 characters allowed";
-        return "";
-    };
+  const handleNextClick = () => {
+    const titleErr = validateServiceTitle(serviceTitle);
+    const aboutErr = validateAbout(aboutText);
 
+    setServiceTitleError(titleErr);
+    setAboutError(aboutErr);
 
+    if (!titleErr && !aboutErr) {
+      onNext();
+    }
+  };
 
-    const handleNextClick = () => {
-        const titleErr = validateServiceTitle(serviceTitle);
-        const aboutErr = validateAbout(aboutText);
+  const clearTitleError = () => serviceTitleError && setServiceTitleError("");
+  const clearAboutError = () => aboutError && setAboutError("");
 
-        setServiceTitleError(titleErr);
-        setAboutError(aboutErr);
+  const titleCountClass = cn(
+    "text-xs font-medium tabular-nums shrink-0 ml-2",
+    serviceTitleError
+      ? "text-red-500"
+      : serviceTitle.length >= TITLE_MAX
+        ? "text-amber-600"
+        : serviceTitle.length >= TITLE_MIN
+          ? "text-green-600"
+          : "text-muted-foreground"
+  );
 
-        if (!titleErr && !aboutErr) {
-            onNext();
-        }
-    };
+  const aboutCountClass = cn(
+    "text-xs tabular-nums shrink-0",
+    aboutError
+      ? "text-red-500"
+      : aboutText.length >= ABOUT_MAX
+        ? "text-amber-600"
+        : aboutText.length >= ABOUT_MIN
+          ? "text-green-600"
+          : "text-muted-foreground"
+  );
 
-    return (
-        <div>
-            {/* Service Title */}
-            <div className="mb-6 space-y-1.5">
-                <label className="block text-base font-medium text-gray-900">Service title <span className="text-red-500">*</span></label>
-                <textarea
-                    ref={titleTextareaRef}
-                    rows={1}
-                    value={serviceTitle}
-                    maxLength={150}
-                    onPaste={(e) => {
-                        // Pre-emptively handle paste to ensure limit is never breached visually or in state
-                        const pasteData = e.clipboardData.getData('text');
-                        // If combined length exceeds 150, slice immediately
-                        if (serviceTitle.length + pasteData.length > 150) {
-                            e.preventDefault();
-                            const truncated = (serviceTitle + pasteData).slice(0, 150);
-                            setServiceTitle(truncated);
-                        }
-                    }}
-                    onChange={(e) => {
-                        // Double reinforcement: truncate any input to 150 characters
-                        const val = e.target.value.slice(0, 150);
-                        setServiceTitle(val);
-                        if (serviceTitleError) setServiceTitleError("");
-                    }}
-                    onBlur={() => setServiceTitleError(validateServiceTitle(serviceTitle))}
-                    placeholder="Logo, Business Card, Flyer, Brochure, Poster, Banner, and Website Design Services"
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-base text-gray-700 resize-none overflow-hidden ${serviceTitleError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-green-500/20 focus:border-green-500'}`}
-                />
-                <div className="flex justify-between text-xs mt-1">
-                    <div className="flex-1">
-                        {serviceTitleError ? (
-                            <div className="flex items-center gap-1 text-red-500">
-                                <AlertCircle className="w-3 h-3" />
-                                <span>{serviceTitleError}</span>
-                            </div>
-                        ) : (
-                            <span className="text-gray-500">Your service title is very important, so include proper keywords that clients can use to search for your service.</span>
-                        )}
-                    </div>
-                    <span className={`${serviceTitleError ? 'text-red-500' : 'text-gray-500'} ml-2 font-medium`}>{serviceTitle.length}/150</span>
-                </div>
-            </div>
-
-
-
-            {/* About */}
-            <div className="mb-6 space-y-1.5">
-                <label className="block text-base font-medium text-gray-900">About <span className="text-red-500">*</span></label>
-                <textarea
-                    rows={6}
-                    value={aboutText}
-                    maxLength={800}
-                    onChange={(e) => {
-                        setAboutText(e.target.value);
-                        if (aboutError) setAboutError("");
-                    }}
-                    onBlur={() => setAboutError(validateAbout(aboutText))}
-                    placeholder="I am a professional designer specializing in logos, brochures, flyers, and complete branding solutions..."
-                    className={`w-full px-4 py-3 border rounded-lg focus:outline-none focus:ring-2 text-base text-gray-700 leading-relaxed resize-none ${aboutError ? 'border-red-500 focus:border-red-500 focus:ring-red-200' : 'border-gray-200 focus:ring-green-500/20 focus:border-green-500'}`}
-                />
-                <div className="flex justify-between items-start mt-1">
-                    <div className="flex-1">
-                        {aboutError && (
-                            <div className="flex items-center gap-1 text-red-500 text-xs">
-                                <AlertCircle className="w-3 h-3" />
-                                <span>{aboutError}</span>
-                            </div>
-                        )}
-                        {!aboutError && (
-                            <span className="text-xs text-gray-500">Share some details about yourself, and the services you provide.</span>
-                        )}
-                    </div>
-                    <span className={`text-xs ${aboutError ? 'text-red-500' : 'text-gray-500'}`}>
-                        {aboutText.length}/800 characters
-                    </span>
-                </div>
-            </div>
-
-            <div className="flex items-center gap-4 mt-8">
-                <button
-                    onClick={onBack}
-                    className="flex-1 py-3.5 border border-gray-300 rounded-full text-gray-700 font-bold hover:bg-gray-50 transition-colors"
-                >
-                    Back
-                </button>
-                <button
-                    onClick={handleNextClick}
-                    className="flex-1 py-3.5 bg-[#10b981] text-white rounded-full font-bold hover:bg-green-600 transition-colors shadow-sm"
-                >
-                    Next
-                </button>
-            </div>
+  return (
+    <div className="space-y-6">
+      {/* Service Title */}
+      <div className="space-y-2">
+        <label
+          htmlFor="service-title"
+          className="block text-sm font-medium text-foreground"
+        >
+          Service title <span className="text-red-500">*</span>
+        </label>
+        <Input
+          id="service-title"
+          value={serviceTitle}
+          maxLength={TITLE_MAX}
+          onChange={(e) => {
+            setServiceTitle(e.target.value);
+            clearTitleError();
+          }}
+          onBlur={() => setServiceTitleError(validateServiceTitle(serviceTitle))}
+          placeholder="e.g. Logo, Business Card, Flyer, Brochure, Poster, Banner, and Website Design"
+          className={cn(
+            "h-11 transition-colors",
+            serviceTitleError && "border-red-500 focus-visible:ring-red-500/20"
+          )}
+          aria-invalid={!!serviceTitleError}
+          aria-describedby={serviceTitleError ? "title-error" : "title-hint"}
+        />
+        <div className="flex justify-between items-start gap-3 min-h-5">
+          <div className="flex-1 min-w-0">
+            {serviceTitleError ? (
+              <p
+                id="title-error"
+                className="flex items-center gap-1.5 text-xs text-red-500"
+              >
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{serviceTitleError}</span>
+              </p>
+            ) : (
+              <p
+                id="title-hint"
+                className="text-xs text-muted-foreground leading-relaxed"
+              >
+                Use keywords that clients search for. Be specific and descriptive.
+              </p>
+            )}
+          </div>
+          <span className={titleCountClass}>
+            {serviceTitle.length}/{TITLE_MAX}
+          </span>
         </div>
-    );
+      </div>
+
+      {/* About */}
+      <div className="space-y-2">
+        <label
+          htmlFor="about-text"
+          className="block text-sm font-medium text-foreground"
+        >
+          About <span className="text-red-500">*</span>
+        </label>
+        <Textarea
+          id="about-text"
+          rows={6}
+          value={aboutText}
+          maxLength={ABOUT_MAX}
+          onChange={(e) => {
+            setAboutText(e.target.value);
+            clearAboutError();
+          }}
+          onBlur={() => setAboutError(validateAbout(aboutText))}
+          placeholder="I am a professional designer specializing in logos, brochures, flyers, and complete branding solutions. I deliver high-quality work with quick turnaround..."
+          className={cn(
+            "resize-none text-base leading-relaxed transition-colors",
+            aboutError && "border-red-500 focus-visible:ring-red-500/20"
+          )}
+          aria-invalid={!!aboutError}
+          aria-describedby={aboutError ? "about-error" : "about-hint"}
+        />
+        <div className="flex justify-between items-start gap-3 min-h-5">
+          <div className="flex-1 min-w-0">
+            {aboutError ? (
+              <p
+                id="about-error"
+                className="flex items-center gap-1.5 text-xs text-red-500"
+              >
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+                <span>{aboutError}</span>
+              </p>
+            ) : (
+              <p
+                id="about-hint"
+                className="text-xs text-muted-foreground leading-relaxed"
+              >
+                Share details about yourself and the services you provide.
+              </p>
+            )}
+          </div>
+          <span className={aboutCountClass}>
+            {aboutText.length}/{ABOUT_MAX}
+          </span>
+        </div>
+      </div>
+
+      {/* Actions */}
+      <div className="flex items-center justify-end gap-3 pt-4">
+<div className="w-full">
+
+</div>
+
+      <div className="w-full">  <Button
+          type="button"
+          onClick={handleNextClick}
+          className=" w-full h-11 rounded-full font-semibold "
+        >
+          Next
+        </Button></div>
+      </div>
+    </div>
+  );
 };
 
 export default PostServiceTitle;
