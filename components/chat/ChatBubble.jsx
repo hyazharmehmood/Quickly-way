@@ -52,23 +52,21 @@ export function ChatBubble({
             (message.type === 'image' || message.type === 'video') ? "p-0" : "px-4 py-2.5"
           )}
         >
-          {/* Image Attachment - WhatsApp Style */}
+          {/* Image Attachment - Consistent size container */}
           {message.type === 'image' && message.attachmentUrl && (
-            <div className="relative group">
+            <div className="relative h-60  overflow-hidden rounded-[inherit]">
               <img
                 src={message.attachmentUrl}
                 alt={message.content || 'Image'}
-                className="w-full h-auto object-cover cursor-pointer"
+                className="w-full h-full object-cover cursor-pointer"
                 loading="lazy"
                 onClick={() => {
-                  // Open image in full screen (can be enhanced with a modal)
                   window.open(message.attachmentUrl, '_blank');
                 }}
               />
-              {/* Text overlay on image if content exists */}
               {message.content && message.content.trim() && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
-                  <p className="text-sm whitespace-pre-wrap break-words">
+                  <p className="text-sm whitespace-pre-wrap break-words line-clamp-1">
                     {message.content}
                   </p>
                 </div>
@@ -76,13 +74,13 @@ export function ChatBubble({
             </div>
           )}
           
-          {/* Video Attachment */}
+          {/* Video Attachment - Consistent size */}
           {message.type === 'video' && message.attachmentUrl && (
-            <div className="relative">
+            <div className="relative h-72  aspect-video overflow-hidden rounded-[inherit]">
               <video
                 src={message.attachmentUrl}
                 controls
-                className="w-full h-auto"
+                className="w-full h-full object-cover"
                 preload="metadata"
               >
                 Your browser does not support the video tag.
@@ -90,7 +88,7 @@ export function ChatBubble({
               {/* Text overlay on video if content exists */}
               {message.content && message.content.trim() && (
                 <div className="absolute bottom-0 left-0 right-0 bg-black/50 text-white p-2">
-                  <p className="text-sm whitespace-pre-wrap break-words">
+                  <p className="text-sm whitespace-pre-wrap break-words line-clamp-1">
                     {message.content}
                   </p>
                 </div>
