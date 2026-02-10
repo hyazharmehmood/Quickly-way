@@ -25,7 +25,6 @@ let __publicPresenceListenersAdded = false;
  * @returns {Object} { isConnected }
  */
 export function usePublicPresence() {
-  const { updateOnlineFreelancers } = usePublicPresenceStore();
   const [isConnected, setIsConnected] = useState(false);
 
   useEffect(() => {
@@ -81,18 +80,18 @@ export function usePublicPresence() {
     });
 
     // ------------------------------------------------------------------------
-    // Presence Event Handlers - Set up only once using flag
+    // Presence Event Handlers - Use getState() to avoid stale closure
     // ------------------------------------------------------------------------
     if (!__publicPresenceListenersAdded) {
       socketInstance.on('presence:connected', (data) => {
-        if (data.onlineFreelancerIds) {
-          updateOnlineFreelancers(data.onlineFreelancerIds);
+        if (data?.onlineFreelancerIds) {
+          usePublicPresenceStore.getState().updateOnlineFreelancers(data.onlineFreelancerIds);
         }
       });
 
       socketInstance.on('presence:update', (data) => {
-        if (data.onlineFreelancerIds) {
-          updateOnlineFreelancers(data.onlineFreelancerIds);
+        if (data?.onlineFreelancerIds) {
+          usePublicPresenceStore.getState().updateOnlineFreelancers(data.onlineFreelancerIds);
         }
       });
 
@@ -106,7 +105,7 @@ export function usePublicPresence() {
     return () => {
       // No cleanup needed here - socket persists across navigations
     };
-  }, [updateOnlineFreelancers]);
+  }, []);
 
   // ============================================================================
   // Connection Status Management

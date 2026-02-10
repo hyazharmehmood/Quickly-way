@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import { ServiceCard } from '@/components/service/ServiceCard';
+import { UserStatus } from '@/components/chat/UserStatus';
 import { formatDistanceToNow } from 'date-fns';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
@@ -375,9 +376,14 @@ export default function FreelancerProfilePage() {
                                     )}
                                   
                                 </div>
-                                <h2 className="text-2xl font-bold text-foreground mb-2">
-                                    {freelancer.name}
-                                </h2>
+                                <div className="flex items-center justify-center gap-2 mb-2">
+                                    <h2 className="text-2xl font-bold text-foreground">
+                                        {freelancer.name}
+                                    </h2>
+                                    {freelancerId && (
+                                        <UserStatus userId={freelancerId} size="sm" showLabel />
+                                    )}
+                                </div>
                                 <div className="flex items-center justify-center gap-2 text-sm mb-4">
                                     <div className="flex items-center gap-1 bg-primary/10 px-2.5 py-1 rounded-full">
                                         <Star className="w-3.5 h-3.5 fill-yellow-400 text-yellow-400" />
