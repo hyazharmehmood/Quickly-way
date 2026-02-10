@@ -7,9 +7,9 @@
   },
   "scripts": {
     "dev": "NODE_ENV=development node server.js",
-    "dev:next": "next dev --webpack -p 3000",
-    "build": "next build --webpack",
-    "start": "NODE_ENV=development node server.js",
+    "dev:next": "next dev --turbopack -p 3000",
+    "build": "next build",
+    "start": "NODE_ENV=production node server.js",
     "start:next": "next start",
     "lint": "next lint",
     "format": "prettier --write \"**/*.{js,jsx,json,md}\"",

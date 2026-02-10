@@ -10,7 +10,12 @@ const hostname = process.env.NODE_ENV !== 'development'
 // Frontend should run on port 3000, not 3001
 const port = 3000;
 
-const app = next({ dev, hostname, port });
+const app = next({
+  dev,
+  hostname,
+  port,
+  turbopack: dev, // Use Turbopack in dev mode (Next.js 16+)
+});
 const handle = app.getRequestHandler();
 
 app.prepare().then(() => {
@@ -32,7 +37,11 @@ app.prepare().then(() => {
       // Socket.IO will intercept WebSocket/polling requests automatically
       await handle(req, res, parsedUrl);
     } catch (err) {
-      console.error('Error occurred handling', req.url, err);
+      if (dev) {
+        console.error('Error occurred handling', req.url, err);
+      } else {
+        console.error('Error occurred handling request');
+      }
       if (!res.headersSent) {
         res.statusCode = 500;
         res.end('internal server error');
@@ -41,7 +50,11 @@ app.prepare().then(() => {
   });
 
   httpServer.once('error', (err) => {
-    console.error(err);
+    if (dev) {
+      console.error(err);
+    } else {
+      console.error('Server error');
+    }
     process.exit(1);
   });
 
