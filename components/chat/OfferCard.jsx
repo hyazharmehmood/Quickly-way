@@ -4,13 +4,7 @@ import React, { useState } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  CheckCircle2, 
-  XCircle, 
-  Clock, 
-  DollarSign,
-  Eye,
-} from 'lucide-react';
+import { CheckCircle2, XCircle, Clock, Eye } from 'lucide-react';
 import { format } from 'date-fns';
 import api from '@/utils/api';
 import { toast } from 'sonner';
@@ -28,42 +22,21 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
-
-const STATUS_CONFIG = {
-  PENDING: {
-    label: 'PENDING',
-    color: 'bg-yellow-500',
-    textColor: 'text-white',
-  },
-  ACCEPTED: {
-    label: 'ACCEPTED',
-    color: 'bg-green-500',
-    textColor: 'text-white',
-  },
-  REJECTED: {
-    label: 'REJECTED',
-    color: 'bg-red-500',
-    textColor: 'text-white',
-  },
-  EXPIRED: {
-    label: 'EXPIRED',
-    color: 'bg-gray-500',
-    textColor: 'text-white',
-  },
-};
+import { ViewOfferModal, OFFER_STATUS_CONFIG } from './ViewOfferModal';
 
 export function OfferCard({ offer, conversationId, onOfferUpdate }) {
   const { user, role, isSeller } = useAuthStore();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [showRejectDialog, setShowRejectDialog] = useState(false);
+  const [showViewOfferDialog, setShowViewOfferDialog] = useState(false);
   const [rejectionReason, setRejectionReason] = useState('');
   const normalizedRole = role ? role.toUpperCase() : '';
 
   if (!offer) return null;
 
   const offerStatus = offer.status || 'PENDING';
-  const statusConfig = STATUS_CONFIG[offerStatus] || STATUS_CONFIG.PENDING;
+  const statusConfig = OFFER_STATUS_CONFIG[offerStatus] || OFFER_STATUS_CONFIG.PENDING;
   const isClient = normalizedRole === 'CLIENT';
   const isFreelancer = normalizedRole === 'FREELANCER' || (normalizedRole === 'CLIENT' && isSeller);
   const isClientOffer = offer.clientId === user?.id;
@@ -246,24 +219,29 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
       )}
 
       {/* View Details Button - Show for freelancer or if offer is accepted/rejected */}
-      {(isFreelancerOffer || isAccepted || isRejected) && (
+      {(isFreelancerOffer || isClientOffer || isAccepted || isRejected) && (
         <Button
           size="lg"
           onClick={() => {
             if (isAccepted && offer.order) {
               router.push(`/orders/${offer.order.id}`);
-            } else if (isFreelancer) {
-              router.push(`/dashboard/freelancer/offers`);
             } else {
-              router.push(`/offers/${offer.id}`);
+              setShowViewOfferDialog(true);
             }
           }}
-          className="w-full  mt-2"
+          variant={isAccepted && offer.order ? 'default' : 'outline'}
+          className="w-full mt-2"
         >
           <Eye className="h-4 w-4 mr-2" />
           {isAccepted && offer.order ? 'View Order' : 'View Offer'}
         </Button>
       )}
+
+      <ViewOfferModal
+        offer={offer}
+        open={showViewOfferDialog}
+        onOpenChange={setShowViewOfferDialog}
+      />
     </Card>
   );
 }

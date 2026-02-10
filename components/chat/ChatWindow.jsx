@@ -50,23 +50,16 @@ export function ChatWindow({ conversation, onBack }) {
     const otherUserId = conversation.otherParticipant?.id;
     const conversationId = conversation.id;
 
-    // Only join conversation room if conversation exists
+    // Fetch messages FIRST for faster display, then join (join can run in parallel)
     if (socket && isConnected && conversationId) {
+      fetchMessages();
       socket.emit('join_conversation', conversationId);
-      
-      // Emit chat:focus when user opens chat
-      if (otherUserId) {
-        socket.emit('chat:focus', { partnerId: otherUserId });
-      }
+      if (otherUserId) socket.emit('chat:focus', { partnerId: otherUserId });
     } else if (socket && isConnected && otherUserId) {
-      // If no conversation yet but we have otherUserId, just emit chat:focus
       socket.emit('chat:focus', { partnerId: otherUserId });
     }
 
-    // Fetch messages only if conversation exists
-    if (socket && isConnected && conversationId) {
-      fetchMessages();
-    } else {
+    if (!conversationId) {
       // No conversation yet, show empty state
       setMessages([]);
       setLoading(false);

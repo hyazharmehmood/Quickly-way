@@ -146,9 +146,9 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="w-[95vw] sm:w-full sm:max-w-lg rounded-2xl sm:rounded-[2.5rem] overflow-y-auto max-h-[95vh] sm:max-h-[90vh] p-4 sm:p-6 border-none shadow-2xl bg-white mx-2 sm:mx-0">
+      <DialogContent className="w-[95vw] sm:w-full sm:max-w-lg  overflow-y-auto max-h-[95vh] sm:max-h-[90vh] p-4 sm:p-6 border-none shadow-2xl bg-white mx-2 sm:mx-0">
         <DialogHeader className="text-center">
-          <DialogTitle className="text-lg sm:text-xl font-bold text-gray-900 mt-2 sm:mt-4 flex items-center justify-center gap-2">
+          <DialogTitle className=" mt-2 sm:mt-4 flex items-center justify-center gap-1.5">
             <FileText className="w-4 h-4 sm:w-5 sm:h-5" />
             Send Custom Offer
           </DialogTitle>
@@ -285,14 +285,14 @@ const CreateOfferModal = ({ isOpen, onClose, service, conversationId, clientId, 
               type="button"
               variant="outline"
               onClick={onClose}
-              className="flex-1 rounded-lg sm:rounded-xl text-sm sm:text-base"
+              className="flex-1 "
               disabled={loading}
             >
               Cancel
             </Button>
             <Button
               type="submit"
-              className="flex-1 rounded-lg sm:rounded-xl bg-[#10b981] hover:bg-[#059669] text-sm sm:text-base"
+              className="flex-1 "
               disabled={loading || !selectedServiceId || services.length === 0}
             >
               {loading ? 'Sending...' : 'Send Offer'}

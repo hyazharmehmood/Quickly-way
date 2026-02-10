@@ -123,7 +123,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   return (
     <div className="flex flex-col w-full relative">
       {/* Top Bar */}
-      <div className="bg-background border-b border-border py-2.5 px-4 sm:px-6 lg:px-8 relative z-[60]">
+      <div className="bg-background border-b border-border py-2.5 px-4 sm:px-6 lg:px-8 relative ">
         <div className="max-w-7xl mx-auto flex items-center justify-start gap-8">
           {/* Navigation Icons Group */}
           <div className="flex items-center gap-6">
