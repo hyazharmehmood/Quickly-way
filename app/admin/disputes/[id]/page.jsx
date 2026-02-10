@@ -75,7 +75,7 @@ export default function AdminDisputeDetailPage() {
 
   const fetchDispute = async () => {
     try {
-      setLoading(true);
+  
       const response = await api.get(`/admin/disputes/${params.id}`);
       if (response.data.success) {
         setDispute(response.data.dispute);
