@@ -98,34 +98,34 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
   const isRejected = offerStatus === 'REJECTED';
 
   return (
-    <Card className="p-4 sm:p-5 mb-4 border border-gray-200 bg-white rounded-2xl shadow-sm w-full max-w-full">
+    <Card className="p-4 sm:p-5 mb-4 space-y-2 border border-gray-200 bg-white rounded-2xl shadow-sm w-full max-w-full">
       {/* Header: Status Badge and Price */}
-      <div className="flex items-start justify-between mb-3 sm:mb-4 gap-2">
-        <Badge className={`${statusConfig.color} ${statusConfig.textColor} px-2 sm:px-3 py-1 sm:py-1.5 rounded-full font-bold uppercase flex-shrink-0`}>
+      <div className="flex items-start justify-between  gap-2">
+        <Badge className={`${statusConfig.color} ${statusConfig.textColor} `}>
           {statusConfig.label}
         </Badge>
         <div className="text-right flex-shrink-0">
-          <div className="text-lg sm:text-lg md:text-lg font-bold text-blue-900">
+          <div className="text-base sm:text-base md:text-base font-semibold ">
             {offer.currency || 'USD'} {offer.price?.toFixed(0) || '0'}
           </div>
         </div>
       </div>
 
       {/* Service Title */}
-      <h3 className="text-md sm:text-md font-bold text-blue-900 mb-2 sm:mb-3 leading-tight break-words">
+      <h3 className="text-md sm:text-md font-bold  break-words">
         {offer.serviceTitle || 'Custom Offer'}
       </h3>
 
       {/* Scope of Work */}
       {offer.scopeOfWork && (
-        <p className="text-sm text-gray-600 mb-3 sm:mb-4 line-clamp-3">
+        <p className="text-xs text-gray-600 line-clamp-3">
           {offer.scopeOfWork}
         </p>
       )}
 
       {/* Delivery Time */}
       {deliveryDate && (
-        <div className="flex items-center gap-2 text-blue-900 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 text-blue-900 ">
           <Clock className="h-3 w-3 sm:h-4 sm:w-4 flex-shrink-0" />
           <span className="text-xs sm:text-sm font-medium">Delivery in {offer.deliveryTime} days ({deliveryDate})</span>
         </div>
@@ -133,16 +133,16 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
 
       {/* Revisions Info */}
       {offer.revisionsIncluded > 0 && (
-        <div className="flex items-center gap-2 text-gray-600 mb-3 sm:mb-4">
+        <div className="flex items-center gap-2 text-gray-600 ">
           <span className="text-xs sm:text-sm">Revisions included: {offer.revisionsIncluded}</span>
         </div>
       )}
 
       {/* Status Messages */}
       {isAccepted && offer.order && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-green-800 font-medium">
-            ✓ Offer accepted! Order has been created.
+        <div className="bg-green-50 border border-green-200 rounded-lg p-2">
+          <p className="text-base text-green-800 font-medium">
+            Offer accepted! Order has been created.
           </p>
           <p className="text-xs text-green-600 mt-1">
             Order #{offer.order.orderNumber} is now active.
@@ -151,8 +151,8 @@ export function OfferCard({ offer, conversationId, onOfferUpdate }) {
       )}
 
       {isRejected && offer.rejectionReason && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
-          <p className="text-sm text-red-800 font-medium">Offer rejected</p>
+        <div className="bg-red-50 border border-red-200 rounded-lg p-2">
+          <p className="text-base text-red-800 font-medium">Offer rejected</p>
           <p className="text-xs text-red-600 mt-1">{offer.rejectionReason}</p>
         </div>
       )}
