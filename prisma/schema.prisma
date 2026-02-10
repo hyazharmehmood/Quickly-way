@@ -159,18 +159,24 @@ model Message {
   content        String
   senderId       String
   conversationId String
-  type           String       @default("text") // "text", "image", "video", "file"
+  type           String       @default("text") // "text", "image", "video", "file", "offer"
   attachmentUrl  String?      // URL for images, videos, or files
-  attachmentName String?      // Original filename
+  attachmentName String?      // Original filename (for file attachments)
+  offerId        String?      // Direct relation to offer (for offer messages)
+  orderId        String?      // Direct relation to order (set when offer accepted)
   createdAt      DateTime     @default(now())
   deliveredAt    DateTime?    // When message was delivered to recipient's device
   seenAt         DateTime?    // When message was seen/read by recipient (from ConversationParticipant.lastReadAt)
   conversation   Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
   sender         User         @relation(fields: [senderId], references: [id])
+  offer          Offer?       @relation(fields: [offerId], references: [id], onDelete: SetNull)
+  order          Order?       @relation(fields: [orderId], references: [id], onDelete: SetNull)
 
   @@index([conversationId, createdAt])
   @@index([deliveredAt])
   @@index([seenAt])
+  @@index([offerId])
+  @@index([orderId])
 }
 
 // Category and Skill Models (Admin-managed)
@@ -295,6 +301,7 @@ model Offer {
   freelancer            User              @relation("FreelancerOffers", fields: [freelancerId], references: [id])
   conversation          Conversation?     @relation(fields: [conversationId], references: [id])
   order                 Order?            @relation(fields: [orderId], references: [id])
+  messages              Message[]
 
   @@index([clientId])
   @@index([freelancerId])
@@ -334,6 +341,7 @@ model Order {
   freelancer            User              @relation("FreelancerOrders", fields: [freelancerId], references: [id])
   conversation          Conversation?     @relation(fields: [conversationId], references: [id])
   offer                 Offer?            @relation // Reverse relation - Offer owns the relation via orderId
+  messages              Message[]
   deliverables          OrderDeliverable[]
   events                OrderEvent[]
   disputes              Dispute[]

@@ -103,13 +103,18 @@ export function ChatWindow({ conversation, onBack }) {
         // Update order in messages
         setMessages((prev) => {
           const updated = prev.map((msg) => {
-            if (msg.order && msg.order.id === data.order.id) {
+            const orderMatch = msg.order?.id === data.order.id || msg.offer?.order?.id === data.order.id;
+            if (orderMatch) {
               console.log('✅ Updating order in message:', {
                 messageId: msg.id,
-                oldStatus: msg.order.status,
+                oldStatus: msg.order?.status || msg.offer?.order?.status,
                 newStatus: data.order.status,
               });
-              return { ...msg, order: data.order };
+              return {
+                ...msg,
+                order: data.order,
+                offer: msg.offer ? { ...msg.offer, order: data.order } : undefined,
+              };
             }
             return msg;
           });
@@ -163,7 +168,11 @@ export function ChatWindow({ conversation, onBack }) {
                 oldStatus: msg.offer.status,
                 newStatus: data.offer.status,
               });
-              return { ...msg, offer: data.offer };
+              return {
+                ...msg,
+                offer: data.offer,
+                order: data.offer?.order || msg.order,
+              };
             }
             return msg;
           });
@@ -783,11 +792,11 @@ export function ChatWindow({ conversation, onBack }) {
                 // Check if this is an offer message
                 const isOfferMessage = firstMessage.type === 'offer';
                 
-                // Show offer card for offer messages (offer might be loading)
-                const showOfferCard = isOfferMessage && firstMessage.attachmentName;
+                // Show offer card for offer messages (offer/offerId from relation, or legacy attachmentName)
+                const showOfferCard = isOfferMessage && (firstMessage.offer || firstMessage.offerId || firstMessage.attachmentName);
                 
-                // Show order card if offer was accepted and has order
-                const showOrderCard = isOfferMessage && firstMessage.offer?.status === 'ACCEPTED' && firstMessage.offer?.order;
+                // Show order card if offer was accepted (order from message.order or offer.order)
+                const showOrderCard = isOfferMessage && (firstMessage.order || firstMessage.offer?.order);
                 
                 return (
                   <React.Fragment key={`group-${groupIndex}-${firstMessage.id}`}>

@@ -8,4 +8,3 @@ DROP INDEX IF EXISTS "Review_orderId_reviewerId_isClientReview_key";
 CREATE UNIQUE INDEX IF NOT EXISTS "Review_orderId_reviewerId_isClientReview_key" 
 ON "Review"("orderId", "reviewerId", "isClientReview") 
 WHERE "orderId" IS NOT NULL;
-

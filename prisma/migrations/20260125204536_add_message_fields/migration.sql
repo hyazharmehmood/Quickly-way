@@ -1,3 +1,45 @@
+-- Create Conversation and ConversationParticipant first (Message depends on them)
+CREATE TABLE IF NOT EXISTS "Conversation" (
+    "id" TEXT NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastMessageAt" TIMESTAMP(3),
+    "lastMessageText" TEXT,
+    "lastSenderId" TEXT,
+
+    CONSTRAINT "Conversation_pkey" PRIMARY KEY ("id")
+);
+
+CREATE INDEX IF NOT EXISTS "Conversation_lastMessageAt_idx" ON "Conversation"("lastMessageAt");
+CREATE INDEX IF NOT EXISTS "Conversation_updatedAt_idx" ON "Conversation"("updatedAt");
+
+CREATE TABLE IF NOT EXISTS "ConversationParticipant" (
+    "id" TEXT NOT NULL,
+    "conversationId" TEXT NOT NULL,
+    "userId" TEXT NOT NULL,
+    "joinedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "lastReadAt" TIMESTAMP(3),
+    "unreadCount" INTEGER NOT NULL DEFAULT 0,
+
+    CONSTRAINT "ConversationParticipant_pkey" PRIMARY KEY ("id")
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS "ConversationParticipant_conversationId_userId_key" ON "ConversationParticipant"("conversationId", "userId");
+CREATE INDEX IF NOT EXISTS "ConversationParticipant_userId_idx" ON "ConversationParticipant"("userId");
+CREATE INDEX IF NOT EXISTS "ConversationParticipant_conversationId_idx" ON "ConversationParticipant"("conversationId");
+
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ConversationParticipant_conversationId_fkey') THEN
+    ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_conversationId_fkey" 
+      FOREIGN KEY ("conversationId") REFERENCES "Conversation"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'ConversationParticipant_userId_fkey') THEN
+    ALTER TABLE "ConversationParticipant" ADD CONSTRAINT "ConversationParticipant_userId_fkey" 
+      FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
+  END IF;
+END $$;
+
 -- CreateTable: Create Message table if it doesn't exist
 -- Using DO block to safely create table and add columns
 DO $$ 
