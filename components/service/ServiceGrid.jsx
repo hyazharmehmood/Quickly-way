@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 
-export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
+export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, onClearFilters }) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [skillName, setSkillName] = useState(null);
@@ -55,20 +55,18 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
   }, [skillSlug]);
 
   useEffect(() => {
-    // Fetch public services
     const fetchServices = async () => {
       try {
         setLoading(true);
-        // Build URL with skillSlug query parameter if provided
-        const url = skillSlug 
-          ? `/api/services/public?skill=${encodeURIComponent(skillSlug)}`
-          : '/api/services/public';
-        
+        const params = new URLSearchParams();
+        if (skillSlug) params.set('skill', skillSlug);
+        if (sellerFilter && sellerFilter !== 'all') params.set('status', sellerFilter);
+        const url = `/api/services/public${params.toString() ? `?${params.toString()}` : ''}`;
+console.log(">>>>", url);        
         const res = await fetch(url);
 
         if (res.ok) {
           const data = await res.json();
-          console.log("Services data:", data.length, "services");
           
           // Reviews are now included in the API response (optimized - no separate API calls)
           const transformed = data.map((svc) => ({
@@ -96,7 +94,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
     };
 
     fetchServices();
-  }, [skillSlug]);
+  }, [skillSlug, sellerFilter]);
 
   const handleServiceClick = (service) => {
     if (onServiceClick) {
@@ -137,18 +135,27 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
       {/* Active Filter Indicator */}
-      {skillSlug && skillName && (
+      {(skillSlug && skillName) || sellerFilter !== 'all' ? (
         <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3">
-            <span className="text-sm text-muted-foreground">Filtered by:</span>
-            <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
-              {skillName}
-            </span>
+          <div className="flex items-center gap-3 flex-wrap">
+            {skillSlug && skillName && (
+              <>
+                <span className="text-sm text-muted-foreground">Filtered by:</span>
+                <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
+                  {skillName}
+                </span>
+              </>
+            )}
+            {sellerFilter !== 'all' && (
+              <span className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium">
+                {sellerFilter === 'online' ? 'Online sellers' : 'Offline sellers'}
+              </span>
+            )}
             <span className="text-sm text-muted-foreground">
               {services.length} {services.length === 1 ? 'result' : 'results'}
             </span>
           </div>
-          {onClearFilters && (
+          {onClearFilters && (skillSlug || sellerFilter !== 'all') && (
             <Button
               onClick={onClearFilters}
               variant="ghost"
@@ -159,7 +166,7 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
             </Button>
           )}
         </div>
-      )}
+      ) : null}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
         {services.map((service, index) => (
@@ -173,9 +180,11 @@ export function ServiceGrid({ skillSlug, onServiceClick, onClearFilters }) {
       {services.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-muted-foreground text-lg">
-            {skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.'}
+            {sellerFilter === 'online' && 'No online sellers found.'}
+            {sellerFilter === 'offline' && 'No offline sellers found.'}
+            {sellerFilter === 'all' && (skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.')}
           </p>
-          {onClearFilters && skillSlug && (
+          {onClearFilters && (skillSlug || sellerFilter !== 'all') && (
             <Button
               onClick={onClearFilters}
               variant="ghost"

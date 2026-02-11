@@ -31,9 +31,26 @@ app.prepare().then(() => {
   httpServer.on('request', async (req, res) => {
     try {
       const parsedUrl = parse(req.url, true);
-      
+
+      // Handle /api/services/public in main process (same as socket) so presence store is shared
+      if (req.method === 'GET' && parsedUrl.pathname === '/api/services/public') {
+        try {
+          const { getPublicServices } = require('./lib/getPublicServicesServer.cjs');
+          const skillSlug = parsedUrl.query.skill || null;
+          const status = parsedUrl.query.status || 'all';
+          const services = await getPublicServices(skillSlug, status);
+          res.writeHead(200, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify(services));
+          return;
+        } catch (err) {
+          if (dev) console.error('Services API error:', err);
+          res.writeHead(500, { 'Content-Type': 'application/json' });
+          res.end(JSON.stringify({ error: 'Failed to fetch services' }));
+          return;
+        }
+      }
+
       // Skip Socket.IO path - it's already handled by Socket.IO
-      // But we still need to let Next.js handle it for the route.js file
       // Socket.IO will intercept WebSocket/polling requests automatically
       await handle(req, res, parsedUrl);
     } catch (err) {
