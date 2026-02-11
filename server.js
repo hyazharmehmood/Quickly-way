@@ -38,7 +38,9 @@ app.prepare().then(() => {
           const { getPublicServices } = require('./lib/getPublicServicesServer.cjs');
           const skillSlug = parsedUrl.query.skill || null;
           const status = parsedUrl.query.status || 'all';
-          const services = await getPublicServices(skillSlug, status);
+          const page = parsedUrl.query.page;
+          const pageSize = parsedUrl.query.pageSize;
+          const services = await getPublicServices(skillSlug, status, page, pageSize);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(services));
           return;

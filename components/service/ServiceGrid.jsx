@@ -1,14 +1,20 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { ServiceCard } from './ServiceCard';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 
+const DEFAULT_PAGE_SIZE = 12;
+
 export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, onClearFilters }) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pageSize] = useState(DEFAULT_PAGE_SIZE);
+  const [total, setTotal] = useState(0);
   const [skillName, setSkillName] = useState(null);
 
   useEffect(() => {
@@ -54,47 +60,76 @@ export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, o
     }
   }, [skillSlug]);
 
-  useEffect(() => {
-    const fetchServices = async () => {
+  const fetchServices = useCallback(
+    async (targetPage = 1, append = false) => {
       try {
-        setLoading(true);
+        if (append) {
+          setLoadingMore(true);
+        } else {
+          setLoading(true);
+        }
         const params = new URLSearchParams();
         if (skillSlug) params.set('skill', skillSlug);
         if (sellerFilter && sellerFilter !== 'all') params.set('status', sellerFilter);
-        const url = `/api/services/public${params.toString() ? `?${params.toString()}` : ''}`;
-console.log(">>>>", url);        
+        params.set('page', targetPage.toString());
+        params.set('pageSize', pageSize.toString());
+        const url = `/api/services/public?${params.toString()}`;
         const res = await fetch(url);
 
-        if (res.ok) {
-          const data = await res.json();
-          
-          // Reviews are now included in the API response (optimized - no separate API calls)
-          const transformed = data.map((svc) => ({
-            ...svc,
-            freelancerId: svc.freelancerId || svc.freelancer?.id,
-            provider: {
-              name: svc.freelancer?.name || "Freelancer",
-              avatarUrl: svc.freelancer?.profileImage,
-              location: "Remote"
-            },
-            thumbnailUrl: svc.coverImage || svc.images?.[0],
-            rating: svc.rating || 5.0,
-            reviewCount: svc.reviewCount || 0
-          }));
-
-          setServices(transformed);
-        } else {
+        if (!res.ok) {
           console.error("Failed to fetch services");
+          return;
         }
+
+        const data = await res.json();
+        const items = Array.isArray(data.items) ? data.items : [];
+
+        const transformed = items.map((svc) => ({
+          ...svc,
+          freelancerId: svc.freelancerId || svc.freelancer?.id,
+          provider: {
+            name: svc.freelancer?.name || "Freelancer",
+            avatarUrl: svc.freelancer?.profileImage,
+            location: "Remote"
+          },
+          thumbnailUrl: svc.coverImage || svc.images?.[0],
+          rating: svc.rating || 5.0,
+          reviewCount: svc.reviewCount || 0
+        }));
+
+        setServices((prev) => (append ? [...prev, ...transformed] : transformed));
+        setTotal(typeof data.total === 'number' ? data.total : transformed.length);
+        setPage(data.page || targetPage);
       } catch (error) {
         console.error("Error fetching services:", error);
       } finally {
-        setLoading(false);
+        if (append) {
+          setLoadingMore(false);
+        } else {
+          setLoading(false);
+        }
       }
-    };
+    },
+    [skillSlug, sellerFilter, pageSize]
+  );
 
-    fetchServices();
+  useEffect(() => {
+    setPage(1);
+    fetchServices(1, false);
+  }, [fetchServices]);
+
+  useEffect(() => {
+    // Reset list when filters change before fetch re-runs
+    setServices([]);
+    setTotal(0);
   }, [skillSlug, sellerFilter]);
+
+  const handleLoadMore = () => {
+    if (loadingMore) return;
+    fetchServices(page + 1, true);
+  };
+
+  const hasMore = services.length < total;
 
   const handleServiceClick = (service) => {
     if (onServiceClick) {
@@ -102,7 +137,7 @@ console.log(">>>>", url);
     }
   };
 
-  if (loading) {
+  if (loading && services.length === 0) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
@@ -152,7 +187,7 @@ console.log(">>>>", url);
               </span>
             )}
             <span className="text-sm text-muted-foreground">
-              {services.length} {services.length === 1 ? 'result' : 'results'}
+              {services.length} of {total} {total === 1 ? 'result' : 'results'}
             </span>
           </div>
           {onClearFilters && (skillSlug || sellerFilter !== 'all') && (
@@ -193,6 +228,17 @@ console.log(">>>>", url);
               Clear filters
             </Button>
           )}
+        </div>
+      )}
+      {services.length > 0 && hasMore && (
+        <div className="flex justify-center pt-8">
+          <Button
+            onClick={handleLoadMore}
+            disabled={loadingMore}
+            className="min-w-[160px]"
+          >
+            {loadingMore ? 'Loading...' : 'Load More'}
+          </Button>
         </div>
       )}
     </div>
