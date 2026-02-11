@@ -14,11 +14,10 @@ import {
 } from '@/components/ui/hover-card';
 import { useRouter, usePathname } from 'next/navigation';
 
-export function CategoryFilter({ 
-  selectedCategory: externalSelectedCategory, 
-  onSelectCategory: externalOnSelectCategory 
+export function CategoryFilter({
+  selectedCategory: externalSelectedCategory,
+  onSelectCategory,
 }) {
-  const [internalSelectedCategory, setInternalSelectedCategory] = useState('All');
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [hoveredCategory, setHoveredCategory] = useState(null);
@@ -26,9 +25,13 @@ export function CategoryFilter({
   const router = useRouter();
   const pathname = usePathname();
 
-  // Use external state if provided, otherwise use internal state
-  const selectedCategory = externalSelectedCategory !== undefined ? externalSelectedCategory : internalSelectedCategory;
-  const handleSelectCategory = externalOnSelectCategory || setInternalSelectedCategory;
+  const selectedCategory = externalSelectedCategory || 'All';
+  const handleSelectCategory = (value) => {
+    onSelectCategory?.(value);
+  };
+
+  const hoverAnimation =
+    'data-[state=open]:animate-in data-[state=open]:fade-in data-[state=open]:zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out data-[state=closed]:zoom-out-95 transition duration-200';
 
   useEffect(() => {
     fetchCategories();
@@ -188,9 +191,12 @@ export function CategoryFilter({
                       sideOffset={0}
                       align="start"
                       side="bottom"
-                      className="p-0 mt-2  shadow-none border-none bg-popover"
+                      className={cn(
+                        'p-0 mt-2 shadow-none border-none bg-popover',
+                        hoverAnimation
+                      )}
                       style={{ 
-                        width: 'min(calc(100vw - 2rem), 1200px)',
+                        width: 'min(calc(100vw - 2rem), 1150px)',
                         maxWidth: 'calc(100vw - 2rem)'
                       }}
                       collisionPadding={16}
@@ -259,7 +265,10 @@ export function CategoryFilter({
                       sideOffset={0}
                       align="start"
                       side="bottom"
-                      className="p-0 m-0 border-t-2 border-primary rounded-t-none shadow-2xl bg-popover"
+                      className={cn(
+                        'p-0 m-0 border-t-2 border-primary rounded-t-none shadow-2xl bg-popover',
+                        hoverAnimation
+                      )}
                       style={{ 
                         width: 'min(calc(100vw - 2rem), 20rem)',
                         maxWidth: 'calc(100vw - 2rem)'
@@ -280,7 +289,7 @@ export function CategoryFilter({
                           <ul className="space-y-1.5 sm:space-y-2">
                             {category.skills.map((skill) => (
                               <li key={skill.id}>
-                                <button
+                                <span
                                   onClick={() => handleSkillClick(skill.slug, category.slug, null)}
                                   className="text-xs sm:text-sm cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-2 px-3 -mx-3 rounded-md hover:bg-primary/5 group/item"
                                 >
@@ -288,7 +297,7 @@ export function CategoryFilter({
                                     <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 group-hover/item:bg-primary group-hover/item:scale-150 transition-all"></span>
                                     {skill.name}
                                   </span>
-                                </button>
+                                </span>
                               </li>
                             ))}
                           </ul>

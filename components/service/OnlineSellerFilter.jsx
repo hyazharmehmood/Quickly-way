@@ -1,45 +1,63 @@
 'use client';
 
-import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
-import { CircleDot, CircleOff, Users } from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { CircleDot, CircleOff, ChevronDown } from 'lucide-react';
 import { cn } from '@/utils';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
 
-/**
- * Online/Offline seller filter
- * Filters services by freelancer presence status (real-time via Socket.IO)
- */
-export function OnlineSellerFilter({ value, onChange, className }) {
+const DEFAULT_STATE = { online: false, offline: false };
+
+export function OnlineSellerFilter({ value = DEFAULT_STATE, onChange, className }) {
+  const state = { ...DEFAULT_STATE, ...(value || {}) };
+
+  const handleToggle = (key) => {
+    const currentlyActive = state[key];
+    const next = currentlyActive
+      ? { online: false, offline: false }
+      : { online: key === 'online', offline: key === 'offline' };
+    onChange?.(next);
+  };
+
+  const activeLabel =
+    state.online && !state.offline
+      ? 'Online sellers'
+      : state.offline && !state.online
+      ? 'Offline sellers'
+      : 'Seller status';
+
   return (
-    <ToggleGroup
-      type="single"
-      value={value}
-      onValueChange={(v) => v && onChange(v)}
-      className={cn('flex gap-1', className)}
-    >
-      <ToggleGroupItem
-        value="all"
-        aria-label="All sellers"
-        className="gap-1.5 px-3 py-1.5 text-xs sm:text-sm"
-      >
-        <Users className="h-3.5 w-3.5" />
-        All
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="online"
-        aria-label="Online sellers only"
-        className="gap-1.5 px-3 py-1.5 text-xs sm:text-sm"
-      >
-        <CircleDot className="h-3.5 w-3.5 text-green-500" />
-        Online
-      </ToggleGroupItem>
-      <ToggleGroupItem
-        value="offline"
-        aria-label="Offline sellers only"
-        className="gap-1.5 px-3 py-1.5 text-xs sm:text-sm"
-      >
-        <CircleOff className="h-3.5 w-3.5" />
-        Offline
-      </ToggleGroupItem>
-    </ToggleGroup>
+    <DropdownMenu modal={false}>
+      <DropdownMenuTrigger asChild>
+        <Button variant="outline" >
+          {activeLabel}
+          <ChevronDown className="w-4 h-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent className="">
+        <DropdownMenuItem
+          onClick={() => handleToggle('online')}
+        
+         
+        >
+          <Checkbox checked={state.online} readOnly className="pointer-events-none" />
+          
+          <span className="flex-1 text-left">Online</span>
+        </DropdownMenuItem>
+        <DropdownMenuItem
+          onClick={() => handleToggle('offline')}
+          
+        >
+          <Checkbox checked={state.offline} readOnly className="pointer-events-none" />
+     
+          <span className="flex-1 text-left">Offline</span>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

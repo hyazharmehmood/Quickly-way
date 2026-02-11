@@ -8,7 +8,14 @@ import api from '@/utils/api';
 
 const DEFAULT_PAGE_SIZE = 12;
 
-export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, onClearFilters }) {
+const DEFAULT_SELLER_FILTER = { online: false, offline: false };
+
+export function ServiceGrid({
+  skillSlug,
+  sellerFilter = DEFAULT_SELLER_FILTER,
+  onServiceClick,
+  onClearFilters,
+}) {
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -70,7 +77,14 @@ export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, o
         }
         const params = new URLSearchParams();
         if (skillSlug) params.set('skill', skillSlug);
-        if (sellerFilter && sellerFilter !== 'all') params.set('status', sellerFilter);
+        const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
+        const onlineSelected = !!filterState.online;
+        const offlineSelected = !!filterState.offline;
+        let statusParam = null;
+        if (onlineSelected && !offlineSelected) statusParam = 'online';
+        if (offlineSelected && !onlineSelected) statusParam = 'offline';
+        if (!onlineSelected && !offlineSelected) statusParam = null;
+        if (statusParam) params.set('status', statusParam);
         params.set('page', targetPage.toString());
         params.set('pageSize', pageSize.toString());
         const url = `/api/services/public?${params.toString()}`;
@@ -181,16 +195,28 @@ export function ServiceGrid({ skillSlug, sellerFilter = 'all', onServiceClick, o
                 </span>
               </>
             )}
-            {sellerFilter !== 'all' && (
-              <span className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium">
-                {sellerFilter === 'online' ? 'Online sellers' : 'Offline sellers'}
-              </span>
-            )}
+            {(() => {
+              const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
+              const chips = [];
+              if (filterState.online && !filterState.offline) {
+                chips.push('Online sellers');
+              } else if (filterState.offline && !filterState.online) {
+                chips.push('Offline sellers');
+              }
+              return chips.map((label) => (
+                <span
+                  key={label}
+                  className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium"
+                >
+                  {label}
+                </span>
+              ));
+            })()}
             <span className="text-sm text-muted-foreground">
               {services.length} of {total} {total === 1 ? 'result' : 'results'}
             </span>
           </div>
-          {onClearFilters && (skillSlug || sellerFilter !== 'all') && (
+          {onClearFilters && (skillSlug || (sellerFilter.online || sellerFilter.offline)) && (
             <Button
               onClick={onClearFilters}
               variant="ghost"
