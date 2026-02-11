@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { SELLER_STATUS, HTTP_STATUS } from '@/lib/shared/constants';
+import { createNotification } from '@/lib/services/notificationService';
 
 export async function PATCH(request, { params }) {
     try {
@@ -34,6 +35,21 @@ export async function PATCH(request, { params }) {
         await prisma.user.update({
             where: { id: application.userId },
             data: userUpdate,
+        });
+
+        await createNotification({
+            userId: application.userId,
+            title: status === SELLER_STATUS.APPROVED ? 'Seller request approved' : 'Seller request rejected',
+            body:
+                status === SELLER_STATUS.APPROVED
+                    ? 'You now have access to the seller dashboard.'
+                    : reason || 'Your application was rejected. You can update details and try again.',
+            type: 'seller.application',
+            priority: status === SELLER_STATUS.APPROVED ? 'normal' : 'high',
+            data: {
+                applicationId,
+                status,
+            },
         });
 
         return NextResponse.json(

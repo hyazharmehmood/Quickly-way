@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
+import { createNotification } from '@/lib/services/notificationService';
 const { emitOrderEvent, emitOfferEvent } = require('@/lib/socket');
 
 /**
@@ -61,12 +62,24 @@ export async function POST(request, { params }) {
 
     // Emit Socket.IO events
     try {
-      // Emit offer update
       emitOfferEvent('OFFER_ACCEPTED', offer);
-      // Emit order created event
       emitOrderEvent('ORDER_CREATED', order);
     } catch (socketError) {
       console.error('Failed to emit events:', socketError);
+    }
+
+    // Notify freelancer: client accepted their offer, order created
+    try {
+      const clientName = offer.client?.name || 'The client';
+      await createNotification({
+        userId: offer.freelancerId,
+        title: 'Offer accepted',
+        body: `${clientName} accepted your offer. An order has been created.`,
+        type: 'order',
+        data: { orderId: order.id, offerId: offer.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create accept-offer notification:', notifError);
     }
 
     return NextResponse.json({

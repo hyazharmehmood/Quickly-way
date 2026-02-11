@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
+import { createNotification } from '@/lib/services/notificationService';
 const { emitOfferEvent } = require('@/lib/socket');
 
 /**
@@ -69,6 +70,20 @@ export async function POST(request, { params }) {
       emitOfferEvent('OFFER_REJECTED', offer);
     } catch (socketError) {
       console.error('Failed to emit offer event:', socketError);
+    }
+
+    // Notify freelancer: client rejected your offer
+    try {
+      const clientName = offer.client?.name || 'The client';
+      await createNotification({
+        userId: offer.freelancerId,
+        title: 'Offer declined',
+        body: `${clientName} has declined your offer.`,
+        type: 'order',
+        data: { offerId: offer.id, conversationId: offer.conversationId, linkUrl: `/messages?c=${offer.conversationId}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create reject notification:', notifError);
     }
 
     return NextResponse.json({

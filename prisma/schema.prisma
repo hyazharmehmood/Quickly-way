@@ -49,6 +49,7 @@ model User {
   reviewsApproved           Review[]                 @relation("ReviewApprovedBy")
   reviewsFlagged            Review[]                 @relation("ReviewFlaggedBy")
   disputeComments           DisputeComment[]         @relation("DisputeCommentAuthor")
+  notifications             Notification[]
   rating                    Float?                   @default(0) // Average rating from reviews
   reviewCount               Int                       @default(0) // Total number of reviews received
 }
@@ -94,6 +95,22 @@ model SellerApplication {
   createdAt       DateTime     @default(now())
   updatedAt       DateTime     @updatedAt
   user            User         @relation(fields: [userId], references: [id])
+}
+
+model Notification {
+  id        String   @id @default(uuid())
+  userId    String
+  type      String   @default("general")
+  title     String
+  body      String?
+  priority  String   @default("normal")
+  data      Json?
+  read      Boolean  @default(false)
+  createdAt DateTime @default(now())
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, read])
+  @@index([createdAt])
 }
 
 model Service {

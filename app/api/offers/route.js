@@ -2,7 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as offerService from '@/lib/services/offerService';
-const { emitOrderEvent, emitOfferEvent } = require('@/lib/socket');
+import { createNotification } from '@/lib/services/notificationService';
+const { emitOfferEvent } = require('@/lib/socket');
 
 /**
  * POST /api/offers - Create a new offer (freelancer sends offer to client)
@@ -83,6 +84,20 @@ export async function POST(request) {
       emitOfferEvent('OFFER_CREATED', offer);
     } catch (socketError) {
       console.error('Failed to emit offer event:', socketError);
+    }
+
+    // Notify client: freelancer sent an offer
+    try {
+      const freelancerName = offer.freelancer?.name || 'A freelancer';
+      await createNotification({
+        userId: offer.clientId,
+        title: 'New offer received',
+        body: `${freelancerName} sent you an offer for "${offer.serviceTitle || offer.service?.title || 'their service'}".`,
+        type: 'order',
+        data: { offerId: offer.id, conversationId: offer.conversationId, linkUrl: `/messages?c=${offer.conversationId}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create offer notification:', notifError);
     }
 
     return NextResponse.json({

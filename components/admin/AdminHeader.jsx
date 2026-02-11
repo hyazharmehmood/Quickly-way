@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Bell, LogOut, LayoutDashboard } from 'lucide-react';
+import { LogOut, LayoutDashboard } from 'lucide-react';
 import { usePathname, useRouter } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 import {
@@ -13,6 +13,7 @@ import {
     DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
 export const AdminHeader = () => {
     const pathname = usePathname();
@@ -47,10 +48,7 @@ export const AdminHeader = () => {
             </div>
 
             <div className="flex items-center gap-5">
-                <button className="relative text-muted-foreground hover:text-foreground transition-colors">
-                    <Bell className="w-6 h-6" />
-                    <span className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-primary text-primary-foreground text-[9px] flex items-center justify-center rounded-full border border-background font-normal">3</span>
-                </button>
+                <NotificationDropdown className="text-muted-foreground hover:text-foreground" />
 
                 {mounted ? (
                     <DropdownMenu modal={false}>

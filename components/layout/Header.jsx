@@ -29,6 +29,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
+import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 
 export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
@@ -254,6 +255,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
 
 
             {/* Support Button */}
+            {isLoggedIn && <NotificationDropdown />}
             <Button
               variant="ghost"
               onClick={() => handleNavigate('support')}

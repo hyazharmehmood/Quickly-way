@@ -76,6 +76,7 @@ const jsonLd = {
 import { AuthInitializer } from '@/components/auth/AuthInitializer';
 import { GlobalHeader } from '@/components/layout/GlobalHeader';
 import { Toaster } from '@/components/ui/sonner';
+import { NotificationToaster } from '@/components/notifications/NotificationToaster';
 
 export default function RootLayout({ children }) {
   return (
@@ -89,6 +90,7 @@ export default function RootLayout({ children }) {
           <GlobalHeader />
           {children}
           <Toaster />
+          <NotificationToaster />
         </AuthInitializer>
       </body>
     </html>
