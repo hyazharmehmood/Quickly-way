@@ -1,7 +1,8 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
+import api from '@/utils/api';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,7 +36,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const router = useRouter();
   const pathname = usePathname();
   const [logoError, setLogoError] = useState(false);
-  const { isLoggedIn, role, isSeller, sellerStatus, user, logout } = useAuthStore();
+  const { isLoggedIn, role, isSeller, sellerStatus, user, logout, setUser, refreshProfile } = useAuthStore();
   const normalizedRole = role ? role.toUpperCase() : '';
   const isAdmin = normalizedRole === 'ADMIN';
 
@@ -53,7 +54,26 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const [currentLocation, setCurrentLocation] = useState('All Locations');
   const [manualLocation, setManualLocation] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
+  const [isResolvingManual, setIsResolvingManual] = useState(false);
   const displayLocation = currentLocation;
+
+  // Load saved location from profile when user is logged in
+  useEffect(() => {
+    if (isLoggedIn && user?.location) {
+      setCurrentLocation(user.location);
+    }
+  }, [isLoggedIn, user?.location]);
+
+  const saveLocationToProfile = async (locationValue) => {
+    if (!isLoggedIn || !locationValue) return;
+    try {
+      const res = await api.put('/auth/profile', { location: locationValue });
+      if (res.data?.user) setUser(res.data.user);
+      else await refreshProfile();
+    } catch (err) {
+      console.error('Failed to save location to profile:', err);
+    }
+  };
   
   // Check if we can go back (not on home page)
   const canGoBack = pathname !== '/' && pathname !== '/dashboard/freelancer' && !pathname.startsWith('/dashboard/freelancer') && pathname !== '/admin';
@@ -80,40 +100,112 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const handleLocationChange = (location) => {
     setCurrentLocation(location);
     setIsLocationPickerOpen(false);
+    saveLocationToProfile(location);
+  };
+
+  const reverseGeocode = async (lat, lng) => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return null;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.results?.[0]) return null;
+    const result = data.results[0];
+    const countryComponent = result.address_components?.find((c) => c.types?.includes('country'));
+    return countryComponent ? countryComponent.long_name : result.formatted_address || null;
+  };
+
+  /** Forward geocode: address text → country (and optionally city, country). Returns { country, display } or null. */
+  const forwardGeocode = async (addressText) => {
+    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
+    if (!apiKey) return null;
+    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressText)}&key=${apiKey}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status !== 'OK' || !data.results?.[0]) return null;
+    const comp = data.results[0].address_components || [];
+    const country = comp.find((c) => c.types?.includes('country'))?.long_name;
+    const city = comp.find((c) => c.types?.includes('locality'))?.long_name;
+    if (!country) return data.results[0].formatted_address ? { country: data.results[0].formatted_address, display: data.results[0].formatted_address } : null;
+    const display = city ? `${city}, ${country}` : country;
+    return { country, display };
   };
 
   const handleDetectLocation = () => {
     setIsDetectingLocation(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          // Reverse geocoding would be needed to get location name
-          // For now, just set a generic detected location
-          setCurrentLocation('Detected Location');
-          setIsDetectingLocation(false);
-          setIsLocationPickerOpen(false);
-          toast.success('Location detected successfully');
-        },
-        (error) => {
-          console.error('Error detecting location:', error);
-          setIsDetectingLocation(false);
-          toast.error('Failed to detect location. Please enter manually.');
-        }
-      );
-    } else {
+    if (!navigator.geolocation) {
       setIsDetectingLocation(false);
       toast.error('Geolocation is not supported by your browser.');
+      return;
     }
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const { latitude, longitude } = position.coords;
+        try {
+          const address = await reverseGeocode(latitude, longitude);
+          if (address) {
+            setCurrentLocation(address);
+            setIsLocationPickerOpen(false);
+            await saveLocationToProfile(address);
+            toast.success('Location detected and saved to profile');
+          } else {
+            const fallback = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
+            setCurrentLocation(fallback);
+            setIsLocationPickerOpen(false);
+            await saveLocationToProfile(fallback);
+            if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
+              toast.info('Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY for address names');
+            } else {
+              toast.success('Location detected and saved to profile');
+            }
+          }
+        } catch (err) {
+          console.error('Geocoding error:', err);
+          const coords = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
+          setCurrentLocation(coords);
+          setIsLocationPickerOpen(false);
+          await saveLocationToProfile(coords);
+          toast.success('Location detected and saved to profile');
+        } finally {
+          setIsDetectingLocation(false);
+        }
+      },
+      (error) => {
+        console.error('Geolocation error:', error);
+        setIsDetectingLocation(false);
+        const message = error.code === 1
+          ? 'Location permission denied. Allow location access or enter manually.'
+          : 'Failed to detect location. Please enter manually.';
+        toast.error(message);
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
   };
 
-  const handleSetManualLocation = () => {
-    if (manualLocation.trim()) {
-      setCurrentLocation(manualLocation.trim());
+  const handleSetManualLocation = async () => {
+    const raw = manualLocation.trim();
+    if (!raw) {
+      toast.error('Please enter a location');
+      return;
+    }
+    setIsResolvingManual(true);
+    try {
+      const resolved = await forwardGeocode(raw);
+      const loc = resolved ? resolved.display : raw;
+      setCurrentLocation(loc);
       setManualLocation('');
       setIsLocationPickerOpen(false);
-      toast.success('Location set successfully');
-    } else {
-      toast.error('Please enter a location');
+      await saveLocationToProfile(loc);
+      toast.success(resolved ? 'Location resolved and saved to profile' : 'Location saved to profile');
+    } catch (err) {
+      console.error('Geocode manual error:', err);
+      setCurrentLocation(raw);
+      setManualLocation('');
+      setIsLocationPickerOpen(false);
+      await saveLocationToProfile(raw);
+      toast.success('Location saved to profile');
+    } finally {
+      setIsResolvingManual(false);
     }
   };
 
@@ -172,7 +264,7 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className=" p-0 shadow-none rounded-[1rem] z-80" align="start">
+            <DropdownMenuContent className=" p-0 shadow-none z-80" align="start">
               <div className="p-4 space-y-3">
                 {/* Header */}
                 <div>
@@ -225,12 +317,10 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                     value={manualLocation}
                     onChange={(e) => setManualLocation(e.target.value)}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleSetManualLocation();
-                      }
+                      if (e.key === 'Enter') handleSetManualLocation();
                     }}
                     size="lg"
-             
+                    disabled={isResolvingManual}
                     onClick={(e) => e.stopPropagation()}
                   />
                   <Button
@@ -241,8 +331,9 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
                     size="lg"
                     className="rounded-full"
                     variant="default"
+                    disabled={isResolvingManual}
                   >
-                    Set
+                    {isResolvingManual ? 'Resolving...' : 'Set'}
                   </Button>
                 </div>
               </div>
