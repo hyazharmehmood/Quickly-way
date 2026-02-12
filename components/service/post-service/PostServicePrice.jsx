@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { CURRENCIES } from '@/utils/constants';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 const PostServicePrice = (props) => {
     const {
@@ -95,7 +97,7 @@ const PostServicePrice = (props) => {
                                 <select
                                     value={selectedCurrency}
                                     onChange={(e) => setSelectedCurrency(e.target.value)}
-                                    className="appearance-none bg-gray-50 border border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-full"
+                                    className="appearance-none bg-gray-50 border border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-11"
                                 >
                                     {CURRENCIES.map(c => (
                                         <option key={c.code} value={c.code}>{c.code}</option>
@@ -105,12 +107,12 @@ const PostServicePrice = (props) => {
                                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                                 </div>
                             </div>
-                            <input
+                            <Input
                                 type="text"
                                 value={priceStr}
                                 onChange={handlePriceChange}
                                 placeholder="0.00"
-                                className="flex-1 w-full px-4 py-3 border border-gray-200 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700"
+                                className="flex-1 w-full rounded-l-none border-l-0"
                             />
                         </div>
                     </div>
@@ -125,18 +127,18 @@ const PostServicePrice = (props) => {
                                 return (
                                     <div key={breakdown.id || index} className="border border-gray-200 rounded-lg p-2 bg-gray-50/50 space-y-3 relative group">
                                         <div className="flex gap-4">
-                                            <input
+                                            <Input
                                                 type="text"
                                                 value={breakdown.text || ""}
                                                 onChange={(e) => handlePriceBreakdownChange(index, 'text', e.target.value)}
                                                 placeholder="Package Name (e.g., Basic Logo Design)"
-                                                className="flex-1 px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700 bg-white"
+                                                className="flex-1 "
                                             />
                                             <div className="w-32 flex">
-                                                <div className="bg-gray-100 border border-gray-200 border-r-0 rounded-l-lg px-3 flex items-center text-sm text-gray-600 font-medium">
+                                                <div className="bg-gray-100 border border-gray-200 border-r-0 h-11 rounded-l-lg px-3 flex items-center text-sm text-gray-600 font-medium">
                                                     {selectedCurrency}
                                                 </div>
-                                                <input
+                                                <Input
                                                     type="text"
                                                     value={breakdown.price || ""}
                                                     onChange={(e) => {
@@ -144,7 +146,7 @@ const PostServicePrice = (props) => {
                                                         handlePriceBreakdownChange(index, 'price', val);
                                                     }}
                                                     placeholder="0"
-                                                    className="w-full px-3 py-3 border border-gray-200 rounded-r-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700 text-center"
+                                                    className="w-full rounded-l-none border-l-0"
                                                 />
                                             </div>
                                         </div>
@@ -173,12 +175,12 @@ const PostServicePrice = (props) => {
                                                 <label className="absolute -top-2.5 left-3 bg-[#FAFAFA] px-1 text-xs font-medium text-gray-500">
                                                     Included
                                                 </label>
-                                                <textarea
+                                                <Textarea
                                                     rows={3}
                                                     value={breakdown.included || ""}
                                                     onChange={(e) => handlePriceBreakdownChange(index, 'included', e.target.value)}
                                                     placeholder="List what's included (e.g., 2 Revisions, Source File)..."
-                                                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-sm text-gray-700 bg-white resize-none"
+                                                    className="w-full "
                                                 />
                                             </div>
                                         )}
@@ -190,7 +192,7 @@ const PostServicePrice = (props) => {
                                                 onClick={() => {
                                                     const newItems = priceBreakdowns.filter((_, i) => i !== index);
                                                     setPriceBreakdowns(newItems);
-                                                    setIsManualPriceEdit(false); // Allow auto-calculation after deletion
+                                                    setIsManualPriceEdit(false); 
                                                 }}
                                                 className="absolute -top-3 -right-3 bg-white border border-gray-200 text-gray-400 hover:text-red-500 rounded-full p-1.5 shadow-sm hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
                                                 title="Remove package"
@@ -227,14 +229,14 @@ const PostServicePrice = (props) => {
             {/* Row 5: Payment Methods */}
             <div className="mb-6 space-y-1.5">
                 <label className="block text-base font-medium text-gray-900">Payment methods</label>
-                <textarea
+                <Textarea
                     rows={3}
                     value={paymentMethods}
                     onFocus={handlePaymentMethodsFocus}
                     onBlur={handlePaymentMethodsBlur}
                     onChange={(e) => setPaymentMethods(e.target.value)}
                     placeholder={defaultPaymentMethods}
-                    className="w-full px-4 py-3 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500 text-base text-gray-700 leading-relaxed resize-none"
+                    className="w-full "
                 />
                 <div className="text-right text-xs text-gray-500">
                     {paymentMethods.length}/150
@@ -260,7 +262,7 @@ const PostServicePrice = (props) => {
                     type="button"
                     variant="outline"
                     onClick={onCancel}
-                    className="flex-1 h-11"
+                    className="flex-1"
                 >
                     Cancel
                 </Button>
@@ -268,7 +270,7 @@ const PostServicePrice = (props) => {
                     type="submit"
                     onClick={onSave}
                     disabled={isLoading}
-                    className="flex-1 h-11 py-3.5  disabled:opacity-50 disabled:cursor-not-allowed "
+                    className="flex-1  disabled:opacity-50 disabled:cursor-not-allowed "
                 >
                     {isLoading ? (
                         <>

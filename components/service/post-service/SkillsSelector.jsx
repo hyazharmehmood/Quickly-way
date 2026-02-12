@@ -20,6 +20,7 @@ import {
 import { cn } from '@/utils';
 import api from '@/utils/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 
 export function SkillsSelector({ 
   selectedSkills = [], 
@@ -102,9 +103,9 @@ export function SkillsSelector({
 
   return (
     <div className="space-y-2">
-      <label className="block text-base font-medium text-foreground">
-        Skills
-      </label>
+      <Label htmlFor="skills" className="">
+        Skills <span className="text-red-500">*</span>
+      </Label>
       
       {/* Skills Dropdown */}
       <Popover open={open} onOpenChange={setOpen}>
@@ -114,8 +115,8 @@ export function SkillsSelector({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-start h-auto min-h-[42px] py-2 px-3",
-              "flex flex-wrap gap-2 items-center"
+              "w-full justify-start h-11 min-h-[42px] py-2 px-3 rounded-lg",
+              "flex flex-wrap gap-2 items-center border-input"
             )}
           >
             {selectedSkills.length > 0 ? (
@@ -129,7 +130,7 @@ export function SkillsSelector({
                       key={skillId}
                       variant="secondary"
                       className={cn(
-                        "px-2 py-1 text-xs font-medium flex items-center gap-1 h-6",
+                        "px-2 py-1 text-xs font-medium flex items-center gap-1 h-8 rounded-md",
                         isInactive 
                           ? "bg-orange-100 text-orange-700 border-orange-200" 
                           : "bg-primary/10 text-primary border-primary/20"
@@ -166,8 +167,8 @@ export function SkillsSelector({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
-          <Command>
+        <PopoverContent className="w-[400px] p-0 rounded-xl overflow-hidden" align="start">
+          <Command className="rounded-xl">
             <CommandInput 
               placeholder="Search skills..." 
               value={searchQuery}

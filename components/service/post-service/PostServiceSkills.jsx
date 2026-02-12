@@ -21,15 +21,18 @@ const PostServiceSkills = (props) => {
 
 
     return (
-        <div>
-            <SkillsSelector
-                selectedSkills={skills}
-                onSkillsChange={setSkills}
-                initialSkillIds={initialSkillIds}
-            />
+        <div className="space-y-8">
+            <h1 className="text-2xl font-semibold text-foreground">Skills & keywords</h1>
 
-            <div className="mt-8">
-                <KeywordSelector
+            <div className="">
+                <SkillsSelector
+                    selectedSkills={skills}
+                    onSkillsChange={setSkills}
+                    initialSkillIds={initialSkillIds}
+                />
+
+                <div className="pt-2 border-t border-border">
+                    <KeywordSelector
                     selectedKeywords={searchTags}
                     onKeywordsChange={(newKeywords) => {
                         if (newKeywords.length <= 5) {
@@ -39,18 +42,15 @@ const PostServiceSkills = (props) => {
                     maxKeywords={5}
                     initialKeywordNames={initialKeywordNames}
                 />
+                </div>
             </div>
 
-
-
-
-
-            <div className="flex items-center gap-4 mt-8">
+            <div className="flex items-center gap-4">
                 <Button
                     type="button"
                     variant="outline"
                     onClick={onBack}
-                    className="flex-1 h-11"
+                    className="flex-1 "
                 >
                     Back
                 </Button>
@@ -58,7 +58,7 @@ const PostServiceSkills = (props) => {
                     type="button"
                     variant="default"
                     onClick={onNext}
-                    className="flex-1 h-11"
+                    className="flex-1"
                 >
                     Next
                 </Button>

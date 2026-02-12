@@ -136,7 +136,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
 
     // --- Step 2 State (Images) ---
     // Single source of truth: galleryImages. Cover is galleryImages[0] unless text mode.
-    const [coverMode, setCoverMode] = useState('image');
+    const [coverMode, setCoverMode] = useState('');
     const [coverText, setCoverText] = useState("");
     const [coverBgColor, setCoverBgColor] = useState("bg-black");
     const [galleryImages, setGalleryImages] = useState([null, null, null, null, null]);

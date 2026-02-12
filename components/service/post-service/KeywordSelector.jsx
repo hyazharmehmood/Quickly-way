@@ -20,6 +20,7 @@ import {
 import { cn } from '@/utils';
 import api from '@/utils/api';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Label } from '@/components/ui/label';
 
 export function KeywordSelector({ 
   selectedKeywords = [], 
@@ -78,10 +79,10 @@ export function KeywordSelector({
 
   return (
     <div className="space-y-2">
-      <label className="block text-base font-medium text-foreground">
+      <Label htmlFor="keywords" className="">
         Positive keywords
-      </label>
-      
+      </Label>
+
       {/* Keywords Dropdown */}
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
@@ -90,8 +91,8 @@ export function KeywordSelector({
             role="combobox"
             aria-expanded={open}
             className={cn(
-              "w-full justify-start h-auto min-h-[42px] py-2 px-3",
-              "flex flex-wrap gap-2 items-center"
+              "w-full justify-start h-11 min-h-[42px] py-2 px-3 rounded-lg",
+              "flex flex-wrap gap-2 items-center border-input"
             )}
           >
             {selectedKeywords.length > 0 ? (
@@ -103,7 +104,7 @@ export function KeywordSelector({
                     <Badge
                       key={keywordName}
                       variant="secondary"
-                      className="px-2 py-1 text-xs font-medium flex items-center gap-1 h-6 bg-primary/10 text-primary border-primary/20"
+                      className="px-2 py-1 text-xs font-medium flex items-center gap-1 h-8 rounded-md bg-primary/10 text-primary border-primary/20"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeKeyword(keywordName);
@@ -136,8 +137,8 @@ export function KeywordSelector({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[400px] p-0" align="start">
-          <Command>
+        <PopoverContent className="w-[400px] p-0 rounded-xl overflow-hidden" align="start">
+          <Command className="rounded-xl">
             <CommandInput 
               placeholder="Search keywords..." 
               value={searchQuery}
