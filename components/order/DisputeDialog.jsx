@@ -76,7 +76,7 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                             <AlertTriangle className="h-5 w-5 text-destructive" />
                         </div>
                         <div>
-                            <DialogTitle className="text-xl">Open a dispute</DialogTitle>
+                            <DialogTitle className="text-lg font-normal">Open a dispute</DialogTitle>
                             <DialogDescription className="mt-0.5">
                                 Order {order?.orderNumber} · An admin will review and help resolve the issue.
                             </DialogDescription>
@@ -89,9 +89,9 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                     </p>
 
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Quick select reason (optional)</Label>
+                        <Label className="">Quick select reason (optional)</Label>
                         <Select value="" onValueChange={(v) => v && setReason(v)}>
-                            <SelectTrigger className="rounded-xl border-border">
+                            <SelectTrigger className="w-full">
                                 <SelectValue placeholder="Choose a reason to fill in below..." />
                             </SelectTrigger>
                             <SelectContent>
@@ -106,18 +106,18 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                     </div>
 
                     <div className="space-y-2">
-                        <Label className="text-sm font-medium">Reason *</Label>
+                        <Label className="">Reason *</Label>
                         <Input
                             value={reason}
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="e.g. Deliverables don’t match what was agreed"
-                            className="rounded-xl border-border"
+                            className="w-full"
                         />
                     </div>
 
                     <div className="space-y-2">
                         <div className="flex items-center justify-between">
-                            <Label className="text-sm font-medium">Description *</Label>
+                            <Label className="">Description *</Label>
                             <span className="text-xs text-muted-foreground">
                                 {description.length} / {DESCRIPTION_MIN} min
                             </span>
@@ -127,7 +127,7 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Describe what went wrong and what you expect..."
                             rows={4}
-                            className="rounded-xl border-border resize-none"
+                            className="w-full resize-none"
                         />
                         {description.length > 0 && description.length < DESCRIPTION_MIN && (
                             <p className="text-xs text-amber-600">Add at least {DESCRIPTION_MIN - description.length} more characters.</p>
@@ -140,7 +140,7 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                             <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-border bg-secondary/30 px-4 py-2.5 text-sm text-muted-foreground hover:bg-secondary/50 hover:text-foreground transition-colors">
                                 <Paperclip className="h-4 w-4" />
                                 <span>Add files</span>
-                                <input
+                                <Input
                                     type="file"
                                     multiple
                                     accept="image/*,.pdf,.doc,.docx,.txt"
@@ -172,12 +172,12 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                     </div>
 
                     <div className="flex gap-3 pt-2">
-                        <Button variant="outline" className="flex-1 rounded-xl" onClick={() => handleClose(false)} disabled={submitting}>
+                        <Button variant="outline" className="flex-1 " onClick={() => handleClose(false)} disabled={submitting}>
                             Cancel
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            className="flex-1 rounded-xl bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                            className="flex-1 w-full bg-destructive text-destructive-foreground hover:bg-destructive/90"
                             disabled={!canSubmit}
                         >
                             {submitting ? (

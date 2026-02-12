@@ -109,7 +109,7 @@ export function ReviewModal({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>
+          <DialogTitle className="text-lg font-normal">
             {existingReview && allowEdit ? 'Edit Review' : existingReview ? 'View Review' : `Review ${revieweeName}`}
           </DialogTitle>
           <DialogDescription>
@@ -159,7 +159,7 @@ export function ReviewModal({
 
           {/* Comment */}
           <div>
-            <Label htmlFor="comment" className="text-sm font-medium mb-2 block">
+            <Label htmlFor="comment" className="">
               Comment (Optional)
             </Label>
             <Textarea
@@ -169,7 +169,7 @@ export function ReviewModal({
               placeholder="Share your experience..."
               rows={4}
               disabled={isSubmitting || (existingReview && !allowEdit)}
-              className="resize-none"
+              className="w-full resize-none"
               readOnly={existingReview && !allowEdit}
             />
           </div>
@@ -181,7 +181,7 @@ export function ReviewModal({
                 variant="outline"
                 onClick={handleSkip}
                 disabled={isSubmitting}
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 Skip for Now
               </Button>
@@ -189,7 +189,7 @@ export function ReviewModal({
             {existingReview && !allowEdit ? (
               <Button
                 onClick={() => onOpenChange(false)}
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 Close
               </Button>
@@ -197,7 +197,7 @@ export function ReviewModal({
               <Button
                 onClick={() => handleSubmit(false)}
                 disabled={isSubmitting || rating === 0}
-                className="flex-1"
+                className="flex-1 w-full"
               >
                 {isSubmitting ? 'Submitting...' : existingReview ? 'Update Review' : 'Submit Review'}
               </Button>

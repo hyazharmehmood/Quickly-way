@@ -182,7 +182,7 @@ export default function FreelancerOrderDetailPage() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Order Overview Card */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -286,7 +286,7 @@ export default function FreelancerOrderDetailPage() {
 
                     {/* Deliverables - Show first as it's most important */}
                     {order.deliverables && order.deliverables.length > 0 && (
-                        <Card className="rounded-[2rem] border-none">
+                            <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal flex items-center gap-2">
                                     <Package className="w-5 h-5" />
@@ -384,7 +384,7 @@ export default function FreelancerOrderDetailPage() {
 
                     {/* Reviews Section - Show for completed orders */}
                     {order.status === 'COMPLETED' && (
-                        <Card className="rounded-[2rem] border-none">
+                        <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal">Reviews</CardTitle>
                             </CardHeader>
@@ -481,7 +481,7 @@ export default function FreelancerOrderDetailPage() {
 
                     {/* Order Timeline - Show at bottom for historical reference */}
                     {order.events && order.events.length > 0 && (
-                        <Card className="rounded-[2rem] border-none">
+                            <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal flex items-center gap-2">
                                     <Clock className="w-5 h-5" />
@@ -524,7 +524,7 @@ export default function FreelancerOrderDetailPage() {
                 {/* Sidebar */}
                 <div className="space-y-6">
                     {/* Order Summary Stats */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal">Order Summary</CardTitle>
                         </CardHeader>
@@ -559,7 +559,7 @@ export default function FreelancerOrderDetailPage() {
                     </Card>
 
                     {/* Client Info */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal flex items-center gap-2">
                                 <User className="w-5 h-5" />
@@ -608,7 +608,7 @@ export default function FreelancerOrderDetailPage() {
                     </Card>
 
                     {/* Actions */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal">Actions</CardTitle>
                         </CardHeader>
@@ -618,7 +618,7 @@ export default function FreelancerOrderDetailPage() {
                                 className="w-full border-border"
                                 onClick={handleChat}
                             >
-                                <MessageSquare className="w-4 h-4 mr-2" /> Open Chat
+                                <MessageSquare className="w-4 h-4 " /> Open Chat
                             </Button>
 
                             {(order.status === 'IN_PROGRESS' || order.status === 'REVISION_REQUESTED') && (
@@ -626,7 +626,7 @@ export default function FreelancerOrderDetailPage() {
                                     className="w-full bg-primary text-primary-foreground"
                                     onClick={() => setShowDeliverDialog(true)}
                                 >
-                                    <Package className="w-4 h-4 mr-2" /> Deliver Order
+                                    <Package className="w-4 h-4 " /> Deliver Order
                                 </Button>
                             )}
 
@@ -636,7 +636,7 @@ export default function FreelancerOrderDetailPage() {
                                     className="w-full text-destructive hover:text-destructive"
                                     onClick={() => setShowCancelDialog(true)}
                                 >
-                                    <XCircle className="w-4 h-4 mr-2" /> Cancel Order
+                                    <XCircle className="w-4 h-4" /> Cancel Order
                                 </Button>
                             )}
 
@@ -648,7 +648,7 @@ export default function FreelancerOrderDetailPage() {
                                             className="w-full bg-primary text-primary-foreground"
                                             onClick={() => setShowReviewModal(true)}
                                         >
-                                            <Star className="w-4 h-4 mr-2" /> Review Client
+                                            <Star className="w-4 h-4" /> Review Client
                                         </Button>
                                     )}
                                     {/* Edit Review button removed - reviews cannot be edited */}

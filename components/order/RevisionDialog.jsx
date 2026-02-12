@@ -40,7 +40,7 @@ export function RevisionDialog({ open, onOpenChange, order, onConfirm }) {
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="rounded-2xl">
                 <DialogHeader>
-                    <DialogTitle>Request Revision</DialogTitle>
+                    <DialogTitle className="text-lg font-normal">Request Revision</DialogTitle>
                     <DialogDescription>
                         Request a revision for order {order?.orderNumber}
                     </DialogDescription>
@@ -53,7 +53,7 @@ export function RevisionDialog({ open, onOpenChange, order, onConfirm }) {
                             onChange={(e) => setReason(e.target.value)}
                             placeholder="What needs to be revised?"
                             rows={4}
-                            className="mt-2 rounded-xl"
+                            className="mt-2 w-full"
                             disabled={submitting}
                         />
                     </div>
@@ -61,14 +61,14 @@ export function RevisionDialog({ open, onOpenChange, order, onConfirm }) {
                         <Button
                             variant="outline"
                             onClick={() => handleClose(false)}
-                            className="flex-1 rounded-xl"
+                            className="flex-1 w-full"
                             disabled={submitting}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            className="flex-1 rounded-xl"
+                            className="flex-1 w-full"
                             disabled={submitting || !reason.trim()}
                         >
                             {submitting ? (

@@ -10,7 +10,7 @@ export function OrderDetailSkeleton() {
         <div className="max-w-7xl mx-auto py-6 px-4 md:px-6 animate-in fade-in duration-500 space-y-6">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2 space-y-6">
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div className="space-y-2">
@@ -44,7 +44,7 @@ export function OrderDetailSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Skeleton className="h-5 w-5" />
@@ -75,7 +75,7 @@ export function OrderDetailSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Skeleton className="h-5 w-5" />
@@ -102,7 +102,7 @@ export function OrderDetailSkeleton() {
                 </div>
 
                 <div className="space-y-6">
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <Skeleton className="h-6 w-32" />
                         </CardHeader>
@@ -118,7 +118,7 @@ export function OrderDetailSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Skeleton className="h-5 w-5" />
@@ -137,7 +137,7 @@ export function OrderDetailSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <div className="flex items-center gap-2">
                                 <Skeleton className="h-5 w-5" />
@@ -156,7 +156,7 @@ export function OrderDetailSkeleton() {
                         </CardContent>
                     </Card>
 
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardContent className="p-6 space-y-3">
                             <Skeleton className="h-10 w-full rounded-lg" />
                             <Skeleton className="h-10 w-full rounded-lg" />

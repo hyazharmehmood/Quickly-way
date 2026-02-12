@@ -244,7 +244,7 @@ export default function OrderDetailPage() {
     if (!order) {
         return (
             <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
-                <Card className="rounded-[2rem] border-none">
+                <Card className="border shadow-none">
                     <CardContent className="p-8 text-center">
                         <p className="text-muted-foreground">Order not found</p>
                         <Button onClick={() => router.push('/orders')} className="mt-4">
@@ -257,7 +257,7 @@ export default function OrderDetailPage() {
     }
 
     return (
-        <div className="max-w-7xl mx-auto  animate-in fade-in duration-500 space-y-6">
+        <div className="max-w-7xl mx-auto  animate-in fade-in duration-500 space-y-6 py-4">
             {/* <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
@@ -281,7 +281,7 @@ export default function OrderDetailPage() {
                 {/* Main Content */}
                 <div className="lg:col-span-2 space-y-6">
                     {/* Order Overview Card */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div>
@@ -375,7 +375,7 @@ export default function OrderDetailPage() {
 
                     {/* Deliverables - Show first as it's most important */}
                     {order.deliverables && order.deliverables.length > 0 && (
-                        <Card className="rounded-[2rem] border-none">
+                        <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal flex items-center gap-2">
                                     <Package className="w-5 h-5" />
@@ -473,7 +473,7 @@ export default function OrderDetailPage() {
 
                     {/* Reviews Section - Show for completed orders */}
                     {order.status === 'COMPLETED' && (
-                        <Card className="rounded-[2rem] border-none">
+                        <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal">Reviews</CardTitle>
                             </CardHeader>
@@ -560,7 +560,7 @@ export default function OrderDetailPage() {
 
                     {/* Order Timeline - Show at bottom for historical reference */}
                     {order.events && order.events.length > 0 && (
-                        <Card className="rounded-[2rem] border-none">
+                            <Card className="border shadow-none">
                             <CardHeader>
                                 <CardTitle className="text-lg font-normal flex items-center gap-2">
                                     <Clock className="w-5 h-5" />
@@ -603,7 +603,7 @@ export default function OrderDetailPage() {
                 {/* Sidebar */}
                 <div className="space-y-6">
                     {/* Order Summary Stats */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal">Order Summary</CardTitle>
                         </CardHeader>
@@ -638,7 +638,7 @@ export default function OrderDetailPage() {
                     </Card>
 
                     {/* Client Info */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal flex items-center gap-2">
                                 <User className="w-5 h-5" />
@@ -676,7 +676,7 @@ export default function OrderDetailPage() {
                     </Card>
 
                     {/* Freelancer Info */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal flex items-center gap-2">
                                 <User className="w-5 h-5" />
@@ -714,7 +714,7 @@ export default function OrderDetailPage() {
                     </Card>
 
                     {/* Actions */}
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className="border shadow-none">
                         <CardContent className="p-6 space-y-3">
                             <Button
                                 variant="outline"

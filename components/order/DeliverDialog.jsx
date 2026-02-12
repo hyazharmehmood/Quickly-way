@@ -54,8 +54,8 @@ export function DeliverDialog({ open, onOpenChange, order, onSuccess }) {
         <Dialog open={open} onOpenChange={handleClose}>
             <DialogContent className="rounded-2xl">
                 <DialogHeader>
-                    <DialogTitle>Submit Delivery</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle className="text-lg font-normal">Submit Delivery</DialogTitle>
+                    <DialogDescription >
                         Submit your work for order {order?.orderNumber}
                     </DialogDescription>
                 </DialogHeader>
@@ -102,14 +102,14 @@ export function DeliverDialog({ open, onOpenChange, order, onSuccess }) {
                         <Button
                             variant="outline"
                             onClick={() => handleClose(false)}
-                            className="flex-1 rounded-xl"
+                            className="flex-1 w-full"
                             disabled={submitting}
                         >
                             Cancel
                         </Button>
                         <Button
                             onClick={handleSubmit}
-                            className="flex-1 rounded-xl"
+                            className="flex-1 w-full"
                             disabled={submitting || (data.type === 'MESSAGE' && !data.message.trim()) || ((data.type === 'FILE' || data.type === 'LINK') && !data.fileUrl.trim())}
                         >
                             {submitting ? (
