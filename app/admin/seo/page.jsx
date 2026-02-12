@@ -183,13 +183,13 @@ export default function SEOPage() {
                 {loading ? (
                     <>
                         {[...Array(4)].map((_, i) => (
-                            <Card key={i} className="border-none rounded-[2rem]">
+                            <Card key={i} className="border shadow-none">
                                 <CardContent className="p-6">
-                                    <div className="flex items-center justify-between mb-4">
+                                    <div className="flex items-center justify-between ">
                                         <Skeleton className="h-4 w-24" />
                                         <Skeleton className="h-8 w-8 rounded-lg" />
                                     </div>
-                                    <Skeleton className="h-8 w-20 mb-2" />
+                                    <Skeleton className="h-4 w-20 mb-2" />
                                     <Skeleton className="h-3 w-32" />
                                 </CardContent>
                             </Card>
