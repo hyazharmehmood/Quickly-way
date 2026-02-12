@@ -119,11 +119,11 @@ export default function FreelancerServicesPage() {
         <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-normal text-foreground tracking-tight">My Services</h2>
-                    <p className="text-muted-foreground font-normal mt-1 text-sm">Create and manage your professional offerings.</p>
+                    <h3 className="heading-3">My Services</h3>
+                    <p className="text-muted-foreground font-normal text-sm">Create and manage your professional offerings.</p>
                 </div>
                 <Link href="/dashboard/freelancer/services/create">
-                    <Button size="lg" className="">
+                        <Button variant="default" className="">
                         <Plus className="w-5 h-5" />
                         <span>Create New Service</span>
                     </Button>

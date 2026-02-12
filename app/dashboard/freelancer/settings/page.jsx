@@ -13,6 +13,8 @@ import api from '@/utils/api';
 import { toast } from 'sonner';
 import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 const passwordChangeSchema = Yup.object({
     currentPassword: Yup.string().required('Current password is required'),
@@ -320,7 +322,7 @@ export default function FreelancerSettings() {
                                 <div className="grid grid-cols-1 xl:grid-cols-3 gap-4">
                                     {/* Left Column: Details */}
                                     <div className="xl:col-span-2 space-y-6">
-                                        <Card className="border border-border/50 shadow-">
+                                        <Card className="border  shadow-none">
                                             <CardContent className="p-6 space-y-8">
                                                 {/* 1. Profile Image */}
                                                 <div className="flex flex-col items-center justify-center space-y-4">
@@ -365,24 +367,24 @@ export default function FreelancerSettings() {
                                                 {/* 2. Basic Info & Contact */}
                                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Display Name</label>
+                                                        <Label className="">Display Name</Label>
                                                         <Input
                                                             value={name}
                                                             onChange={(e) => setName(e.target.value)}
                                                             disabled={isLoading}
                                                             required
-                                                            className="h-10"
+                                                            className="w-full"
                                                         />
                                                     </div>
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Location</label>
+                                                        <Label className="">Location</Label>
                                                         <div className="relative">
                                                             <Input
                                                                 value={location}
                                                                 onChange={(e) => setLocation(e.target.value)}
                                                                 disabled={isLoading}
                                                                 placeholder="e.g. New York, USA"
-                                                                className="h-10 pl-9"
+                                                                className="w-full pl-9"
                                                             />
                                                             <MapPin className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                                                         </div>
@@ -390,8 +392,8 @@ export default function FreelancerSettings() {
 
                                                     <div className="space-y-1.5">
                                                         <div className="flex justify-between items-center px-1">
-                                                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Email</label>
-                                                            <label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                                                            <Label className="">Email</Label>
+                                                            <Label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
                                                                 <input
                                                                     type="checkbox"
                                                                     checked={showEmail}
@@ -399,36 +401,36 @@ export default function FreelancerSettings() {
                                                                     className="w-3 h-3 rounded border-input accent-primary focus:ring-primary"
                                                                 />
                                                                 Show on profile
-                                                            </label>
+                                                            </Label>
                                                         </div>
                                                         <Input
                                                             type="email"
                                                             value={email}
                                                             onChange={(e) => setEmail(e.target.value)}
                                                             disabled={isLoading}
-                                                            className="h-10"
+                                                            className="w-full"
                                                         />
                                                     </div>
 
                                                     <div className="space-y-1.5">
                                                         <div className="flex justify-between items-center px-1">
-                                                            <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">Phone</label>
-                                                            <label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
-                                                                <input
+                                                            <Label className="">Phone</Label>
+                                                            <Label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                                                                <Input
                                                                     type="checkbox"
                                                                     checked={showMobile}
                                                                     onChange={(e) => setShowMobile(e.target.checked)}
                                                                     className="w-3 h-3 rounded border-input accent-primary focus:ring-primary"
                                                                 />
                                                                 Show on profile
-                                                            </label>
+                                                            </Label>
                                                         </div>
                                                         <Input
                                                             value={phoneNumber}
                                                             onChange={(e) => setPhoneNumber(e.target.value)}
                                                             disabled={isLoading}
                                                             placeholder="+1 234 567 890"
-                                                            className="h-10"
+                                                            className="w-full"
                                                         />
                                                     </div>
                                                 </div>
@@ -436,19 +438,19 @@ export default function FreelancerSettings() {
                                                 {/* 3. Bio & Skills */}
                                                 <div className="space-y-5 pt-2">
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Bio</label>
-                                                        <textarea
+                                                        <Label className="">Bio</Label>
+                                                        <Textarea
                                                             value={bio}
                                                             onChange={(e) => setBio(e.target.value)}
                                                             disabled={isLoading}
                                                             rows={4}
                                                             placeholder="Tell us about yourself..."
-                                                            className="w-full p-3 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm resize-none"
+                                                                className="w-full resize-none"
                                                         />
                                                     </div>
 
                                                     <div className="space-y-1.5">
-                                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">Languages</label>
+                                                        <Label className="">Languages</Label>
                                                         <TagInput
                                                             tags={languages}
                                                             onChange={setLanguages}
@@ -463,7 +465,7 @@ export default function FreelancerSettings() {
 
                                     {/* Right Column: Availability */}
                                     <div className="space-y-4">
-                                        <Card className="border border-border/50 shadow-sm h-full">
+                                        <Card className="border shadow-none h-full">
                                             <CardContent className="p-4 space-y-4">
                                                 <div className="flex items-center gap-2 px-1">
                                                     <Clock className="w-4 h-4 text-primary" />
@@ -524,9 +526,9 @@ export default function FreelancerSettings() {
                                 <div className="pt-6 border-t border-border flex justify-end sticky bottom-0 bg-background/80 backdrop-blur-sm py-4 z-10">
                                     <Button
                                         type="submit"
-                                        size="lg"
+                                        variant="default"
                                         disabled={isLoading}
-                                        className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 min-w-[140px]"
+                                        className=""
                                     >
                                         {isLoading ? (
                                             <>
@@ -554,7 +556,7 @@ export default function FreelancerSettings() {
                             <form onSubmit={passwordFormik.handleSubmit} className="max-w-md">
                                 <div className="space-y-4 ">
                                     <div className="space-y-2">
-                                        <label htmlFor="currentPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Current Password</label>
+                                        <Label htmlFor="currentPassword" className="">Current Password</Label>
                                         <div className="relative">
                                             <Input
                                                 id="currentPassword"
@@ -565,22 +567,24 @@ export default function FreelancerSettings() {
                                                 onBlur={passwordFormik.handleBlur}  
                                                disabled={isLoading}
 
-                                                className="h-10 pr-12"
+                                                className="w-full pr-12"
                                            />
-                                            <button
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
                                                 type="button"
                                                 onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 !bg-transparent !text-muted-foreground hover:!text-foreground cursor-pointer"
                                             >
                                                 {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
+                                            </Button>
                                         </div>
                                         {passwordFormik.touched.currentPassword && passwordFormik.errors.currentPassword && (
                                             <p className="text-xs text-destructive">{passwordFormik.errors.currentPassword}</p>
                                         )}
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="newPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">New Password</label>
+                                        <Label htmlFor="newPassword" className="">New Password</Label>
                                         <div className="relative">
                                             <Input
                                                 id="newPassword"
@@ -590,15 +594,17 @@ export default function FreelancerSettings() {
                                                 onChange={passwordFormik.handleChange}
                                                 onBlur={passwordFormik.handleBlur}  
                                                 disabled={isLoading}
-                                                className="h-10 pr-12"
+                                                className="w-full pr-12"
                                             />
-                                            <button
+                                            <Button
+                                               variant="ghost"     
+                                                size="icon"
                                                 type="button"
                                                 onClick={() => setShowNewPassword(!showNewPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 !bg-transparent !text-muted-foreground hover:!text-foreground cursor-pointer"
                                             >
-                                                {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
+                                                {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                                            </Button>
                                         </div>
                                         {passwordFormik.touched.newPassword && passwordFormik.errors.newPassword ? (
                                             <p className="text-xs text-destructive">{passwordFormik.errors.newPassword}</p>
@@ -607,7 +613,7 @@ export default function FreelancerSettings() {
                                         )}
                                     </div>
                                     <div className="space-y-2">
-                                        <label htmlFor="confirmPassword" className="text-[10px] font-normal text-muted-foreground uppercase tracking-widest px-1">Confirm New Password</label>
+                                        <Label htmlFor="confirmPassword" className="">Confirm New Password</Label>
                                         <div className="relative">
                                             <Input
                                                 id="confirmPassword"
@@ -617,15 +623,18 @@ export default function FreelancerSettings() {
                                                 onChange={passwordFormik.handleChange}
                                                 onBlur={passwordFormik.handleBlur}  
                                                disabled={isLoading}
-                                                className="h-10 pr-12"
+                                                className="w-full pr-12"
                                             />
-                                            <button
+                                            <Button
+                                             
+                                                variant="ghost"
+                                                size="icon"
                                                 type="button"
                                                 onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                                                className="absolute right-0 top-1/2 -translate-y-1/2 !bg-transparent !text-muted-foreground hover:!text-foreground cursor-pointer"
                                             >
                                                 {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
-                                            </button>
+                                            </Button>
                                         </div>
                                         {passwordFormik.touched.confirmPassword && passwordFormik.errors.confirmPassword && (
                                             <p className="text-xs text-destructive">{passwordFormik.errors.confirmPassword}</p>
@@ -636,9 +645,9 @@ export default function FreelancerSettings() {
                                 <div className="pt-6 border-t border-border flex justify-end mt-4">
                                     <Button
                                         type="submit"
-                                        size="lg"
+                                      variant="default"
                                         disabled={isLoading}
-                                        className="bg-primary text-primary-foreground hover:bg-primary/90"
+                                        className=""
                                     >
                                         {isLoading ? (
                                             <>

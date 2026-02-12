@@ -150,7 +150,7 @@ export default function ClientOrdersPage() {
                 {loading ? (
                     // Skeleton Loading State
                     [...Array(3)].map((_, index) => (
-                        <Card key={index} className="rounded-[2rem] border-none transition-all overflow-hidden">
+                        <Card key={index} className="shadow-none transition-all overflow-hidden">
                             <div className="flex flex-col lg:flex-row">
                                 <div className="p-5 md:p-8 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -178,14 +178,14 @@ export default function ClientOrdersPage() {
                         </Card>
                     ))
                 ) : filteredOrders.length === 0 ? (
-                    <Card className="rounded-[2rem] border-none">
+                    <Card className=" ">
                         <CardContent className="p-8 text-center text-muted-foreground">
                             No orders found
                         </CardContent>
                     </Card>
                 ) : (
                     filteredOrders.map((order) => (
-                        <Card key={order.id} className="rounded-[2rem] border-none transition-all overflow-hidden">
+                        <Card key={order.id} className="shadow-none transition-all overflow-hidden">
                             <div className="flex flex-col lg:flex-row">
                                 <div className="p-5 md:p-8 lg:w-2/3 border-b lg:border-b-0 lg:border-r border-border">
                                     <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
@@ -230,33 +230,31 @@ export default function ClientOrdersPage() {
 
                                 <div className="p-4 md:p-8 lg:w-1/3 bg-secondary/10 flex flex-col justify-center gap-3">
                                     <Button 
-                                        size="lg" 
-                                        className="w-full bg-primary text-primary-foreground hover:bg-primary/90"
+                                       variant="default"
+                                        className="w-full"
                                         onClick={() => handleViewOrder(order)}
                                     >
-                                        <Eye className="w-4 h-4 mr-2" /> View Project Details
+                                        <Eye className="w-4 h-4 " /> View Project Details
                                     </Button>
                                     <Button 
-                                        size="lg" 
                                         variant="outline" 
                                         className="w-full border-border"
                                         onClick={() => handleChat(order)}
                                     >
-                                        <MessageSquare className="w-4 h-4 mr-2" /> Contact Freelancer
+                                        <MessageSquare className="w-4 h-4 " /> Contact Freelancer
                                     </Button>
                                     {order.status === 'DELIVERED' && (
                                         <Button size="lg" variant="secondary" className="w-full bg-primary/10 text-primary border border-primary/20">
-                                            <Download className="w-4 h-4 mr-2" /> Download Assets
+                                            <Download className="w-4 h-4 " /> Download Assets
                                         </Button>
                                     )}
                                     {(order.status === 'DELIVERED' || order.status === 'DISPUTED') && (
                                         <Button 
-                                            size="lg" 
                                             variant="ghost" 
                                             className="w-full text-muted-foreground hover:text-destructive"
                                             onClick={() => router.push(`/orders/${order.id}`)}
                                         >
-                                            <AlertCircle className="w-3.5 h-3.5 mr-2" /> {order.status === 'DISPUTED' ? 'View Dispute' : 'Report an Issue'}
+                                            <AlertCircle className="w-4 h-4 " /> {order.status === 'DISPUTED' ? 'View Dispute' : 'Report an Issue'}
                                         </Button>
                                     )}
                                 </div>

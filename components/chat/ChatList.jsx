@@ -290,10 +290,10 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
   return (
     <div className="w-full h-full flex flex-col overflow-hidden">
       {/* Header with Inbox and Bell */}
-      <div className="p-6 border-b border-border">
+      <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
           <h3 className="text-xl font-normal text-foreground">Inbox</h3>
-          <Bell className="w-5 h-5 text-muted-foreground" />
+          {/* <Bell className="w-5 h-5 text-muted-foreground" /> */}
         </div>
         
         {/* Search Bar */}
@@ -301,7 +301,7 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <Input
             placeholder="Search by name"
-            className="pl-10 h-10 bg-secondary/50 border-none rounded-xl"
+            className="pl-10   "
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />

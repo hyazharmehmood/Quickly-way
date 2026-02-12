@@ -147,7 +147,7 @@ export default function FreelancerOrdersPage() {
                 </div>
             </div>
 
-            <Card className="border-none rounded-[2rem] overflow-hidden">
+            <Card className="border-none shadow-none overflow-hidden">
                 <CardContent className="p-0">
                     {loading ? (
                         <div className="p-0">

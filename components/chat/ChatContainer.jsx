@@ -146,7 +146,7 @@ export function ChatContainer() {
   }, [conversationIdFromUrl, otherUserIdFromUrl, socket, isConnected]);
 
   return (
-    <Card className="animate-in rounded-2xl md:rounded-[2.5rem] fade-in duration-500 flex flex-col md:flex-row border-border bg-card shadow-sm overflow-hidden h-[calc(100vh-9.5rem)]">
+    <Card className="animate-in  fade-in duration-500 flex flex-col md:flex-row border-border bg-card shadow-sm overflow-hidden h-[calc(100vh-9.5rem)]">
       {/* Left Sidebar - Inbox */}
       <div className={`${showChatWindow ? 'hidden md:flex' : 'flex'} w-full md:w-80 flex-shrink-0 border-r border-border flex-col`}>
         <ChatList

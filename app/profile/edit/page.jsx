@@ -12,6 +12,8 @@ import api from '@/utils/api';
 import { toast } from 'sonner';
 import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
 import { Skeleton } from "@/components/ui/skeleton";
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 
 export default function EditProfilePage() {
     const { user, setUser, refreshProfile } = useAuthStore();
@@ -175,24 +177,18 @@ export default function EditProfilePage() {
         <div className="max-w-7xl mx-auto py-8 px-4">
             <div className="max-w-4xl mx-auto space-y-6">
                 {/* Header */}
-                <div className="flex items-center gap-4">
-                    <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => router.push('/profile')}
-                        className="h-9 w-9 p-0"
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                    </Button>
+              
+                <form onSubmit={handleProfileUpdate} className="space-y-6">
+                    <Card className="border border-border/50 shadow-sm">
+                        <CardHeader>
+                        <div className="flex items-center gap-4 pb-4">
+                 
                     <div>
-                        <h1 className="text-xl font-bold text-foreground">Edit Profile</h1>
+                        <h3 className="heading-3">Edit Profile</h3>
                         <p className="text-muted-foreground  text-sm">Update your profile information</p>
                     </div>
                 </div>
 
-                <form onSubmit={handleProfileUpdate} className="space-y-6">
-                    <Card className="border border-border/50 shadow-sm">
-                        <CardHeader>
                             <div className="flex items-center gap-2">
                                 <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-primary shadow-inner">
                                     <User className="w-6 h-6" />
@@ -242,48 +238,48 @@ export default function EditProfilePage() {
 
                             {/* Basic Info & Contact */}
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">
+                                <div className="space-y-2">
+                                    <Label className="">
                                         Display Name *
-                                    </label>
+                                    </Label>
                                     <Input
                                         value={name}
                                         onChange={(e) => setName(e.target.value)}
                                         disabled={isLoading}
                                         required
-                                        className="h-10"
+                                        className="w-full"
                                     />
                                 </div>
-                                <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">
+                                <div className="space-y-2">
+                                    <Label className="  ">
                                         Location
-                                    </label>
+                                    </Label>
                                     <div className="relative">
                                         <Input
                                             value={location}
                                             onChange={(e) => setLocation(e.target.value)}
                                             disabled={isLoading}
                                             placeholder="e.g. New York, USA"
-                                            className="h-10 pl-9"
+                                            className="w-full pl-9"
                                         />
                                         <MapPin className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
                                     </div>
                                 </div>
 
-                                <div className="space-y-1.5">
+                                <div className="space-y-2">
                                     <div className="flex justify-between items-center px-1">
-                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                                                <Label className="">
                                             Email
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
-                                            <input
+                                        </Label>
+                                        <Label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                                            <Input
                                                 type="checkbox"
                                                 checked={showEmail}
                                                 onChange={(e) => setShowEmail(e.target.checked)}
                                                 className="w-3 h-3 rounded border-input accent-primary focus:ring-primary"
                                             />
                                             Show on profile
-                                        </label>
+                                        </Label>
                                     </div>
                                     <Input
                                         type="email"
@@ -291,24 +287,24 @@ export default function EditProfilePage() {
                                         onChange={(e) => setEmail(e.target.value)}
                                         disabled={isLoading}
                                         readOnly={showEmail}
-                                        className="h-10 disabled:opacity-100"
+                                        className="w-full disabled:opacity-100"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
                                     <div className="flex justify-between items-center px-1">
-                                        <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold">
+                                                <Label className="">
                                             Phone
-                                        </label>
-                                        <label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
-                                            <input
+                                        </Label>
+                                        <Label className="flex items-center gap-2 cursor-pointer text-[10px] text-muted-foreground hover:text-foreground">
+                                            <Input
                                                 type="checkbox"
                                                 checked={showMobile}
                                                 onChange={(e) => setShowMobile(e.target.checked)}
-                                                className="w-3 h-3 rounded border-input accent-primary focus:ring-primary"
+                                                    className="w-3 h-3 rounded border-input accent-primary focus:ring-primary"
                                             />
                                             Show on profile
-                                        </label>
+                                        </Label>
                                     </div>
                                     <Input
                                         value={phoneNumber}
@@ -316,7 +312,7 @@ export default function EditProfilePage() {
                                         disabled={isLoading}
 
                                         placeholder="+1 234 567 890"
-                                        className="h-10"
+                                        className="w-full"
                                     />
                                 </div>
                             </div>
@@ -324,23 +320,23 @@ export default function EditProfilePage() {
                             {/* Bio & Languages */}
                             <div className="space-y-5 pt-2">
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">
+                                    <Label className="">
                                         Bio
-                                    </label>
-                                    <textarea
+                                    </Label>
+                                    <Textarea
                                         value={bio}
                                         onChange={(e) => setBio(e.target.value)}
                                         disabled={isLoading}
                                         rows={4}
                                         placeholder="Tell us about yourself..."
-                                        className="w-full p-3 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm resize-none"
+                                        className="w-full resize-none"
                                     />
                                 </div>
 
                                 <div className="space-y-1.5">
-                                    <label className="text-[10px] uppercase tracking-widest text-muted-foreground font-semibold px-1">
+                                    <Label className="">
                                         Languages
-                                    </label>
+                                    </Label>
                                     <TagInput
                                         tags={languages}
                                         onChange={setLanguages}
@@ -364,18 +360,18 @@ export default function EditProfilePage() {
                         </Button>
                         <Button
                             type="submit"
-                            size="lg"
+                            variant="default"
                             disabled={isLoading}
-                            className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 min-w-[140px]"
+                            className=""
                         >
                             {isLoading ? (
                                 <>
-                                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                    <Loader2 className="w-4 h-4  animate-spin" />
                                     Saving...
                                 </>
                             ) : (
                                 <>
-                                    <Save className="w-4 h-4 mr-2" /> Save Changes
+                                    <Save className="w-4 h-4 " /> Save Changes
                                 </>
                             )}
                         </Button>

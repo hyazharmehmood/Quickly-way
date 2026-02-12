@@ -86,11 +86,15 @@ export default function ProfilePage() {
     return (
         <div className="max-w-7xl mx-auto py-8 px-4">
             <div className="max-w-4xl mx-auto space-y-6">
-                {/* Header */}
+              
+                {/* Profile Card */}
+                <Card className="border-none shadow-sm">
+                    <CardHeader className="pb-6 space-y-4">
+                          {/* Header */}
                 <div className="flex items-center justify-between">
                     <div>
-                        <h1 className="text-2xl font-bold text-foreground">My Profile</h1>
-                        <p className="text-muted-foreground mt-1">View and manage your profile information</p>
+                        <h3 className="heading-3">My Profile</h3>
+                        <p className="text-muted-foreground text-sm">View and manage your profile information</p>
                     </div>
                     <Button
                         onClick={() => router.push('/profile/edit')}
@@ -102,13 +106,10 @@ export default function ProfilePage() {
                     </Button>
                 </div>
 
-                {/* Profile Card */}
-                <Card className="border-none shadow-sm">
-                    <CardHeader className="pb-6">
-                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
-                            <Avatar className="w-32 h-32 border-4 border-secondary">
+                        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4">
+                            <Avatar className="w-24 h-24 border-4 border-secondary">
                                 <AvatarImage src={user?.profileImage} />
-                                <AvatarFallback className="text-4xl bg-primary/10 text-primary">
+                                <AvatarFallback className="text-2xl bg-primary/10 text-primary">
                                     {userInitial}
                                 </AvatarFallback>
                         </Avatar>
@@ -150,7 +151,7 @@ export default function ProfilePage() {
                     <CardContent className="space-y-6">
                         {/* Bio Section */}
                         <div className="pt-6 border-t border-border">
-                            <h3 className="text-lg font-semibold mb-3 flex items-center gap-2">
+                            <h3 className="heading-3 mb-3 flex items-center gap-1.5">
                                 <UserIcon className="w-5 h-5" />
                                 About Me
                             </h3>
