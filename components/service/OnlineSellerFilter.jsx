@@ -34,12 +34,12 @@ export function OnlineSellerFilter({ value = DEFAULT_STATE, onChange, className 
   return (
     <DropdownMenu modal={false}>
       <DropdownMenuTrigger asChild>
-        <Button variant="outline" >
+        <Button variant="outline" className="rounded-sm">
           {activeLabel}
           <ChevronDown className="w-4 h-4" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent className="">
+      <DropdownMenuContent className="w-[160px]">
         <DropdownMenuItem
           onClick={() => handleToggle('online')}
         
