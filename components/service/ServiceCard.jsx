@@ -20,8 +20,13 @@ export function ServiceCard({ service }) {
   };
 
   const thumbnailUrl = service.thumbnailUrl || service.image;
-  const reviewCount = service.reviewCount || service.reviews || 0;
-  const rating = service.rating || 5.0;
+  const reviewCount =
+    typeof service.reviewCount === 'number'
+      ? service.reviewCount
+      : Array.isArray(service.reviews)
+        ? service.reviews.length
+        : 0;
+  const rating = typeof service.rating === 'number' ? service.rating : 5.0;
 
   const handleCardClick = () => {
     router.push(`/services/${service.id}`);
@@ -37,7 +42,7 @@ export function ServiceCard({ service }) {
           {service.coverType === 'TEXT' ? (
             <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-6 text-center`}>
               <span className="text-white font-bold text-2xl leading-tight line-clamp-4 break-words" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
-                {service.coverText}
+                {service.coverText || service.title || 'Service'}
               </span>
             </div>
           ) : (
@@ -91,15 +96,15 @@ export function ServiceCard({ service }) {
                 {provider.name}
               </Link>
               <div className="flex items-center gap-0.5 text-sm text-gray-500  hover:text-gray-900 active:text-gray-900 transition-colors">
-                <MapPin className="w-3 h-3" />
-                <span className="truncate line-clamp-0.5">{provider.location}</span>
+                <MapPin className="w-3 h-3 flex-shrink-0" />
+                <span className="truncate line-clamp-0.5">{provider.location || 'Remote'}</span>
               </div>
             </div>
           </div>
 
           {/* Description */}
           <p className="text-sm text-gray-600 leading-relaxed line-clamp-2 mb-4 hover:text-gray-900 active:text-gray-900 transition-colors">
-            {service.description}
+            {service.description || service.title || ''}
           </p>
 
           {/* Footer: Rating and Price */}
@@ -110,7 +115,11 @@ export function ServiceCard({ service }) {
               <span className="text-base text-gray-400 hover:text-gray-600 active:text-gray-900 transition-colors">({reviewCount})</span>
             </div>
             <div className="text-base font-semibold text-gray-900">
-              ${service.price}
+              {service.currency === 'USD' || !service.currency ? (
+                <>${Number(service.price).toFixed(0)}</>
+              ) : (
+                <>{service.currency} {Number(service.price).toFixed(0)}</>
+              )}
             </div>
           </div>
         </CardContent>

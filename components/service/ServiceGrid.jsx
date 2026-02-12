@@ -96,6 +96,7 @@ export function ServiceGrid({
         }
 
         const data = await res.json();
+        console.log(data);
         const items = Array.isArray(data.items) ? data.items : [];
 
         const transformed = items.map((svc) => ({
@@ -241,11 +242,14 @@ export function ServiceGrid({
       {services.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-20 text-center">
           <p className="text-muted-foreground text-lg">
-            {sellerFilter === 'online' && 'No online sellers found.'}
-            {sellerFilter === 'offline' && 'No offline sellers found.'}
-            {sellerFilter === 'all' && (skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.')}
+            {(() => {
+              const f = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
+              if (f.online && !f.offline) return 'No online sellers found.';
+              if (f.offline && !f.online) return 'No offline sellers found.';
+              return skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.';
+            })()}
           </p>
-          {onClearFilters && (skillSlug || sellerFilter !== 'all') && (
+          {onClearFilters && (skillSlug || (sellerFilter?.online || sellerFilter?.offline)) && (
             <Button
               onClick={onClearFilters}
               variant="ghost"

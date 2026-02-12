@@ -93,14 +93,14 @@ export function NotificationDropdown({ className }) {
                         <Icon className="w-5 h-5" />
                       </div>
                       {!notification.read && (
-                        <span className="absolute bottom-0 left-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card" aria-hidden />
+                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card" aria-hidden />
                       )}
                     </div>
                     <div className="min-w-0 flex-1">
                       <p className="text-sm text-foreground leading-snug">
-                        {notification.title}
+                        {notification.title}:
                         {notification.body && (
-                          <span className="text-muted-foreground font-normal"> {notification.body}</span>
+                          <span className="text-muted-foreground font-normal text-xs  "> {notification.body}</span>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">{timeAgo}</p>
