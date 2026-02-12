@@ -177,10 +177,10 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                 <span className="font-medium text-gray-500">{service.hires} hires</span>
                                             </div>
                                         </div>
-                                        <Button variant="outline" className="flex items-center gap-2 transition-all flex-shrink-0">
+                                        {/* <Button variant="outline" className="flex items-center gap-2 transition-all flex-shrink-0">
                                             <Heart className="w-5 h-5" />
                                             <span>Favorite</span>
-                                        </Button>
+                                        </Button> */}
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4  text-gray-600 max-w-3xl">
@@ -269,8 +269,9 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                             )}
 
                             <Card className="border-none shadow-sm">
-                                <CardContent className="p-4 md:p-6 gap-1 ">
-                                    <h3 className="text-xl font-bold text-gray-900 ">Description</h3>
+                                <CardContent className="p-4 md:p-6 gap-1  ">
+                                    <h3 className="heading-3  ">Description</h3>
+                                
                                     <p className="text-base text-gray-700 leading-relaxed font-normal">
                                         {service.description}
                                     </p>
@@ -280,7 +281,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                             {service.skills && service.skills.length > 0 && (
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 flex flex-col gap-1 ">
-                                        <h3 className="text-xl font-bold text-gray-900">Skills</h3>
+                                            <h3 className="heading-3  ">Skills</h3>
                                     <div className="flex flex-wrap gap-2">
                                             {service.skills.map((skill, idx) => (
                                                 <Badge key={idx} variant="secondary" size="lg" className="text-base text-gray-600 font-medium   ">
@@ -295,7 +296,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                             {service.provider.languages && service.provider.languages.length > 0 && (
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 flex flex-col gap-1 ">
-                                        <h3 className="text-xl font-bold text-gray-900">Languages</h3>
+                                        <h3 className="heading-3  ">Languages</h3>
                                         <div className="flex flex-wrap gap-2">
                                             {service.provider.languages.map((lang, idx) => (
                                                 <Badge key={idx} variant="primary" size="lg" className="text-base font-medium   ">
@@ -313,8 +314,8 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                         <div className="sticky top-24 space-y-4">
                             <Card className="border-none shadow-sm">
                                 <CardContent className="p-4 md:p-6 ">
-                                    <h3 className="text-xl font-bold text-gray-900 uppercase tracking-widest mb-2">Starting price</h3>
-                                    <div className="text-xl font-black text-gray-900  tracking-tight">
+                                    <h3 className="heading-3  ">Starting price</h3>
+                                    <div className="text-xl font-semibold text-gray-900 py-2 tracking-tight">
                                         {service.priceRange ? service.priceRange.split('-')[0].trim() : `$${service.price}`}
                                     </div>
 
@@ -377,11 +378,11 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 ">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="text-xl font-bold text-gray-900 text-gray-900">Working hours</h3>
+                                            <h3 className="heading-3  ">Working hours</h3>
                                             <Badge variant="secondary" size="default" className="text-sm font-medium text-green-600 ">Live</Badge>
                                         </div>
                                         <div className="text-base text-gray-500 font-medium mb-6">
-                                            Typical Response Time: <span className="text-gray-900">1 Hour</span>
+                                            Typical Response Time: <span className="text-gray-900 text-base font-semibold">1 Hour</span>
                                         </div>
                                         <div className="space-y-3 text-[17px] text-gray-700 font-medium">
                                             {service.provider.availability.map((item, idx) => {
@@ -405,8 +406,8 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
 
                             <Card className="border-none shadow-sm">
                                 <CardContent className="p-4 md:p-6">
-                                    <h3 className="text-xl font-bold text-gray-900 mb-4">Payment methods</h3>
-                                    <p className="text-lg text-gray-600 leading-relaxed font-normal">
+                                    <h3 className="heading-3  ">Payment methods</h3>
+                                    <p className="text-base text-gray-600 leading-relaxed font-normal">
                                         {service.paymentMethods?.[0]?.startsWith("I accept payments via")
                                             ? service.paymentMethods.join(', ')
                                             : `This pro accepts payments via ${service.paymentMethods?.join(', ')}.`
@@ -434,7 +435,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                     <CardContent className="p-4 md:p-6">
                             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
                                 <div>
-                                <h3 className="text-xl font-bold text-gray-900 ">Customer Feedback</h3>
+                                <h3 className="heading-3  ">Customer Feedback</h3>
                                     <p className="text-gray-500 text-base">Verified reviews from actual clients who hired this pro.</p>
                                 </div>
                           
@@ -520,7 +521,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                 {moreServices.length > 0 && (
                     <div className="mt-8 pt-8">
                         <div className="flex justify-between items-center mb-8 px-4">
-                            <h3 className="text-2xl font-bold text-gray-900">More services from {service.provider.name}</h3>
+                                <h2 className="heading-2  ">More services from {service.provider.name}</h2>
                             <button className="text-[#10b981] font-bold hover:underline">See all portfolio</button>
                         </div>
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">

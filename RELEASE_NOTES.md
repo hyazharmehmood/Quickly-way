@@ -226,6 +226,84 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 ---
 
+## 🔔 In-App Notification System
+
+### Overview
+Central notification system with bell icon in all headers, real-time toasts, optional sound, and type-based icons. Notifications are stored per user and shown in a dropdown.
+
+### Bell Icon & Dropdown
+- **All headers**: Notification bell appears in main site Header, Dashboard header, and Admin header when the user is logged in
+- **Unread badge**: Red badge shows unread count (e.g. 9+ for 10 or more)
+- **Dropdown**: Clicking the bell opens a list of notifications with title, body, and time-ago
+- **Mark as read**: Single notification or “Mark all read” to clear unread state
+- **Layout**: Fiverr-style rows with type icon on the left, optional thumbnail on the right
+
+### Notification Types & Icons
+- **Order / offer**: Shopping bag icon — new offer, offer accepted, offer declined, order updates
+- **Seller application**: Checkmark (success) — seller request approved or rejected
+- **Message**: Mail icon — chat/message related
+- **Gig / brief**: Briefcase icon — gig or opportunity related
+- **General**: Bell icon — everything else
+
+### Real-Time Toast
+- **On new notification**: When a notification is received (Socket.IO), a toast appears with title and description
+- **Type-based style**: Success toasts for approvals; default toasts with the correct icon for order/message/gig
+- **Only for current user**: Toasts and list show only the logged-in user’s notifications; no cross-user data
+
+### Sound
+- **On receive**: A short sound plays when a new notification arrives (toast moment)
+- **Custom sound**: Optional `public/sounds/notification.mp3` is used if present
+- **Fallback**: If no file or playback fails, a two-tone chime is played via Web Audio API
+- **Mute**: Stored in `localStorage` key `quicklyway-notification-sound`; set to `'false'` to disable sound
+
+### Browser Notifications (Optional)
+- **Permission**: Browser notification permission can be requested when the user is logged in
+- **When sent**: If permission is granted, a native browser notification is also shown for new notifications
+- **Click**: Clicking the browser notification focuses the app
+
+### Offer & Order Notifications
+- **Freelancer creates offer** → Client gets: “New offer received” with freelancer name and service title
+- **Client accepts offer** → Freelancer gets: “Offer accepted” and “Order created — you can start working”
+- **Client rejects offer** → Freelancer gets: “Offer declined”
+- **Links**: Notifications include `data.linkUrl` for messages or order page where applicable
+
+### Technical Notes
+- **API**: `GET /api/notifications` (paginated), `PATCH /api/notifications` (mark read)
+- **Store**: Zustand store for list, unread count, and “last added” for toast/sound
+- **Socket**: Server emits to `user:{userId}`; client only adds notifications when `notification.userId` matches current user
+- **Login/logout**: Store is reset on logout; on login (or account switch) notifications are re-fetched so the bell never shows another user’s data
+
+---
+
+## 🛒 Become Seller (Seller Application)
+
+### Overview
+Clients can apply to become sellers (freelancers). Admins review requests and approve or reject them. Applicants are notified of the decision.
+
+### Applicant Flow
+- **Become Seller page**: Dedicated page (e.g. `/become-seller`) for clients to submit a seller application
+- **Application data**: Typically full name, skills, bio, portfolio, etc., as configured
+- **Status**: Application is created with status `PENDING`
+- **Pending state**: UI can show “Request pending” or similar until admin acts
+
+### Admin Flow
+- **Seller requests**: Admin area (e.g. `/admin/seller-requests`) lists all pending and processed seller applications
+- **Approve**: Admin can approve a request; user becomes an approved seller and can access freelancer dashboard and create offers
+- **Reject**: Admin can reject with an optional reason; user stays client-only
+- **Audit**: Admin can see request details and history
+
+### Notifications
+- **On approval**: Applicant receives an in-app notification (e.g. “Seller request approved” / “You now have access to the seller dashboard”) and optional email if implemented
+- **On rejection**: Applicant can be notified (e.g. “Seller request rejected” with reason if provided)
+- **Real-time**: Notifications are delivered via Socket.IO when the user is online, and stored for when they return
+
+### Status & Access
+- **Seller status**: User model has `sellerStatus` (e.g. NONE, PENDING, APPROVED, REJECTED) and `isSeller`
+- **After approval**: User can switch to freelancer view, create services, send offers, and manage orders as a freelancer
+- **After rejection**: User remains client; can re-apply if the flow allows
+
+---
+
 ## 🎯 Key Business Rules
 
 ### Offer Rules
@@ -324,7 +402,10 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 ---
 
-**Version**: 1.0.0  
-**Release Date**: January 2025  
-**Status**: Production Ready
+**Version**: 1.1.0  
+**Release Date**: February 2026  
+**Status**: Production Ready  
 
+### v1.1.0 (Feb 2026)
+- In-app notification system (bell icon, dropdown, toasts, sound, offer/order/seller notifications)
+- Become Seller flow with admin approve/reject and notifications

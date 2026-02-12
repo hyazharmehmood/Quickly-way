@@ -28,7 +28,7 @@ function HomeContent() {
 
   return (
     <main className="min-h-screen bg-background">
-      <h1 className="sr-only">Find Top Freelance Services</h1>
+      <h1 className="heading-1 sr-only">Find Top Freelance Services</h1>
       <CategoryFilter
         selectedCategory={selectedSkill || 'All'}
         onSelectCategory={handleCategorySelect}
@@ -50,7 +50,7 @@ export default function Home() {
     <Suspense fallback={
       <main className="min-h-screen bg-background">
         <div className="flex items-center justify-center min-h-screen">
-          <div className="text-muted-foreground">Loading...</div>
+          <div className="caption">Loading...</div>
         </div>
       </main>
     }>

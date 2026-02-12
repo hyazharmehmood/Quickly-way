@@ -1,0 +1,30 @@
+---
+description: One design rule for all UI — same radius, typography, and colors. Use for badges, labels, inputs, buttons, tables, tabs, switch, tooltip, toggle, skeleton, menubar, and all headings.
+globs: ["**/*.jsx", "**/*.tsx", "**/*.css"]
+---
+
+# Quicklyway Design System (Single Rule)
+
+When adding or editing UI (landing page, dashboard, admin, components):
+
+## Border radius
+- **Pills**: Use `rounded-full` for **buttons** and **badges** only.
+- **Everything else**: Use `rounded-lg` for inputs, textareas, cards, dropdowns, tables, tabs, tooltip, toggle, skeleton, menubar. Do not use `rounded-md` or `rounded-xl` for these — stick to `rounded-lg`.
+
+## Typography
+Use these classes for headings and text so font size and weight stay consistent:
+- **H1**: `className="heading-1"` or `text-3xl font-semibold tracking-tight`
+- **H2**: `className="heading-2"` or `text-2xl font-semibold tracking-tight`
+- **H3**: `className="heading-3"` or `text-xl font-medium`
+- **H4**: `className="heading-4"` or `text-lg font-medium`
+- **H5**: `className="heading-5"` or `text-base font-medium`
+- **H6**: `className="heading-6"` or `text-sm font-medium`
+- **Body**: `text-base`
+- **Small**: `text-sm`
+- **Caption**: `className="caption"` or `text-xs text-muted-foreground`
+
+## Colors
+Use only design tokens: `primary`, `primary-foreground`, `secondary`, `muted`, `muted-foreground`, `accent`, `destructive`, `border`, `background`, `foreground`, `card`, `popover`. No ad-hoc hex/rgb.
+
+## Reference
+Full spec: `docs/DESIGN_SYSTEM.md`

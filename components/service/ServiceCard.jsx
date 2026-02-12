@@ -29,7 +29,7 @@ export function ServiceCard({ service }) {
 
   return (
     <Card 
-      className="cursor-pointer transition-transform duration-300 hover:-translate-y-1 h-full"
+      className="cursor-pointer border-none shadow-none transition-transform duration-300 hover:-translate-y-1 h-full"
       onClick={handleCardClick}
     >
         {/* Media Container - Changed aspect ratio to 11/7 to match editor (220/140) */}
@@ -86,7 +86,7 @@ export function ServiceCard({ service }) {
               <Link 
                 href={`/freelancer/${service.freelancerId || service.freelancer?.id}`}
                 onClick={(e) => e.stopPropagation()}
-                className="text-sm font-bold text-gray-900 leading-tight hover:text-primary transition-colors cursor-pointer"
+                className="text-base  font-semibold text-gray-900 leading-tight hover:text-primary transition-colors cursor-pointer"
               >
                 {provider.name}
               </Link>
@@ -106,10 +106,10 @@ export function ServiceCard({ service }) {
           <div className="mt-auto flex items-center justify-between">
             <div className="flex items-center gap-1.5">
               <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
-              <span className="text-sm font-bold text-gray-900">{rating.toFixed(1)}</span>
+              <span className="text-base font-semibold text-gray-900">{rating.toFixed(1)}</span>
               <span className="text-base text-gray-400 hover:text-gray-600 active:text-gray-900 transition-colors">({reviewCount})</span>
             </div>
-            <div className="text-base font-bold text-gray-900">
+            <div className="text-base font-semibold text-gray-900">
               ${service.price}
             </div>
           </div>

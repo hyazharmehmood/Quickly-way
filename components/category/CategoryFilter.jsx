@@ -102,7 +102,7 @@ export function CategoryFilter({
                 router.push('/');
               }}
               variant="default"
-              className="whitespace-nowrap px-6 py-2 rounded-md text-sm font-medium"
+              className="whitespace-nowrap px-6 py-2 text-sm font-medium"
             >
               All
             </Button>
@@ -216,7 +216,7 @@ export function CategoryFilter({
                                     {/* Subcategory Title with hover effect */}
                                     <div className="text-left w-full pb-2 border-b border-border/30 group-hover:border-primary/30 transition-colors">
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <h4 className="text-sm sm:text-base font-bold text-foreground group-hover:text-primary transition-colors">
+                                        <h4 className="heading-6 sm:text-base font-medium text-foreground group-hover:text-primary transition-colors">
                                           {subcategory.name}
                                         </h4>
                                         
@@ -230,7 +230,7 @@ export function CategoryFilter({
                                           <li key={skill.id}>
                                             <button
                                               onClick={() => handleSkillClick(skill.slug, category.slug, subcategory.slug)}
-                                              className="text-xs sm:text-sm cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-1 px-2 -mx-2 rounded-md hover:bg-primary/5 group/item"
+                                              className="small cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-1 px-2 -mx-2 rounded-lg hover:bg-primary/5 group/item"
                                             >
                                               <span className="flex items-center gap-2">
                                                 <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 group-hover/item:bg-primary group-hover/item:scale-150 transition-all"></span>
@@ -278,7 +278,7 @@ export function CategoryFilter({
                       <div className="bg-popover">
                         {/* Header with gradient */}
                         <div className="px-6 py-4 border-b border-border/50 bg-gradient-to-r from-primary/5 via-primary/3 to-transparent">
-                          <h3 className="text-lg font-bold text-foreground">{category.name}</h3>
+                          <h3 className="heading-4 text-foreground">{category.name}</h3>
                           <p className="text-xs text-muted-foreground mt-1">
                             {category.skills.length} skills available
                           </p>
@@ -291,7 +291,7 @@ export function CategoryFilter({
                               <li key={skill.id}>
                                 <span
                                   onClick={() => handleSkillClick(skill.slug, category.slug, null)}
-                                  className="text-xs sm:text-sm cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-2 px-3 -mx-3 rounded-md hover:bg-primary/5 group/item"
+                                  className="small cursor-pointer text-muted-foreground hover:text-primary hover:font-medium transition-all duration-200 text-left w-full py-2 px-3 -mx-3 rounded-lg hover:bg-primary/5 group/item"
                                 >
                                   <span className="flex items-center gap-2">
                                     <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground/30 group-hover/item:bg-primary group-hover/item:scale-150 transition-all"></span>

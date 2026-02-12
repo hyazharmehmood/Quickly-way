@@ -22,9 +22,22 @@
   --color-border: hsl(240 5.9% 90%);
   --color-input: hsl(240 5.9% 90%);
   --color-ring: hsl(142 71% 35%);
-  --radius: 0.5rem;
+  --radius: 0.75rem;
   --font-sans: var(--font-poppins), 'Poppins', system-ui, -apple-system, sans-serif;
   --font-mono: 'Courier New', monospace;
+}
+
+/* Design system: typography utilities (use for headings and text) */
+@layer components {
+  .heading-1 { @apply text-3xl font-semibold tracking-tight text-foreground; }
+  .heading-2 { @apply text-2xl font-semibold tracking-tight text-foreground; }
+  .heading-3 { @apply text-xl font-medium text-foreground; }
+  .heading-4 { @apply text-lg font-medium text-foreground; }
+  .heading-5 { @apply text-base font-medium text-foreground; }
+  .heading-6 { @apply text-sm font-medium text-foreground; }
+  .body { @apply text-base text-foreground; }
+  .small { @apply text-sm text-foreground; }
+  .caption { @apply text-xs text-muted-foreground; }
 }
 
 /* Dark mode disabled - keeping light theme as default */

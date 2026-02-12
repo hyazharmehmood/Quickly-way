@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/utils";
+import { Label } from "@/components/ui/label";
 
 const TITLE_MIN = 50;
 const TITLE_MAX = 150;
@@ -80,12 +81,12 @@ const PostServiceTitle = (props) => {
     <div className="space-y-6">
       {/* Service Title */}
       <div className="space-y-2">
-        <label
+        <Label
           htmlFor="service-title"
-          className="block text-sm font-medium text-foreground"
+          className=""
         >
           Service title <span className="text-red-500">*</span>
-        </label>
+        </Label>
         <Input
           id="service-title"
           value={serviceTitle}
@@ -97,8 +98,8 @@ const PostServiceTitle = (props) => {
           onBlur={() => setServiceTitleError(validateServiceTitle(serviceTitle))}
           placeholder="e.g. Logo, Business Card, Flyer, Brochure, Poster, Banner, and Website Design"
           className={cn(
-            "h-11 transition-colors",
-            serviceTitleError && "border-red-500 focus-visible:ring-red-500/20"
+            "transition-colors",
+            serviceTitleError && " focus-visible:ring-red-500"
           )}
           aria-invalid={!!serviceTitleError}
           aria-describedby={serviceTitleError ? "title-error" : "title-hint"}
@@ -130,12 +131,12 @@ const PostServiceTitle = (props) => {
 
       {/* About */}
       <div className="space-y-2">
-        <label
+        <Label
           htmlFor="about-text"
-          className="block text-sm font-medium text-foreground"
+          className=""
         >
           About <span className="text-red-500">*</span>
-        </label>
+        </Label>  
         <Textarea
           id="about-text"
           rows={6}
@@ -149,7 +150,7 @@ const PostServiceTitle = (props) => {
           placeholder="I am a professional designer specializing in logos, brochures, flyers, and complete branding solutions. I deliver high-quality work with quick turnaround..."
           className={cn(
             "resize-none text-base leading-relaxed transition-colors",
-            aboutError && "border-red-500 focus-visible:ring-red-500/20"
+            aboutError && " focus-visible:ring-red-500"
           )}
           aria-invalid={!!aboutError}
           aria-describedby={aboutError ? "about-error" : "about-hint"}
@@ -188,7 +189,7 @@ const PostServiceTitle = (props) => {
       <div className="w-full">  <Button
           type="button"
           onClick={handleNextClick}
-          className=" w-full h-11 rounded-full font-semibold "
+          className=" w-full  "
         >
           Next
         </Button></div>

@@ -3,31 +3,36 @@
 import { useRouter } from 'next/navigation';
 import Signup from '@/components/auth/Signup';
 import { Suspense } from 'react';
-
+import { Skeleton } from '@/components/ui/skeleton';
+import { Card } from '@/components/ui/card';
 
 export default function SignupPage() {
-    const router = useRouter();
+  const router = useRouter();
 
-    const handleSignIn = () => {
-        router.replace('/login');
-    };
+  const handleSignIn = () => {
+    router.replace('/login');
+  };
 
-    const handlePostService = () => {
-        // TODO: Implement post service flow
-        console.log('Post service clicked');
-        router.replace('/post-service');
-    };
+  const handlePostService = () => {
+    router.replace('/post-service');
+  };
 
-    return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
-                <Suspense fallback={<div className="flex justify-center p-8">Loading...</div>}>
-                    <Signup
-                        onSignInClick={handleSignIn}
-                        onPostServiceClick={handlePostService}
-                    />
-                </Suspense>
+  return (
+    <div className="min-h-screen max-w-[500px] mx-auto flex items-center justify-center px-3">
+      <Card className=" px-4 py-8 sm:px-6 lg:px-8">
+      
+        <Suspense
+          fallback={
+            <div className="w-full max-w-md space-y-4 p-4">
+              <Skeleton className="h-8 w-48 mx-auto" />
+              <Skeleton className="h-64 w-full rounded-lg" />
             </div>
-        </div>
-    );
+          }
+        >
+          <Signup onSignInClick={handleSignIn} onPostServiceClick={handlePostService} />
+        </Suspense>
+      
+      </Card>
+    </div>
+  );
 }

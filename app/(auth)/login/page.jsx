@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation';
 import Login from '@/components/auth/Login';
+import { Card } from '@/components/ui/card';
 
 export default function LoginPage() {
     const router = useRouter();
@@ -19,14 +20,14 @@ export default function LoginPage() {
     };
 
     return (
-        <div className="min-h-screen bg-background flex items-center justify-center p-4">
-            <div className="w-full max-w-md">
+        <div className="min-h-screen max-w-[500px] mx-auto flex items-center justify-center px-2">
+            <Card className=" px-4 py-8 sm:px-6 lg:px-8">
                 <Login
                     onClose={handleClose}
                     onCreateAccountClick={handleCreateAccount}
                     onForgotPasswordClick={handleForgotPassword}
                 />
-            </div>
+            </Card>
         </div>
     );
 }

@@ -54,16 +54,16 @@ export const SessionExpiryDialog = () => {
             }
             setShowExpiryDialog(open);
         }}>
-            <DialogContent className="sm:max-w-md border-none shadow-2xl rounded-3xl p-0 overflow-hidden">
+            <DialogContent className="sm:max-w-md rounded-lg border border-border p-0 overflow-hidden">
                 <div className="bg-primary/5 p-8 flex flex-col items-center text-center">
                     <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 animate-pulse">
                         <Clock className="w-8 h-8 text-primary" />
                     </div>
                     <DialogHeader className="space-y-2">
-                        <DialogTitle className="text-2xl font-bold tracking-tight text-foreground">
+                        <DialogTitle className="heading-2 text-foreground">
                             Session Expired
                         </DialogTitle>
-                        <DialogDescription className="text-muted-foreground text-base">
+                        <DialogDescription className="body text-muted-foreground">
                             Your security session has timed out. Would you like to stay logged in or exit?
                         </DialogDescription>
                     </DialogHeader>
@@ -73,7 +73,7 @@ export const SessionExpiryDialog = () => {
                     <Button
                         variant="outline"
                         onClick={handleLogout}
-                        className="flex-1 rounded-2xl h-12 gap-2 border-border hover:bg-destructive/5 hover:text-destructive hover:border-destructive/20 transition-all font-medium"
+                        className="flex-1 h-11 gap-2 font-medium hover:bg-destructive/10 hover:text-destructive hover:border-destructive/30"
                     >
                         <LogOut className="w-4 h-4" />
                         Logout
@@ -81,7 +81,7 @@ export const SessionExpiryDialog = () => {
                     <Button
                         onClick={handleRefresh}
                         disabled={isRefreshing}
-                        className="flex-1 rounded-2xl h-12 gap-2 bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex-1 h-11 gap-2 font-medium"
                     >
                         <RefreshCw className={`w-4 h-4 ${isRefreshing ? 'animate-spin' : ''}`} />
                         {isRefreshing ? 'Refreshing...' : 'Refresh Session'}
