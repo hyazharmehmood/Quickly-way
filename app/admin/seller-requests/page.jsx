@@ -81,13 +81,13 @@ export default function AdminSellerRequests() {
                 <div className="flex gap-3">
                     <div className="relative w-64">
                         <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                        <Input placeholder="Search applicants..." className="pl-10 h-10 bg-card border-border rounded-xl" />
+                        <Input placeholder="Search applicants..." className="pl-10 " />
                     </div>
                 </div>
             </div>
 
-            <Card className="border-none rounded-[2rem]">
-                <CardHeader className="p-8 border-b border-border bg-secondary/10">
+                <Card className="border-none shadow-none">
+                <CardHeader className="px-0 ">
                     <CardTitle className="text-xl font-normal">Requests List</CardTitle>
                     <CardDescription className="font-normal">{requests.length} applications awaiting review</CardDescription>
                 </CardHeader>

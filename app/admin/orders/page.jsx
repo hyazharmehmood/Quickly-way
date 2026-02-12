@@ -188,8 +188,8 @@ export default function OrdersPage() {
                 />
             </div>
 
-            <Card className="border-none rounded-[2rem]">
-                <CardHeader className="p-8 border-b border-border flex flex-col md:flex-row justify-between items-center gap-4">
+            <Card className="border-none shadow-none">
+                <CardHeader className="px-0 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <CardTitle className="text-xl font-normal text-foreground">Job Ledger</CardTitle>
                         <p className="text-muted-foreground font-normal mt-0.5 text-sm">All orders across the platform</p>
@@ -199,13 +199,13 @@ export default function OrdersPage() {
                             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
                             <Input 
                                 placeholder="Search orders..." 
-                                className="pl-10 h-11 bg-card border-border rounded-xl"
+                                className="pl-10 "
                                 value={searchQuery}
                                 onChange={(e) => setSearchQuery(e.target.value)}
                             />
                         </div>
                         <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="h-11 w-40 rounded-xl border-border">
+                            <SelectTrigger className="h-11 w-40 ">
                                 <SelectValue placeholder="Filter" />
                             </SelectTrigger>
                             <SelectContent>
@@ -223,7 +223,7 @@ export default function OrdersPage() {
                             variant="outline"
                             size="icon"
                             onClick={fetchOrders}
-                            className="h-11 w-11 rounded-xl"
+                            className="h-11 w-11 "
                             disabled={loading}
                         >
                             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -232,7 +232,7 @@ export default function OrdersPage() {
                 </CardHeader>
                 <CardContent className="p-0">
                     {loading ? (
-                        <div className="p-0">
+                            <div className="px-2">
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-secondary/40 hover:bg-secondary/40">

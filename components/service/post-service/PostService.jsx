@@ -46,7 +46,6 @@ const DEFAULT_LANGUAGES = [
 
 // ALL_WORLD_LANGUAGES imported from constants
 
-const DEFAULT_PAYMENT_METHODS = "I accept payments via Cash, Check, Credit Card, Google Pay, PayPal, Samsung Pay, Apple Pay, Venmo, and Zelle.";
 
 // Map Tailwind classes to Hex codes for Canvas generation
 const BG_COLOR_MAP = {
@@ -155,7 +154,8 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     const [priceBreakdowns, setPriceBreakdowns] = useState([
         { id: `pb-0`, text: "", price: "", included: "" }
     ]);
-    const [paymentMethods, setPaymentMethods] = useState("");
+    const [paymentRegion, setPaymentRegion] = useState("GLOBAL");
+    const [paymentMethods, setPaymentMethods] = useState([]);
     const [availableForJob, setAvailableForJob] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -217,6 +217,8 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 setPriceBreakdowns(initialData.priceBreakdowns);
             }
 
+            setPaymentRegion(initialData.paymentRegion || "GLOBAL");
+            setPaymentMethods(Array.isArray(initialData.paymentMethods) ? initialData.paymentMethods : []);
             setAvailableForJob(initialData.freelancer?.availableForJob || false); // If this exists
         }
     }, [initialData]);
@@ -277,6 +279,8 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 images: validImages,
                 searchTags, // Add tags to payload
                 skillIds: skills, // Add skill IDs to payload for service
+                paymentRegion: paymentRegion || "GLOBAL",
+                paymentMethods,
 
                 showEmail: user?.showEmail || false,
                 showMobile: user?.showMobile || false,
@@ -347,9 +351,9 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                         priceStr={priceStr} setPriceStr={setPriceStr}
                         selectedCurrency={selectedCurrency} setSelectedCurrency={setSelectedCurrency}
                         priceBreakdowns={priceBreakdowns} setPriceBreakdowns={setPriceBreakdowns}
+                        paymentRegion={paymentRegion} setPaymentRegion={setPaymentRegion}
                         paymentMethods={paymentMethods} setPaymentMethods={setPaymentMethods}
                         availableForJob={availableForJob} setAvailableForJob={setAvailableForJob}
-                        defaultPaymentMethods={DEFAULT_PAYMENT_METHODS}
                         defaultPriceBreakdowns={DEFAULT_PRICE_BREAKDOWNS}
                         onBack={() => setStep(3)}
                         onSave={handleSave}

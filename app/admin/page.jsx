@@ -6,13 +6,16 @@ import { Users, Briefcase, ShoppingCart, DollarSign, UserCheck, ArrowRight } fro
 import { MetricCard } from '@/components/admin/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 
 export default function AdminPage() {
     const [pendingSellers, setPendingSellers] = useState(0);
+    const [stats, setStats] = useState(null);
+    const [statsLoading, setStatsLoading] = useState(true);
 
     useEffect(() => {
-        const fetch = async () => {
+        const fetchSellerRequests = async () => {
             try {
                 const res = await api.get('/admin/seller-requests');
                 const pending = (res.data || []).filter((r) => r.status === 'PENDING').length;
@@ -21,41 +24,89 @@ export default function AdminPage() {
                 // ignore
             }
         };
-        fetch();
+        fetchSellerRequests();
     }, []);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await api.get('/admin/stats');
+                if (res.data?.success && res.data?.stats) {
+                    setStats(res.data.stats);
+                }
+            } catch {
+                // ignore
+            } finally {
+                setStatsLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const formatNumber = (n) => {
+        if (n == null || n === undefined) return '0';
+        return new Intl.NumberFormat('en-US').format(n);
+    };
+    const formatRevenue = (n) => {
+        if (n == null || n === undefined) return '$0';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+    };
+
+    const s = stats || {};
 
     return (
         <div className="space-y-4">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground">Dashboard Overview</h2>
+            <h2 className="text-2xl font-normal tracking-tight text-foreground">Dashboard Overview</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <MetricCard
-                    title="Total Users"
-                    value="12,345"
-                    trend="+12% from last month"
-                    icon={<Users />}
-                />
-                <MetricCard
-                    title="Active Services"
-                    value="423"
-                    trend="+5% from last month"
-                    icon={<Briefcase />}
-                />
-                <MetricCard
-                    title="Total Orders"
-                    value="1,204"
-                    trend="+23% from last month"
-                    icon={<ShoppingCart />}
-                />
-                <MetricCard
-                    title="Revenue"
-                    value="$45,231"
-                    trend="+8% from last month"
-                    icon={<DollarSign />}
-                />
+                {statsLoading ? (
+                    <>
+                        {[1, 2, 3, 4].map((i) => (
+                            <Card key={i} className=" border-border shadow-none">
+                                <CardContent className="p-4">
+                                    <div className="flex justify-between items-start">
+                                        <div className="space-y-2">
+                                                    <Skeleton className="h-4 w-24" />
+                                            <Skeleton className="h-6 w-16" />
+                                        </div>
+                                        <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+                                    </div>
+                                    <Skeleton className="h-3 w-28 mt-3" />
+                                </CardContent>
+                            </Card>
+                        ))}
+                    </>
+                ) : (
+                    <>
+                        <MetricCard
+                            title="Total Users"
+                            value={formatNumber(s.totalUsers)}
+                            trend="All registered users"
+                            icon={<Users />}
+                        />
+                        <MetricCard
+                            title="Active Services"
+                            value={formatNumber(s.activeServices)}
+                            trend="Total gigs listed"
+                            icon={<Briefcase />}
+                        />
+                        <MetricCard
+                            title="Total Orders"
+                            value={formatNumber(s.totalOrders)}
+                            trend="All orders"
+                            icon={<ShoppingCart />}
+                        />
+                        <MetricCard
+                            title="Revenue"
+                            value={formatRevenue(s.revenue)}
+                            trend="From completed orders"
+                            icon={<DollarSign />}
+                        />
+                    </>
+                )}
             </div>
 
             {/* Seller Requests - View & Approve */}
-            <Card className="border-none rounded-[2rem]">
+            <Card className="border shadow-none">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-lg font-normal flex items-center gap-2">
                         <UserCheck className="w-5 h-5 text-primary" />
@@ -77,7 +128,7 @@ export default function AdminPage() {
             </Card>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card className="border-none rounded-[2rem]">
+                <Card className="border shadow-none">
                     <CardHeader>
                         <CardTitle className="text-lg font-normal">Analytics Preview</CardTitle>
                     </CardHeader>
@@ -85,7 +136,7 @@ export default function AdminPage() {
                         Chart Placeholder
                     </CardContent>
                 </Card>
-                <Card className="border-none">
+                <Card className="border shadow-none">
                     <CardHeader>
                         <CardTitle className="text-lg font-normal">Recent Activity</CardTitle>
                     </CardHeader>

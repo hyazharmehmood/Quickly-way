@@ -133,6 +133,8 @@ model Service {
   coverText       String?
   coverType       String        @default("IMAGE")
   searchTags      String[]
+  paymentRegion   String?       // e.g. "SAUDI_ARABIA", "GLOBAL"
+  paymentMethods  String[]      // Selected method labels, e.g. ["Mada (HyperPay)", "Moyasar"]
   freelancer      User          @relation(fields: [freelancerId], references: [id])
   skills          ServiceSkill[]
   orders          Order[]
@@ -349,6 +351,7 @@ model Order {
   cancellationReason    String?
   cancelledBy           String?           // User ID who cancelled
   clientIpAddress       String?           // IP address when order created
+  paymentMethodUsed     String?           // Payment method selected by client (e.g. "Mada (HyperPay)")
   createdAt             DateTime          @default(now())
   updatedAt             DateTime          @updatedAt
   

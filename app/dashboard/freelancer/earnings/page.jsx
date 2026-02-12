@@ -1,9 +1,9 @@
 "use client";
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import {
-    DollarSign, ArrowUpRight, ArrowDownLeft,
-    CreditCard, Building, History, TrendingUp, Download
+    DollarSign, ArrowDownLeft,
+    History, TrendingUp, Download
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -15,14 +15,50 @@ import {
     TableHeader,
     TableRow
 } from "@/components/ui/table";
+import api from '@/utils/api';
+import { format } from 'date-fns';
 
 export default function FreelancerEarningsPage() {
-    const transactions = [
-        { id: 'TX-1001', date: '22 Nov 2024', description: 'Order Payment - ORD-8819', type: 'Credit', amount: 120.00 },
-        { id: 'TX-1002', date: '21 Nov 2024', description: 'Withdrawal to Bank Account', type: 'Debit', amount: 500.00 },
-        { id: 'TX-1003', date: '19 Nov 2024', description: 'Order Payment - ORD-8790', type: 'Credit', amount: 85.50 },
-        { id: 'TX-1004', date: '15 Nov 2024', description: 'Early Payout Recovery', type: 'Debit', amount: 20.00 },
-    ];
+    const [stats, setStats] = useState(null);
+    const [transactions, setTransactions] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchData = async () => {
+            try {
+                const [statsRes, ordersRes] = await Promise.all([
+                    api.get('/dashboard/freelancer/stats'),
+                    api.get('/orders', { params: { status: 'COMPLETED', limit: 50 } }),
+                ]);
+                if (statsRes.data?.success && statsRes.data?.stats) {
+                    setStats(statsRes.data.stats);
+                }
+                if (ordersRes.data?.success && Array.isArray(ordersRes.data.orders)) {
+                    const txs = ordersRes.data.orders.map((o) => ({
+                        id: o.id,
+                        date: o.completedAt ? format(new Date(o.completedAt), 'dd MMM yyyy') : '-',
+                        description: `Order Payment - ${o.orderNumber || o.id.slice(0, 8)}`,
+                        type: 'Credit',
+                        amount: o.price ?? 0,
+                        currency: o.currency || 'USD',
+                    }));
+                    setTransactions(txs);
+                }
+            } catch (err) {
+                console.error('Failed to fetch earnings:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchData();
+    }, []);
+
+    const formatCurrency = (amount, currency = 'USD') => {
+        if (amount == null) return '$0.00';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency, minimumFractionDigits: 2 }).format(amount);
+    };
+
+    const totalEarnings = stats?.totalEarnings ?? 0;
 
     return (
         <div className="animate-in fade-in duration-500 space-y-4">
@@ -35,14 +71,16 @@ export default function FreelancerEarningsPage() {
                 <Card className="lg:col-span-2 rounded-[2rem] border-none bg-primary text-primary-foreground p-4 overflow-hidden relative">
                     <div className="relative z-10 flex flex-col h-full justify-between">
                         <div>
-                            <p className="text-sm font-normal uppercase tracking-widest opacity-80 mb-2">Available Balance</p>
-                            <h3 className="text-5xl font-normal tracking-tighter">$1,240.50</h3>
+                            <p className="text-sm font-normal uppercase tracking-widest opacity-80 mb-2">Total Earnings</p>
+                            <h3 className="text-5xl font-normal tracking-tighter">
+                                {loading ? '...' : formatCurrency(totalEarnings)}
+                            </h3>
                         </div>
                         <div className="flex gap-4 mt-12">
-                            <Button size="lg" variant="outline" className="text-primary hover:text-primary  ">
+                            <Button size="lg" variant="outline" className="text-primary hover:text-primary" disabled>
                                 Withdraw Funds
                             </Button>
-                            <Button size="lg" variant="outline" className="text-primary hover:text-primary  ">
+                            <Button size="lg" variant="outline" className="text-primary hover:text-primary" disabled>
                                 Manage Payout Methods
                             </Button>
                         </div>
@@ -59,8 +97,8 @@ export default function FreelancerEarningsPage() {
                                 <TrendingUp className="w-6 h-6" />
                             </div>
                             <div>
-                                <p className="text-xs text-muted-foreground uppercase tracking-widest">Expected Next Week</p>
-                                <p className="text-2xl font-normal text-foreground">$840.00</p>
+                                <p className="text-xs text-muted-foreground uppercase tracking-widest">Completed Orders</p>
+                                <p className="text-2xl font-normal text-foreground">{loading ? '...' : (stats?.completedOrders ?? 0)}</p>
                             </div>
                         </div>
                     </Card>
@@ -71,7 +109,7 @@ export default function FreelancerEarningsPage() {
                             </div>
                             <div>
                                 <p className="text-xs text-muted-foreground uppercase tracking-widest">Lifetime Earnings</p>
-                                <p className="text-2xl font-normal text-foreground">$12,840.00</p>
+                                <p className="text-2xl font-normal text-foreground">{loading ? '...' : formatCurrency(totalEarnings)}</p>
                             </div>
                         </div>
                     </Card>
@@ -81,7 +119,7 @@ export default function FreelancerEarningsPage() {
             <Card className="border-none overflow-hidden rounded-[2rem] ">
                 <CardHeader className="p-4 border-b border-border flex flex-row justify-between items-center">
                     <CardTitle className="text-xl font-normal">Transaction History</CardTitle>
-                    <Button variant="outline" size="sm" className="rounded-xl h-10 border-border">
+                    <Button variant="outline" size="sm" className="rounded-xl h-10 border-border" disabled>
                         <Download className="w-4 h-4 mr-2" /> Export CSV
                     </Button>
                 </CardHeader>
@@ -96,24 +134,31 @@ export default function FreelancerEarningsPage() {
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {transactions.map((tx) => (
-                                <TableRow key={tx.id} className="hover:bg-secondary/10 border-b border-border transition-colors">
-                                    <TableCell className="px-10 py-6 text-sm text-muted-foreground font-normal">{tx.id}</TableCell>
-                                    <TableCell className="px-10 py-6 text-sm font-normal text-foreground">{tx.date}</TableCell>
-                                    <TableCell className="px-10 py-6">
-                                        <div className="flex items-center gap-3">
-                                            {tx.type === 'Credit'
-                                                ? <ArrowDownLeft className="w-4 h-4 text-primary" />
-                                                : <ArrowUpRight className="w-4 h-4 text-destructive" />
-                                            }
-                                            <span className="text-sm font-normal text-foreground">{tx.description}</span>
-                                        </div>
-                                    </TableCell>
-                                    <TableCell className={`px-10 py-6 text-right font-normal text-sm ${tx.type === 'Credit' ? 'text-primary' : 'text-foreground'}`}>
-                                        {tx.type === 'Credit' ? '+' : '-'}${tx.amount.toFixed(2)}
-                                    </TableCell>
+                            {loading ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="px-10 py-8 text-center text-muted-foreground text-sm">Loading...</TableCell>
                                 </TableRow>
-                            ))}
+                            ) : transactions.length === 0 ? (
+                                <TableRow>
+                                    <TableCell colSpan={4} className="px-10 py-8 text-center text-muted-foreground text-sm">No completed orders yet.</TableCell>
+                                </TableRow>
+                            ) : (
+                                transactions.map((tx) => (
+                                    <TableRow key={tx.id} className="hover:bg-secondary/10 border-b border-border transition-colors">
+                                        <TableCell className="px-10 py-6 text-sm text-muted-foreground font-normal">{tx.id.slice(0, 8)}</TableCell>
+                                        <TableCell className="px-10 py-6 text-sm font-normal text-foreground">{tx.date}</TableCell>
+                                        <TableCell className="px-10 py-6">
+                                            <div className="flex items-center gap-3">
+                                                <ArrowDownLeft className="w-4 h-4 text-primary" />
+                                                <span className="text-sm font-normal text-foreground">{tx.description}</span>
+                                            </div>
+                                        </TableCell>
+                                        <TableCell className="px-10 py-6 text-right font-normal text-sm text-primary">
+                                            +{formatCurrency(tx.amount, tx.currency)}
+                                        </TableCell>
+                                    </TableRow>
+                                ))
+                            )}
                         </TableBody>
                     </Table>
                 </CardContent>

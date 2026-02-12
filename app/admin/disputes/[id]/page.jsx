@@ -375,7 +375,7 @@ export default function AdminDisputeDetailPage() {
           </Card>
 
           {/* Dispute Thread */}
-          <Card className="rounded-[2rem] border-none">
+          <Card className="border-none shadow-none">
             <CardHeader>
               <CardTitle className="text-lg font-normal flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-destructive" />

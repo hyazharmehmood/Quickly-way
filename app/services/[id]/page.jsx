@@ -100,7 +100,7 @@ export default function ServiceDetailsPage() {
                         isOnline: false,
                         availability: data.freelancer?.availability || []
                     },
-                    paymentMethods: ["Credit Card", "PayPal"],
+                    paymentMethods: data.paymentMethods && Array.isArray(data.paymentMethods) ? data.paymentMethods : [],
                     reviewsList: transformedReviews,
                     freelancerId: data.freelancerId || data.freelancer?.id,
                     rawData: data

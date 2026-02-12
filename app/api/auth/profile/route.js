@@ -1,9 +1,20 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { verifyToken } from '@/lib/utils/jwt';
 import { getUserProfile, updateUserProfile } from '@/lib/controllers/userController';
 
 async function getUserId() {
+    const headersList = await headers();
+    const authHeader = headersList.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+        const token = authHeader.slice(7);
+        try {
+            const decoded = verifyToken(token);
+            return decoded?.id || null;
+        } catch {
+            // fall through to cookie
+        }
+    }
     const cookieStore = await cookies();
     const token = cookieStore.get('token')?.value;
     if (!token) return null;

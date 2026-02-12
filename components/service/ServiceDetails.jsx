@@ -406,13 +406,28 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
 
                             <Card className="border-none shadow-sm">
                                 <CardContent className="p-4 md:p-6">
-                                    <h3 className="heading-3  ">Payment methods</h3>
-                                    <p className="text-base text-gray-600 leading-relaxed font-normal">
-                                        {service.paymentMethods?.[0]?.startsWith("I accept payments via")
-                                            ? service.paymentMethods.join(', ')
-                                            : `This pro accepts payments via ${service.paymentMethods?.join(', ')}.`
-                                        }
-                                    </p>
+                                    <h3 className="heading-3 mb-3">Payment methods</h3>
+                                    {service.paymentMethods?.length > 0 ? (
+                                        <ul className="space-y-2 list-none p-0 m-0">
+                                            {service.paymentMethods.map((method, index) => (
+                                                <li
+                                                    key={index}
+                                                    className="flex items-center gap-3 rounded-xl border border-gray-100 bg-gray-50/50 px-4 py-3 text-sm font-medium text-gray-800"
+                                                >
+                                                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-green-100 text-green-600">
+                                                        <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                                                        </svg>
+                                                    </span>
+                                                    {method}
+                                                </li>
+                                            ))}
+                                        </ul>
+                                    ) : (
+                                        <p className="text-base text-gray-500 leading-relaxed font-normal">
+                                            Payment methods not specified.
+                                        </p>
+                                    )}
                                 </CardContent>
                             </Card>
 

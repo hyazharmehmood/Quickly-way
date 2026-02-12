@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState } from 'react';
-import { ShoppingCart, Calendar, RefreshCw, AlertCircle } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { ShoppingCart, Calendar, RefreshCw, AlertCircle, CreditCard } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -26,6 +26,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
     deliveryTime: service?.deliveryTime || 7,
     revisionsIncluded: 2,
     cancellationPolicy: 'Standard cancellation policy applies. Order can be cancelled within 24 hours of acceptance.',
+    paymentMethod: '',
   });
 
   // Redirect to login if not logged in
@@ -40,11 +41,27 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
     return null; // Don't show order button for own service
   }
 
+  const servicePaymentMethods = service?.paymentMethods && Array.isArray(service.paymentMethods) && service.paymentMethods.length > 0
+    ? service.paymentMethods
+    : [];
+
+  useEffect(() => {
+    const methods = service?.paymentMethods && Array.isArray(service.paymentMethods) ? service.paymentMethods : [];
+    if (methods.length === 1) {
+      setFormData(prev => (prev.paymentMethod ? prev : { ...prev, paymentMethod: methods[0] }));
+    }
+  }, [service?.id, service?.paymentMethods]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     
     if (!service?.id) {
       toast.error('Service information missing');
+      return;
+    }
+
+    if (servicePaymentMethods.length > 0 && !formData.paymentMethod) {
+      toast.error('Please select a payment method');
       return;
     }
 
@@ -56,6 +73,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
         deliveryTime: parseInt(formData.deliveryTime),
         revisionsIncluded: parseInt(formData.revisionsIncluded),
         cancellationPolicy: formData.cancellationPolicy,
+        paymentMethodUsed: formData.paymentMethod || null,
       });
 
       if (response.data.success) {
@@ -111,6 +129,31 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
               Payment will be processed after order acceptance
             </div>
           </div>
+
+          {/* Payment method (freelancer's accepted methods) */}
+          {servicePaymentMethods.length > 0 && (
+            <div className="space-y-2">
+              <Label htmlFor="paymentMethod" className="flex items-center gap-2">
+                <CreditCard className="w-4 h-4" />
+                Payment method
+              </Label>
+              <select
+                id="paymentMethod"
+                value={formData.paymentMethod}
+                onChange={(e) => setFormData({ ...formData, paymentMethod: e.target.value })}
+                required={servicePaymentMethods.length > 0}
+                className="w-full rounded-xl border border-gray-200 bg-white py-3 px-4 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500"
+              >
+                <option value="">Select payment method</option>
+                {servicePaymentMethods.map((method) => (
+                  <option key={method} value={method}>{method}</option>
+                ))}
+              </select>
+              <p className="text-xs text-gray-500">
+                You can pay only with the methods this freelancer accepts for this service.
+              </p>
+            </div>
+          )}
 
           {/* Delivery Time */}
           <div className="space-y-2">

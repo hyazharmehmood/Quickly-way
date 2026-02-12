@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import {
     ArrowLeft, Clock, CheckCircle2, XCircle,
     MessageSquare, Download, Package, AlertCircle, User,
-    Calendar, RefreshCw, Star
+    Calendar, RefreshCw, Star, CreditCard
 } from 'lucide-react';
 import { ReviewModal } from '@/components/review/ReviewModal';
 import DisputeThread from '@/components/dispute/DisputeThread';
@@ -16,6 +16,14 @@ import {
     RevisionDialog,
     DisputeDialog,
 } from '@/components/order';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -37,6 +45,9 @@ export default function OrderDetailPage() {
     const [showCancelDialog, setShowCancelDialog] = useState(false);
     const [showRevisionDialog, setShowRevisionDialog] = useState(false);
     const [showDisputeDialog, setShowDisputeDialog] = useState(false);
+    const [showCompleteOrderDialog, setShowCompleteOrderDialog] = useState(false);
+    const [selectedPaymentMethod, setSelectedPaymentMethod] = useState('');
+    const [completingOrder, setCompletingOrder] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [reviews, setReviews] = useState([]);
     const [canReview, setCanReview] = useState({ canReview: false, reason: null });
@@ -152,12 +163,26 @@ export default function OrderDetailPage() {
         }
     };
 
-    const handleAcceptDelivery = async () => {
+    const servicePaymentMethods = order?.service?.paymentMethods && Array.isArray(order.service.paymentMethods)
+        ? order.service.paymentMethods
+        : [];
+    const requiresPaymentSelection = servicePaymentMethods.length > 0;
+
+    const handleAcceptDeliveryClick = () => {
+        if (!order) return;
+        if (requiresPaymentSelection) {
+            setSelectedPaymentMethod(order.paymentMethodUsed || '');
+            setShowCompleteOrderDialog(true);
+            return;
+        }
+        handleAcceptDelivery();
+    };
+
+    const handleAcceptDelivery = async (paymentMethodUsedParam) => {
         if (!order) return;
 
-        // Get the latest deliverable
-        const latestDeliverable = order.deliverables && order.deliverables.length > 0 
-            ? order.deliverables[0] 
+        const latestDeliverable = order.deliverables && order.deliverables.length > 0
+            ? order.deliverables[0]
             : null;
 
         if (!latestDeliverable) {
@@ -168,19 +193,34 @@ export default function OrderDetailPage() {
         try {
             const response = await api.post(`/orders/${order.id}/complete`, {
                 deliverableId: latestDeliverable.id,
+                ...(paymentMethodUsedParam && { paymentMethodUsed: paymentMethodUsedParam }),
             });
             if (response.data.success) {
                 toast.success('Order completed successfully!');
+                setShowCompleteOrderDialog(false);
+                setSelectedPaymentMethod('');
                 await fetchOrder();
                 await fetchReviews();
                 await checkCanReview();
-                // Show review modal for client
                 if (isClient) {
                     setTimeout(() => setShowReviewModal(true), 500);
                 }
             }
         } catch (error) {
             toast.error(error.response?.data?.error || 'Failed to accept delivery');
+        }
+    };
+
+    const handleCompleteOrderWithPayment = async () => {
+        if (!selectedPaymentMethod) {
+            toast.error('Please select a payment method');
+            return;
+        }
+        setCompletingOrder(true);
+        try {
+            await handleAcceptDelivery(selectedPaymentMethod);
+        } finally {
+            setCompletingOrder(false);
         }
     };
 
@@ -328,6 +368,12 @@ export default function OrderDetailPage() {
                                     </p>
                                 </div>
                             </div>
+                                {order.paymentMethodUsed && (
+                                    <div className="space-y-1 md:col-span-2">
+                                        <Label className="text-xs text-muted-foreground uppercase tracking-widest">Payment method</Label>
+                                        <p className="text-sm font-medium text-foreground">{order.paymentMethodUsed}</p>
+                                    </div>
+                                )}
                             </div>
 
                             <Separator />
@@ -740,7 +786,7 @@ export default function OrderDetailPage() {
                                         <>
                                             <Button
                                                 className="w-full bg-primary text-primary-foreground"
-                                                onClick={handleAcceptDelivery}
+                                                onClick={handleAcceptDeliveryClick}
                                             >
                                                 <CheckCircle2 className="w-4 h-4 " /> Accept & Complete
                                             </Button>
@@ -900,6 +946,59 @@ export default function OrderDetailPage() {
                 order={order}
                 onSubmit={handleOpenDispute}
             />
+
+            {/* Complete order: select payment method when required */}
+            <Dialog open={showCompleteOrderDialog} onOpenChange={setShowCompleteOrderDialog}>
+                <DialogContent className="sm:max-w-md rounded-2xl">
+                    <DialogHeader>
+                        <DialogTitle className="flex items-center gap-2 text-lg font-normal">
+                            <CreditCard className="w-5 h-5" />
+                            Select payment method
+                        </DialogTitle>
+                        <DialogDescription>
+                            Choose how you paid for this order. The order will be marked complete after you confirm.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="space-y-4 py-2">
+                        <div className="space-y-2">
+                            <Label>Payment method</Label>
+                            <Select
+                                value={selectedPaymentMethod}
+                                onValueChange={(value) => setSelectedPaymentMethod(value)}
+                                className="w-full"
+                            >
+                                <SelectTrigger className="w-full">
+                                    <SelectValue placeholder="Select payment method" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    {servicePaymentMethods.map((method) => (
+                                        <SelectItem key={method} value={method}>{method}</SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div className="flex gap-3 pt-2">
+                            <Button
+                                type="button"
+                                variant="outline"
+                                className="flex-1"
+                                onClick={() => setShowCompleteOrderDialog(false)}
+                                disabled={completingOrder}
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                type="button"
+                                className="flex-1 bg-primary text-primary-foreground"
+                                onClick={handleCompleteOrderWithPayment}
+                                disabled={!selectedPaymentMethod || completingOrder}
+                            >
+                                {completingOrder ? 'Completing...' : 'Complete order'}
+                            </Button>
+                        </div>
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

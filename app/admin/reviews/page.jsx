@@ -218,8 +218,8 @@ export default function ReviewsPage() {
                 />
             </div>
 
-            <Card className="border-none rounded-[2rem]">
-                <CardHeader className="p-10 border-b border-border flex flex-col md:flex-row justify-between items-center gap-6">
+            <Card className="border-none shadow-none">
+                <CardHeader className="px-0 flex flex-col md:flex-row justify-between items-center gap-6">
                     <CardTitle className="text-xl font-normal text-foreground">Feedback Hub</CardTitle>
                     <div className="flex gap-3 flex-wrap">
                         <div className="relative w-64">

@@ -205,17 +205,18 @@ export default function SEOPage() {
                 )}
             </div>
 
-            <Card className="border-none rounded-[2rem]">
-                <CardHeader className="p-8 border-b border-border flex flex-col md:flex-row justify-between items-center gap-4">
+                <Card className="border-none shadow-none">
+                <CardHeader className="py-4 px-0 flex flex-col md:flex-row justify-between items-center gap-4">
                     <div>
                         <CardTitle className="text-xl font-normal text-foreground">Keyword Tracking</CardTitle>
                         <p className="text-muted-foreground font-normal mt-0.5 text-sm">Monitor search engine visibility for core terms</p>
                     </div>
                     <Button
                         onClick={() => setIsCreateDialogOpen(true)}
-                        className="h-11 px-6 bg-primary text-primary-foreground rounded-[1rem] shadow-lg shadow-primary/20 hover:bg-primary/90 transition-all"
+                        variant="default"
+                        className=""
                     >
-                        <Plus className="w-4 h-4 mr-2" />
+                        <Plus className="w-4 h-4 " />
                         Add Keyword
                     </Button>
                 </CardHeader>
@@ -359,7 +360,7 @@ export default function SEOPage() {
                 </CardContent>
             </Card>
 
-            <Card className="rounded-[2.5rem] border-border p-8 shadow-sm bg-card">
+            {/* <Card className="rounded-[2.5rem] border-border p-8 shadow-sm bg-card">
                 <CardHeader className="p-0 mb-8 border-none bg-transparent">
                     <div className="flex items-center gap-4">
                         {loading ? (
@@ -409,7 +410,7 @@ export default function SEOPage() {
                         )}
                     </div>
                 </CardContent>
-            </Card>
+            </Card> */}
 
             {/* Create Dialog */}
             <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>

@@ -14,7 +14,7 @@ export default function AdminLayout({ children }) {
     };
 
     return (
-        <div className="flex h-screen bg-[#f8faff] overflow-hidden font-sans">
+        <div className="flex h-screen overflow-hidden font-sans">
             <Sidebar onLogout={handleLogout} />
 
             <div className="flex-1 flex flex-col h-screen overflow-hidden">

@@ -1,12 +1,66 @@
 "use client";
 
-import React from 'react';
-import { DollarSign, ShoppingCart, Clock, Star, Activity } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { DollarSign, ShoppingCart, Clock, Star, Activity, FileText, CheckCircle2 } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
+import api from '@/utils/api';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FreelancerOverview() {
+    const [stats, setStats] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await api.get('/dashboard/freelancer/stats');
+                if (res.data?.success && res.data?.stats) {
+                    setStats(res.data.stats);
+                }
+            } catch (err) {
+                console.error('Failed to fetch freelancer stats:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchStats();
+    }, []);
+
+    const formatCurrency = (n) => {
+        if (n == null || n === undefined) return '$0';
+        return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(n);
+    };
+
+    if (loading) {
+        return (
+            <div className="animate-in fade-in duration-500 space-y-4">
+                <div>
+                    <h2 className="text-2xl font-normal text-foreground tracking-tight">Freelancer Overview</h2>
+                    <p className="text-muted-foreground font-normal mt-1 text-sm">Welcome back! Here's what's happening today.</p>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <Card key={i} className=" border-border shadow-none">
+                            <CardContent className="p-4">
+                                <div className="flex justify-between items-start">
+                                    <div className="space-y-2">
+                                        <Skeleton className="h-4 w-24" />
+                                        <Skeleton className="h-6 w-16" />
+                                    </div>
+                                    <Skeleton className="h-6 w-6 rounded-full shrink-0" />
+                                </div>
+                                <Skeleton className="h-3 w-20 mt-3" />
+                            </CardContent>
+                        </Card>
+                    ))}
+                </div>
+            </div>
+        );
+    }
+
+    const s = stats || {};
     return (
         <div className="animate-in fade-in duration-500 space-y-4">
             <div>
@@ -14,23 +68,17 @@ export default function FreelancerOverview() {
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Welcome back! Here's what's happening today.</p>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-                <MetricCard title="Total Earnings" value="$2250" trend="+12% this month" icon={<DollarSign />} />
-                <MetricCard title="Active Orders" value="12" trend="3 due soon" icon={<ShoppingCart />} />
-                <MetricCard title="Pending Requests" value="8" trend="4 new" icon={<Clock />} />
-                <MetricCard title="Avg Rating" value="4.9" trend="124 reviews" icon={<Star />} />
-                <Card className="rounded-[2rem] border-border shadow-sm flex flex-col p-4 bg-card">
-                    <p className="text-muted-foreground text-[14px] font-normal tracking-tight mb-2">Profile Completion</p>
-                    <div className="flex items-end justify-between mb-2">
-                        <span className="text-xl font-normal text-foreground tracking-tight">85%</span>
-                        <Activity className="w-5 h-5 text-primary opacity-20" />
-                    </div>
-                    <Progress value={85} className="h-2 bg-secondary" />
-                </Card>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <MetricCard title="Total Earnings" value={formatCurrency(s.totalEarnings)} trend={s.completedOrders ? `${s.completedOrders} completed` : '0 completed'} icon={<DollarSign />} />
+                <MetricCard title="Active Orders" value={String(s.activeOrders ?? 0)} trend={s.deliveredOrders ? `${s.deliveredOrders} delivered` : 'In progress'} icon={<ShoppingCart />} />
+                <MetricCard title="Completed Orders" value={String(s.completedOrders ?? 0)} trend="Total completed" icon={<CheckCircle2 />} />
+                <MetricCard title="Pending Requests" value={String(s.pendingRequests ?? 0)} trend="Awaiting acceptance" icon={<Clock />} />
+                <MetricCard title="Pending Offers" value={String(s.pendingOffers ?? 0)} trend="Awaiting client" icon={<FileText />} />
+                <MetricCard title="Avg. Rating" value={s.avgRating ?? '0'} trend={s.reviewCount ? `${s.reviewCount} reviews` : 'No reviews yet'} icon={<Star />} />
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <Card className="border-none h-80 rounded-[2rem] flex flex-col ">
+                <Card className="border-none h-80  flex flex-col ">
                     <CardHeader className="p-8 border-b border-border">
                         <CardTitle className="text-xl font-normal">Income Projection</CardTitle>
                     </CardHeader>
@@ -44,7 +92,7 @@ export default function FreelancerOverview() {
                     </CardContent>
                 </Card>
 
-                <Card className="border-none h-80 rounded-[2rem] flex flex-col ">
+                <Card className="border-none h-80 p flex flex-col ">
                     <CardHeader className="p-8 border-b border-border">
                         <CardTitle className="text-xl font-normal">Upcoming Deadlines</CardTitle>
                     </CardHeader>

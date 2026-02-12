@@ -201,8 +201,8 @@ export default function DisputesPage() {
                 />
             </div>
 
-            <Card className="border-none rounded-[2rem]">
-                <CardHeader className="p-10 border-b rounded-t-[1.5rem] border-border flex flex-row justify-between items-center bg-card">
+            <Card className="border-none shadow-none">
+                <CardHeader className="px-0 flex flex-row justify-between items-center ">
                     <CardTitle className="text-xl font-normal text-foreground">Case Unit</CardTitle>
                     <div className="flex gap-3">
                         <div className="relative w-64">

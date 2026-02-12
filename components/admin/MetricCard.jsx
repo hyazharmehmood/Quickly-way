@@ -2,8 +2,8 @@ import React from 'react';
 import { ArrowUp } from 'lucide-react';
 import { Card, CardContent } from "@/components/ui/card";
 
-export const MetricCard = ({ title, value, trend, icon }) => (
-    <Card className=" border-none rounded-[2rem]">
+export const    MetricCard = ({ title, value, trend, icon }) => (
+    <Card className=" border shadow-none">
         <CardContent className="p-4">
             <div className="flex justify-between items-start ">
                 <div className="space-y-1">

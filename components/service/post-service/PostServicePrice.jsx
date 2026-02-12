@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CURRENCIES } from '@/utils/constants';
+import { CURRENCIES, PAYMENT_REGIONS, getPaymentMethodsByRegion } from '@/utils/constants';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,10 +10,11 @@ const PostServicePrice = (props) => {
         priceStr, setPriceStr,
         selectedCurrency, setSelectedCurrency,
         priceBreakdowns, setPriceBreakdowns,
+        paymentRegion, setPaymentRegion,
         paymentMethods, setPaymentMethods,
         availableForJob, setAvailableForJob,
         onBack, onSave, onCancel,
-        defaultPaymentMethods, defaultPriceBreakdowns,
+        defaultPriceBreakdowns,
         isLoading
     } = props;
 
@@ -73,16 +74,20 @@ const PostServicePrice = (props) => {
 
 
 
-    const handlePaymentMethodsFocus = () => {
-        if (!paymentMethods) {
-            setTimeout(() => setPaymentMethods("I accept payments via Cash"), 0);
-        }
+    const regionMethods = getPaymentMethodsByRegion(paymentRegion || 'GLOBAL');
+    const selectedSet = new Set(paymentMethods || []);
+
+    const togglePaymentMethod = (label) => {
+        setPaymentMethods(prev => {
+            const next = new Set(prev || []);
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
+            return Array.from(next);
+        });
     };
 
-    const handlePaymentMethodsBlur = () => {
-        if (paymentMethods === "I accept payments via Cash") {
-            setTimeout(() => setPaymentMethods(""), 0);
-        }
+    const selectAllPaymentMethods = () => {
+        setPaymentMethods(regionMethods.map(m => m.label));
     };
 
     return (
@@ -226,27 +231,83 @@ const PostServicePrice = (props) => {
 
             </div>
 
-            {/* Row 5: Payment Methods */}
-            <div className="mb-6 space-y-1.5">
-                <label className="block text-base font-medium text-gray-900">Payment methods</label>
-                <Textarea
-                    rows={3}
-                    value={paymentMethods}
-                    onFocus={handlePaymentMethodsFocus}
-                    onBlur={handlePaymentMethodsBlur}
-                    onChange={(e) => setPaymentMethods(e.target.value)}
-                    placeholder={defaultPaymentMethods}
-                    className="w-full "
-                />
-                <div className="text-right text-xs text-gray-500">
-                    {paymentMethods.length}/150
+            {/* Row 5: Payment methods (Fiverr-style: region-based, list design) */}
+            <div className="mb-6 space-y-4">
+                <div>
+                    <label className="block text-base font-medium text-gray-900">Payment methods</label>
+                    <p className="text-sm text-gray-500 mt-0.5">Choose your payment region. Buyers will only be able to pay using the methods you enable.</p>
+                </div>
+                <div className="space-y-2">
+                    <label className="block text-sm font-medium text-gray-700">Region</label>
+                    <select
+                        value={paymentRegion || 'GLOBAL'}
+                        onChange={(e) => {
+                            setPaymentRegion(e.target.value);
+                            setPaymentMethods([]);
+                        }}
+                        className="w-full max-w-xs bg-gray-50 border border-gray-200 rounded-xl py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
+                    >
+                        {PAYMENT_REGIONS.map((r) => (
+                            <option key={r.value} value={r.value}>{r.label}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                        <label className="block text-sm font-medium text-gray-700">Accept these payment methods</label>
+                        <button
+                            type="button"
+                            onClick={selectAllPaymentMethods}
+                            className="text-sm text-green-600 hover:text-green-700 font-medium hover:underline underline-offset-2"
+                        >
+                            Select all
+                        </button>
+                    </div>
+                    <ul className="space-y-2 list-none p-0 m-0">
+                        {regionMethods.map((method) => {
+                            const isChecked = selectedSet.has(method.label);
+                            return (
+                                <li key={method.id}>
+                                    <label
+                                        className={`flex items-center gap-4 cursor-pointer rounded-xl border px-4 py-3.5 transition-all ${
+                                            isChecked
+                                                ? 'border-primary shadow-sm'
+                                                : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                                        }`}
+                                    >
+                                        <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${isChecked ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'}`}>
+                                            <Input
+                                                type="checkbox"
+                                                checked={isChecked}
+                                                onChange={() => togglePaymentMethod(method.label)}
+                                                className="sr-only"
+                                            />
+                                            {isChecked ? (
+                                                <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                                                </svg>
+                                            ) : null}
+                                        </span>
+                                        <span className={`text-sm font-medium ${isChecked ? 'text-gray-900' : 'text-gray-700'}`}>
+                                            {method.label}
+                                        </span>
+                                    </label>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                    {paymentMethods?.length > 0 && (
+                        <p className="text-xs text-gray-500 pt-1">
+                            {paymentMethods.length} method{paymentMethods.length !== 1 ? 's' : ''} selected
+                        </p>
+                    )}
                 </div>
             </div>
 
             {/* Row 6: Employment Status */}
             <div className="mb-10">
                 <label className="flex items-center gap-3 cursor-pointer p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <input
+                    <Input
                         type="checkbox"
                         checked={availableForJob}
                         onChange={(e) => setAvailableForJob(e.target.checked)}

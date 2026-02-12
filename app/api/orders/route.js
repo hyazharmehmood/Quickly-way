@@ -56,6 +56,7 @@ export async function POST(request) {
       scopeOfWork,
       cancellationPolicy,
       price, // Optional - freelancer can set custom price
+      paymentMethodUsed,
     } = body;
 
     if (!serviceId) {
@@ -85,6 +86,7 @@ export async function POST(request) {
       deliveryTime: deliveryTime || 7,
       revisionsIncluded: revisionsIncluded || 0,
       price,
+      paymentMethodUsed: paymentMethodUsed || null,
       clientIpAddress: ipAddress,
     });
 

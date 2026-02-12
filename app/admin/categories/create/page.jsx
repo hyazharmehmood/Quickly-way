@@ -153,7 +153,7 @@ export default function CreateCategoryPage() {
         </div>
       </div>
 
-      <Card className="border-none rounded-[2rem]">
+      <Card className="border-none shadow-none">
         <CardContent className="p-4 space-y-4">
           {/* Main Category */}
           <div className="space-y-2">
@@ -189,7 +189,7 @@ export default function CreateCategoryPage() {
             </div>
 
             {formData.subcategories.map((subcat, subcatIndex) => (
-              <Card key={subcatIndex} className="p-3 border-none rounded-[2rem]">
+              <Card key={subcatIndex} className="p-3 border-none shadow-none">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                     <Label className="text-sm font-medium">

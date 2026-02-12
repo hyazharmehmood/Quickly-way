@@ -49,7 +49,7 @@ export async function POST(request, { params }) {
     }
 
     const body = await request.json();
-    const { deliverableId } = body;
+    const { deliverableId, paymentMethodUsed } = body;
 
     if (!deliverableId) {
       return NextResponse.json(
@@ -61,7 +61,8 @@ export async function POST(request, { params }) {
     const order = await orderService.acceptDelivery(
       id,
       user.id,
-      deliverableId
+      deliverableId,
+      paymentMethodUsed || null
     );
 
     // Emit Socket.IO event

@@ -269,22 +269,23 @@ export default function SkillsPage() {
     <div className="animate-in fade-in duration-500 space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-2xl font-bold tracking-tight text-foreground">Skills</h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h3 className="heading-3">Skills</h3>
+          <p className="text-muted-foreground font-normal text-sm">
             {loading ? 'Loading...' : `Showing all skills (${filteredSkills.length}${searchQuery ? ' matching search' : ''})`}
           </p>
         </div>
         <Button
           onClick={() => setIsCreateDialogOpen(true)}
-          className="bg-primary hover:bg-primary/90"
+          variant="default"
+          className=""
         >
           <Plus className="w-4 h-4" />
           Create Skill
         </Button>
       </div>
 
-      <Card className="border-none rounded-[2rem]">
-        <CardHeader className="p-8 border-b border-border">
+      <Card className="border-none shadow-none">
+        <CardHeader className="p-0 py-4">
           <div className="flex flex-col sm:flex-row gap-4 sm:items-center sm:justify-between">
             <div className="relative flex-1 max-w-sm">
               <Search className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
@@ -293,7 +294,7 @@ export default function SkillsPage() {
                 placeholder="Search skills..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 pr-4 h-11 bg-secondary/50 rounded-[1rem] border-border focus-visible:ring-primary/20"
+                className="pl-9 pr-4 "
               />
             </div>
             <div className="flex items-center gap-1.5">
@@ -301,7 +302,7 @@ export default function SkillsPage() {
                 variant={filterActive === null ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(null)}
-                className="rounded-[0.75rem]"
+                className=""
               >
                 All
               </Button>
@@ -309,15 +310,16 @@ export default function SkillsPage() {
                 variant={filterActive === true ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(true)}
-                className="rounded-[0.75rem]"
+                className=""
               >
                 Active
               </Button>
               <Button
                 variant={filterActive === false ? "default" : "outline"}
                 size="sm"
+
                 onClick={() => setFilterActive(false)}
-                className="rounded-[0.75rem]"
+                className=""
               >
                 Inactive
               </Button>

@@ -92,15 +92,15 @@ export default function CategoriesPage() {
     <div className="animate-in fade-in duration-500 space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h2 className="text-sm font-bold tracking-tight text-foreground">Categories</h2>
-          <p className="text-muted-foreground text-sm mt-1">
+          <h3 className="heading-3 ">Categories</h3>
+          <p className="text-muted-foreground font-normal mt-1 text-sm">
             Manage hierarchical categories with subcategories and skills
           </p>
         </div>
         <div className="flex gap-2">
      
           <Button
-            size="default"
+          
             variant="default"
             onClick={() => router.push('/admin/categories/create')}
          
@@ -111,8 +111,8 @@ export default function CategoriesPage() {
         </div>
       </div>
 
-      <Card className="border-none rounded-[2rem]">
-        <CardHeader className="p-6 border-b border-border">
+      <Card className="border-none shadow-none ">
+        <CardHeader className="p-4">
           <div className="flex flex-col md:flex-row gap-4 items-start md:items-center justify-between">
             <div className="relative w-full md:w-80 ">
               <Input
@@ -120,7 +120,7 @@ export default function CategoriesPage() {
                 placeholder="Search categories..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-8 pr-4 h-11 bg-secondary/50  border-none focus-visible:ring-primary/20"
+                className="pl-8 pr-4 "
               />
               <Search className="w-4 h-4 text-muted-foreground absolute left-2 top-1/2 -translate-y-1/2" />
             </div>
@@ -201,9 +201,9 @@ export default function CategoriesPage() {
               </p>
             </div>
           ) : (
-            <div className="p-4 space-y-4">
+            <div className="py-2 space-y-4">
               {filteredCategories.map((category) => (
-                <Card key={category.id} className="border-none">
+                <Card key={category.id} className="border  shadow-none ">
                   <CardHeader>
                     <div className="flex items-center justify-between">
                       <div className="flex-1">

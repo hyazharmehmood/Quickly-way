@@ -17,6 +17,31 @@ export const COUNTRY_CODES = [
     // Add more as needed
 ];
 
+// Fiverr-style: region-based payment methods (short labels, no long descriptions)
+export const PAYMENT_REGIONS = [
+    { value: 'SAUDI_ARABIA', label: 'Saudi Arabia (Main)' },
+    { value: 'GLOBAL', label: 'Global' },
+];
+
+export const REGION_PAYMENT_METHODS = {
+    SAUDI_ARABIA: [
+        { id: 'mada_hyperpay', label: 'Mada (HyperPay)' },
+        { id: 'moyasar', label: 'Moyasar' },
+        { id: 'paytabs', label: 'PayTabs' },
+        { id: 'stripe', label: 'Stripe' },
+    ],
+    GLOBAL: [
+        { id: 'paypal', label: 'PayPal' },
+        { id: 'stripe', label: 'Stripe' },
+        { id: 'credit_card', label: 'Credit / Debit Card' },
+        { id: 'bank_transfer', label: 'Bank Transfer' },
+    ],
+};
+
+export function getPaymentMethodsByRegion(region) {
+    return REGION_PAYMENT_METHODS[region] || REGION_PAYMENT_METHODS.GLOBAL;
+}
+
 export const CURRENCIES = [
     { code: "USD", symbol: "$" },
     { code: "EUR", symbol: "€" },
