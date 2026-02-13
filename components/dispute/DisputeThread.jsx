@@ -12,6 +12,7 @@ import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import useAuthStore from '@/store/useAuthStore';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 
 const ROLE_CONFIG = {
@@ -37,6 +38,7 @@ const ROLE_CONFIG = {
 
 export default function DisputeThread({ dispute, order, onCommentAdded }) {
   const { user } = useAuthStore();
+  const { socket } = useGlobalSocket();
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [commentContent, setCommentContent] = useState('');
@@ -51,6 +53,30 @@ export default function DisputeThread({ dispute, order, onCommentAdded }) {
       fetchComments();
     }
   }, [dispute?.id]);
+
+  // Real-time: subscribe to dispute room when viewing
+  useEffect(() => {
+    if (!socket || !dispute?.id) return;
+    socket.emit('dispute:subscribe', { disputeId: dispute.id });
+    return () => {
+      socket.emit('dispute:unsubscribe', { disputeId: dispute.id });
+    };
+  }, [socket, dispute?.id]);
+
+  // Real-time: listen for new comments from other users (or self from another tab)
+  useEffect(() => {
+    if (!socket || !dispute?.id) return;
+    const handleNewComment = (data) => {
+      if (data?.disputeId !== dispute.id || !data?.comment) return;
+      const comment = data.comment;
+      setComments((prev) => {
+        if (prev.some((c) => c.id === comment.id)) return prev;
+        return [...prev, comment];
+      });
+    };
+    socket.on('dispute:new_comment', handleNewComment);
+    return () => socket.off('dispute:new_comment', handleNewComment);
+  }, [socket, dispute?.id]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new comments arrive

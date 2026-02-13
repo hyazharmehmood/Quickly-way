@@ -454,7 +454,7 @@ export function Header() {
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <AlertCircle className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">Dispute</span>
+                            <span className="text-sm font-medium">Support Tickets</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
@@ -509,7 +509,7 @@ export function Header() {
                               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                                 <AlertCircle className="w-4 h-4" />
                               </div>
-                              <span className="text-sm font-medium">Dispute</span>
+                              <span className="text-sm font-medium">Support Tickets</span>
                             </DropdownMenuItem>
                           )}
 

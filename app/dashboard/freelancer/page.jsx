@@ -20,7 +20,7 @@ export default function FreelancerOverview() {
                     setStats(res.data.stats);
                 }
             } catch (err) {
-                console.error('Failed to fetch freelancer stats:', err);
+                console.error('Failed to fetch Seller stats:', err);
             } finally {
                 setLoading(false);
             }

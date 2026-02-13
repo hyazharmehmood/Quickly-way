@@ -247,7 +247,7 @@ export default function ClientOrdersPage() {
                                         className="w-full border-border"
                                         onClick={() => handleChat(order)}
                                     >
-                                        <MessageSquare className="w-4 h-4 " /> Contact Freelancer
+                                        <MessageSquare className="w-4 h-4 " /> Contact Seller
                                     </Button>
                                     {order.status === 'DELIVERED' && (
                                         <Button size="lg" variant="secondary" className="w-full bg-primary/10 text-primary border border-primary/20">
