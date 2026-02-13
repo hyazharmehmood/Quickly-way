@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/services/notificationService';
 
 /**
  * GET /api/disputes/[id]/comments - Get all comments for a dispute
@@ -43,6 +44,7 @@ export async function GET(request, { params }) {
       where: { id },
       select: {
         id: true,
+        orderId: true,
         clientId: true,
         freelancerId: true,
         status: true,
@@ -140,6 +142,7 @@ export async function POST(request, { params }) {
       where: { id },
       select: {
         id: true,
+        orderId: true,
         clientId: true,
         freelancerId: true,
         status: true,
@@ -213,6 +216,34 @@ export async function POST(request, { params }) {
         },
       },
     });
+
+    // Notify the other party: new dispute comment (client and freelancer; skip if admin posted)
+    try {
+      const authorName = comment.user?.name || 'Someone';
+      const notifyIds = [];
+      if (role === 'CLIENT') notifyIds.push(dispute.freelancerId);
+      else if (role === 'FREELANCER') notifyIds.push(dispute.clientId);
+      else {
+        // Admin posted: notify both client and freelancer
+        notifyIds.push(dispute.clientId, dispute.freelancerId);
+      }
+      const notificationBody = role === 'ADMIN'
+        ? 'Admin replied on the dispute.'
+        : `${authorName} replied on the dispute.`;
+      for (const notifyUserId of notifyIds) {
+        if (notifyUserId && notifyUserId !== user.id) {
+          await createNotification({
+            userId: notifyUserId,
+            title: 'New dispute comment',
+            body: notificationBody,
+            type: 'dispute',
+            data: { disputeId: id, orderId: dispute.orderId, linkUrl: dispute.orderId ? `/orders/${dispute.orderId}` : `/admin/disputes/${id}` },
+          });
+        }
+      }
+    } catch (notifError) {
+      console.error('Failed to create dispute comment notification:', notifError);
+    }
 
     return NextResponse.json({
       success: true,

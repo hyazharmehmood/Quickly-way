@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as orderService from '@/lib/services/orderService';
+import { createNotification } from '@/lib/services/notificationService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
@@ -78,6 +79,21 @@ export async function POST(request, { params }) {
       emitOrderEvent('DISPUTE_OPENED', result.order, { disputeId: result.dispute.id });
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
+    }
+
+    // Notify freelancer: client opened a dispute
+    try {
+      const order = result.order;
+      const clientName = order.client?.name || 'The client';
+      await createNotification({
+        userId: order.freelancerId,
+        title: 'Dispute opened',
+        body: `${clientName} opened a dispute for order ${order.orderNumber}. Please respond.`,
+        type: 'dispute',
+        data: { orderId: order.id, disputeId: result.dispute.id, linkUrl: `/orders/${order.id}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create dispute notification:', notifError);
     }
 
     return NextResponse.json({

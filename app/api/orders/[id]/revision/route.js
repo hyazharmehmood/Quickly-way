@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as orderService from '@/lib/services/orderService';
+import { createNotification } from '@/lib/services/notificationService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
@@ -69,6 +70,20 @@ export async function POST(request, { params }) {
       emitOrderEvent('REVISION_REQUESTED', order, { reason: reason.trim() });
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
+    }
+
+    // Notify freelancer: client requested revision
+    try {
+      const clientName = order.client?.name || 'The client';
+      await createNotification({
+        userId: order.freelancerId,
+        title: 'Revision requested',
+        body: `${clientName} requested a revision for order ${order.orderNumber}.`,
+        type: 'order',
+        data: { orderId: order.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create order notification:', notifError);
     }
 
     return NextResponse.json({

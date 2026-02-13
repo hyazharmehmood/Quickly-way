@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import * as orderService from '@/lib/services/orderService';
+import { createNotification } from '@/lib/services/notificationService';
 const { emitOrderEvent } = require('@/lib/socket');
 
 /**
@@ -65,6 +66,20 @@ export async function POST(request, { params }) {
       emitOrderEvent('ORDER_IN_PROGRESS', order);
     } catch (socketError) {
       console.error('Failed to emit order event:', socketError);
+    }
+
+    // Notify freelancer: client accepted order, now In Progress
+    try {
+      const clientName = order.client?.name || 'The client';
+      await createNotification({
+        userId: order.freelancerId,
+        title: 'Order accepted',
+        body: `${clientName} accepted order ${order.orderNumber}. It is now In Progress.`,
+        type: 'order',
+        data: { orderId: order.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+      });
+    } catch (notifError) {
+      console.error('Failed to create order notification:', notifError);
     }
 
     return NextResponse.json({
