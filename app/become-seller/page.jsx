@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import useAuthStore from '@/store/useAuthStore';
 import api from '@/utils/api';
 import { toast } from 'sonner';
-import { Loader2, ArrowLeft, Shield, Sparkles, Star } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function BecomeSellerPage() {
@@ -22,6 +22,7 @@ export default function BecomeSellerPage() {
     const [skillsInput, setSkillsInput] = useState('');
     const [bio, setBio] = useState('');
     const [portfolio, setPortfolio] = useState('');
+    const [errors, setErrors] = useState({});
 
     useEffect(() => {
         if (!isLoggedIn) {
@@ -37,17 +38,22 @@ export default function BecomeSellerPage() {
         if (user?.name) setFullName(user.name);
     }, [isLoggedIn, isSeller, sellerStatus, router, user?.name]);
 
+    const validate = () => {
+        const next = {};
+        if (!fullName.trim()) next.fullName = 'Full name is required.';
+        const skills = skillsInput.split(/[,،]/).map((s) => s.trim()).filter(Boolean);
+        if (skills.length === 0) next.skills = 'Please enter at least one skill (comma-separated).';
+        setErrors(next);
+        return Object.keys(next).length === 0;
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
+        if (!validate()) {
+            toast.error('Please fill all required fields.');
+            return;
+        }
         const skills = skillsInput.split(/[,،]/).map((s) => s.trim()).filter(Boolean);
-        if (!fullName.trim()) {
-            toast.error('Please enter your full name.');
-            return;
-        }
-        if (skills.length === 0) {
-            toast.error('Please enter at least one skill (comma-separated).');
-            return;
-        }
         setLoading(true);
         try {
             await api.post('/seller/apply', {
@@ -102,100 +108,49 @@ export default function BecomeSellerPage() {
         .filter(Boolean)
         .slice(0, 6);
 
-        const highlights = [
-            {
-                icon: <Shield className="w-4 h-4" />,
-                title: 'Trusted & Verified',
-                desc: 'All sellers go through a manual review process to maintain platform quality and trust.',
-            },
-            {
-                icon: <Sparkles className="w-4 h-4" />,
-                title: 'Advanced Seller Tools',
-                desc: 'Manage orders, chat with clients in real-time, send offers, and track performance easily.',
-            },
-            {
-                icon: <Star className="w-4 h-4" />,
-                title: 'Build Your Reputation',
-                desc: 'Collect reviews, grow your ratings, and build a strong freelance brand over time.',
-            },
-        ];
-
     return (
-        <div className=" pt-6 pb-10 px-4">
-            <div className="max-w-7xl mx-auto space-y-6">
-                <div className="flex flex-col gap-4">
-                  
-                    <div className="flex flex-col ">
-                     
-                    <h1 className="text-lg sm:text-xl font-semibold text-foreground">
-    Apply to Become a Verified Seller
-</h1>
-<p className="text-muted-foreground max-w-3xl text-xs">
-    Complete your seller application to join our trusted freelance marketplace. 
-    Our team carefully reviews every profile to ensure high-quality services for buyers. 
-    Once approved, you’ll unlock your seller dashboard and can start publishing services right away.
-</p>
-                    </div>
-                </div>
-
-                <div className="grid gap-6 lg:grid-cols-[1.05fr_0.95fr]">
-                    <Card className="border-none shadow-sm bg-card/95 backdrop-blur">
-                        <CardHeader className="space-y-4">
-                            <div className="grid gap-4 sm:grid-cols-3">
-                                {highlights.map((item) => (
-                                    <div key={item.title} className="flex flex-col gap-1.5 rounded-xl border border-border/60 p-3">
-                                        <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
-                                            {item.icon}
-                                        </div>
-                                        <p className="text-sm font-semibold">{item.title}</p>
-                                        <p className="text-xs text-muted-foreground">{item.desc}</p>
-                                    </div>
-                                ))}
-                            </div>
-                            <CardTitle className="text-lg">Why Become a Seller?</CardTitle>
-<CardDescription className="text-xs">
-    As a verified seller, you gain access to powerful tools designed to help you succeed. 
-    From secure payments to performance analytics, everything is built to support your freelance growth.
-</CardDescription>
-                        </CardHeader>
-                        <CardContent className="space-y-2">
-                        <ul className="space-y-2 text-xs text-muted-foreground">
-    <li>• Verified seller badge displayed on your profile</li>
-    <li>• Ability to create and manage unlimited services</li>
-    <li>• Secure order management & dispute handling system</li>
-    <li>• Access to performance insights and client reviews</li>
-</ul>
-                        </CardContent>
-                    </Card>
-
-                    <Card className="shadow-sm border-none">
-                        <CardHeader>
+        <div className="pt-6 pb-10 px-4">
+            <div className="max-w-2xl mx-auto">
+                <Card className="shadow-sm border-none">
+                    <CardHeader>
                         <CardTitle>Seller Application</CardTitle>
-<CardDescription>
-    Your information is securely reviewed by our admin team. 
-    This data will not be publicly visible until your application is approved.
-</CardDescription> </CardHeader>
-                        <CardContent>
-                            <form onSubmit={handleSubmit} className="space-y-4">
+                        {/* <CardDescription>
+                            Your information is securely reviewed by our admin team.
+                            This data will not be publicly visible until your application is approved.
+                        </CardDescription> */}
+                    </CardHeader>
+                    <CardContent>
+                            <form onSubmit={handleSubmit} noValidate className="space-y-4">
                                 <div className="space-y-2">
                                     <label className="text-sm font-medium text-foreground">Full name *</label>
                                     <Input
                                         value={fullName}
-                                        onChange={(e) => setFullName(e.target.value)}
-                                        placeholder="e.g. Ayesha Khan"
-                                        required
+                                        onChange={(e) => {
+                                            setFullName(e.target.value);
+                                            if (errors.fullName) setErrors((p) => ({ ...p, fullName: '' }));
+                                        }}
+                                        placeholder="Enter your full name"
+                                        className={errors.fullName ? 'border-destructive' : ''}
                                     />
+                                    {errors.fullName && (
+                                        <p className="text-xs text-destructive">{errors.fullName}</p>
+                                    )}
                                 </div>
 
                                 <div className="space-y-2">
-                                <label className="text-sm font-medium text-foreground">
-    Professional Skills *
-</label>  <Input
+                                    <label className="text-sm font-medium text-foreground">Professional Skills *</label>
+                                    <Input
                                         value={skillsInput}
-                                        onChange={(e) => setSkillsInput(e.target.value)}
-                                        placeholder="e.g. UI/UX, Next.js, Brand identity"
-                                        required
+                                        onChange={(e) => {
+                                            setSkillsInput(e.target.value);
+                                            if (errors.skills) setErrors((p) => ({ ...p, skills: '' }));
+                                        }}
+                                        placeholder="Enter your skills"
+                                        className={errors.skills ? 'border-destructive' : ''}
                                     />
+                                    {errors.skills && (
+                                        <p className="text-xs text-destructive">{errors.skills}</p>
+                                    )}
                                     {skillsPreview.length > 0 && (
                                         <div className="flex flex-wrap gap-2 text-xs">
                                             {skillsPreview.map((skill) => (
@@ -222,18 +177,21 @@ export default function BecomeSellerPage() {
                                         type="url"
                                         value={portfolio}
                                         onChange={(e) => setPortfolio(e.target.value)}
-                                        placeholder="https://yourportfolio.com or https://dribbble.com/username"
+                                        placeholder="https://yourportfolio.com"
 
                                     />
                                 </div>
 
-                                <Button type="submit" disabled={loading} className="w-full">
+                                <Button
+                                    type="submit"
+                                    disabled={loading || !fullName.trim() || !skillsInput.trim().replace(/[,،\s]/g, '')}
+                                    className="w-full"
+                                >
                                     {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Submit Application for Review'}
                                 </Button>
                             </form>
-                        </CardContent>
-                    </Card>
-                </div>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

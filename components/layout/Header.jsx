@@ -27,7 +27,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store } from 'lucide-react';
+import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
@@ -450,6 +450,13 @@ export function Header() {
                             <span className="text-sm font-medium">My Orders</span>
                           </DropdownMenuItem>
 
+                          <DropdownMenuItem onClick={() => router.push('/disputes')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                              <AlertCircle className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">Dispute</span>
+                          </DropdownMenuItem>
+
                           <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <MessageSquare className="w-4 h-4" />
@@ -457,12 +464,12 @@ export function Header() {
                             <span className="text-sm font-medium">Messages</span>
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={() => { }} className="cursor-pointer">
+                          {/* <DropdownMenuItem onClick={() => { }} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <Languages className="w-4 h-4" />
                             </div>
                             <span className="text-sm font-medium">Language</span>
-                          </DropdownMenuItem>
+                          </DropdownMenuItem> */}
 
                           <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
@@ -496,6 +503,15 @@ export function Header() {
                             </div>
                             <span className="text-sm font-medium">Dashboard</span>
                           </DropdownMenuItem>
+
+                          {!isAdmin && (
+                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/disputes')} className="cursor-pointer">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                <AlertCircle className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">Dispute</span>
+                            </DropdownMenuItem>
+                          )}
 
                           <DropdownMenuItem
                             onClick={() => {
