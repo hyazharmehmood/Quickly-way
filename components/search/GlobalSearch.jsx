@@ -176,7 +176,7 @@ export function GlobalSearch({ className }) {
         </div>
       </PopoverAnchor>
       <PopoverContent
-        className="p-0 rounded-2xl border shadow-xl bg-popover/95 backdrop-blur-sm overflow-hidden !w-[var(--radix-popover-anchor-width)] !max-w-[var(--radix-popover-anchor-width)]"
+        className="p-0 rounded-2xl border shadow-xl bg-popover/95 backdrop-blur-sm overflow-hidden w-[35rem]"
         align="start"
         sideOffset={8}
         onOpenAutoFocus={(e) => e.preventDefault()}
