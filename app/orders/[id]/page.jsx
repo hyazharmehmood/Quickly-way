@@ -34,11 +34,13 @@ import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
 export default function OrderDetailPage() {
     const router = useRouter();
     const params = useParams();
     const { user } = useAuthStore();
+    const { socket } = useGlobalSocket();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
     const [showDeliverDialog, setShowDeliverDialog] = useState(false);
@@ -63,6 +65,27 @@ export default function OrderDetailPage() {
             checkCanReview();
         }
     }, [params.id, user?.id]);
+
+    // Real-time order updates: subscribe to order room and listen for updates
+    useEffect(() => {
+        if (!socket || !params.id) return;
+        socket.emit('order:subscribe', { orderId: params.id });
+        return () => {
+            socket.emit('order:unsubscribe', { orderId: params.id });
+        };
+    }, [socket, params.id]);
+
+    useEffect(() => {
+        if (!socket) return;
+        const handleOrderUpdated = (data) => {
+            if (data?.order?.id === params.id) {
+                setOrder(data.order);
+                // toast.info('Order updated');
+            }
+        };
+        socket.on('order:updated', handleOrderUpdated);
+        return () => socket.off('order:updated', handleOrderUpdated);
+    }, [socket, params.id]);
 
     useEffect(() => {
         // Show review modal when order is completed and user is client
@@ -325,7 +348,7 @@ export default function OrderDetailPage() {
                         <CardHeader className="pb-4">
                             <div className="flex items-center justify-between">
                                 <div>
-                                    <CardTitle className="text-2xl font-normal mb-2">
+                                    <CardTitle className="text-2xl break-all font-normal mb-2">
                                     {order.service?.title || 'Service'}
                                 </CardTitle>
                                     <p className="text-sm text-muted-foreground">

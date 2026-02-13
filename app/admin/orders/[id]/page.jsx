@@ -16,6 +16,7 @@ import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter, useParams } from 'next/navigation';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import {
     Table,
     TableBody,
@@ -38,6 +39,7 @@ const STATUS_CONFIG = {
 export default function AdminOrderDetailPage() {
     const router = useRouter();
     const params = useParams();
+    const { socket } = useGlobalSocket();
     const [order, setOrder] = useState(null);
     const [loading, setLoading] = useState(true);
 
@@ -46,6 +48,25 @@ export default function AdminOrderDetailPage() {
             fetchOrder();
         }
     }, [params.id]);
+
+    // Real-time order updates
+    useEffect(() => {
+        if (!socket || !params.id) return;
+        socket.emit('order:subscribe', { orderId: params.id });
+        return () => socket.emit('order:unsubscribe', { orderId: params.id });
+    }, [socket, params.id]);
+
+    useEffect(() => {
+        if (!socket) return;
+        const handleOrderUpdated = (data) => {
+            if (data?.order?.id === params.id) {
+                setOrder(data.order);
+                // toast.info('Order updated');
+            }
+        };
+        socket.on('order:updated', handleOrderUpdated);
+        return () => socket.off('order:updated', handleOrderUpdated);
+    }, [socket, params.id]);
 
     const fetchOrder = async () => {
         try {
@@ -95,7 +116,7 @@ export default function AdminOrderDetailPage() {
                     {/* Main Content Skeleton */}
                     <div className="lg:col-span-2 space-y-6">
                         {/* Order Info Card Skeleton */}
-                        <Card className="rounded-[2rem] border-none">
+                        <Card className="rounded-[2rem]  border-none">
                             <CardHeader>
                                 <div className="flex items-center justify-between">
                                     <Skeleton className="h-6 w-48" />
@@ -278,7 +299,7 @@ export default function AdminOrderDetailPage() {
                     <Card className="rounded-[2rem] border-none">
                         <CardHeader>
                             <div className="flex items-center justify-between">
-                                <CardTitle className="text-xl font-normal">
+                                <CardTitle className="text-xl break-allfont-normal">
                                     {order.service?.title || 'Service'}
                                 </CardTitle>
                                 {getStatusBadge(order.status)}

@@ -67,8 +67,8 @@ export function NotificationDropdown({ className }) {
             Mark all read
           </Button>
         </div>
-        <ScrollArea className="max-h-[22rem]">
-          <div className="py-1">
+            <ScrollArea className=" h-[20rem] ">
+          <div className="py-1 mr-2">
             {notifications.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">No notifications yet.</p>
             ) : (
@@ -96,11 +96,11 @@ export function NotificationDropdown({ className }) {
                         <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-primary border-2 border-card" aria-hidden />
                       )}
                     </div>
-                    <div className="min-w-0 flex-1">
+                    <div className=" flex-1">
                       <p className="text-sm text-foreground leading-snug">
                         {notification.title}:
                         {notification.body && (
-                          <span className="text-muted-foreground font-normal text-xs  "> {notification.body}</span>
+                          <span className="text-muted-foreground font-normal text-xs break-all whitespace-normal leading-relaxed  "> {notification.body}</span>
                         )}
                       </p>
                       <p className="text-xs text-muted-foreground mt-1">{timeAgo}</p>
