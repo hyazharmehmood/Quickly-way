@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import api from '@/utils/api';
 import Image from 'next/image';
@@ -12,7 +12,6 @@ import {
   MapPin,
   Globe,
   Headphones,
-  Search,
   ArrowLeft,
   Navigation,
 } from 'lucide-react';
@@ -31,8 +30,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { GlobalSearch } from '@/components/search/GlobalSearch';
 
-export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
+export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [logoError, setLogoError] = useState(false);
@@ -49,7 +49,6 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   const switchToClient = () => router.push('/');
   const switchToSeller = () => router.push('/dashboard/freelancer');
 
-  const [internalSearchQuery, setInternalSearchQuery] = useState('');
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('All Locations');
   const [manualLocation, setManualLocation] = useState('');
@@ -78,22 +77,11 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
   // Check if we can go back (not on home page)
   const canGoBack = pathname !== '/' && pathname !== '/dashboard/freelancer' && !pathname.startsWith('/dashboard/freelancer') && pathname !== '/admin';
 
-  // Use external search query if provided, otherwise use internal state
-  const searchQuery = externalSearchQuery !== undefined ? externalSearchQuery : internalSearchQuery;
-
   const handleNavigate = (path) => {
     if (path === '' && normalizedRole === 'FREELANCER') {
       router.push('/dashboard/freelancer');
     } else {
       router.push(`/${path}`);
-    }
-  };
-
-  const handleSearch = (value) => {
-    if (onSearchChange) {
-      onSearchChange(value);
-    } else {
-      setInternalSearchQuery(value);
     }
   };
 
@@ -575,24 +563,11 @@ export function Header({ searchQuery: externalSearchQuery, onSearchChange }) {
 
           {/* Search Bar - mobile: row 2 full width, desktop: center (order 2) */}
           <div className="col-span-2 col-start-1 row-start-2 md:col-span-1 md:row-auto md:flex-1 md:order-2 w-full flex justify-center px-0 md:px-4 lg:px-6 min-w-0 max-w-full">
-            <div className="relative group w-full max-w-xl">
-              <Input
-                type="text"
-                size="lg"
-                variant="outline"
-                placeholder="Search services..."
-                value={searchQuery}
-                onChange={(e) => handleSearch(e.target.value)}
-                className="w-full pr-10 h-12 rounded-full"
-              />
-              <Button
-                variant="default"
-                size="icon"
-                className="absolute w-12 right-0 top-1/2 h-12 -translate-y-1/2 rounded-l-none"
-              >
-                <Search className="w-4 h-4 sm:w-5 sm:h-5" />
-              </Button>
-            </div>
+            <Suspense fallback={
+              <div className="relative w-full max-w-xl h-10 sm:h-12 rounded-full border border-input bg-muted/30 animate-pulse" />
+            }>
+              <GlobalSearch className="w-full" />
+            </Suspense>
           </div>
         </div>
       </header>

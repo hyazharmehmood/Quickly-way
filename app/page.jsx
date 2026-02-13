@@ -1,15 +1,17 @@
 'use client';
 
 import { useState, useEffect, Suspense } from 'react';
-import { useSearchParams } from 'next/navigation';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/category/CategoryFilter';
 import { ServiceGrid } from '@/components/service/ServiceGrid';
 import { OnlineSellerFilter } from '@/components/service/OnlineSellerFilter';
 
 function HomeContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [sellerFilter, setSellerFilter] = useState({ online: false, offline: false });
+  const searchQuery = searchParams.get('q') || '';
 
   useEffect(() => {
     const skillSlug = searchParams.get('skill');
@@ -19,7 +21,7 @@ function HomeContent() {
   const handleClearFilters = () => {
     setSelectedSkill(null);
     setSellerFilter({ online: false, offline: false });
-    window.history.pushState({}, '', '/');
+    router.push('/');
   };
 
   const handleCategorySelect = (value) => {
@@ -39,6 +41,7 @@ function HomeContent() {
       <ServiceGrid
         skillSlug={selectedSkill}
         sellerFilter={sellerFilter}
+        searchQuery={searchQuery}
         onClearFilters={handleClearFilters}
       />
     </main>

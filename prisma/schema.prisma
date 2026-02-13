@@ -265,6 +265,18 @@ model Keyword {
   @@index([isActive])
 }
 
+// Trending search keywords - count incremented on each search
+model SearchKeyword {
+  id        String   @id @default(uuid())
+  keyword   String   @unique
+  count     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([keyword])
+  @@index([count])
+}
+
 enum UserRole {
   CLIENT
   FREELANCER
