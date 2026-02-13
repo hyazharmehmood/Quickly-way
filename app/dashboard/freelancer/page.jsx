@@ -20,7 +20,7 @@ export default function FreelancerOverview() {
                     setStats(res.data.stats);
                 }
             } catch (err) {
-                console.error('Failed to fetch freelancer stats:', err);
+                console.error('Failed to fetch Seller stats:', err);
             } finally {
                 setLoading(false);
             }
@@ -37,7 +37,7 @@ export default function FreelancerOverview() {
         return (
             <div className="animate-in fade-in duration-500 space-y-4">
                 <div>
-                    <h2 className="text-2xl font-normal text-foreground tracking-tight">Freelancer Overview</h2>
+                    <h2 className="text-2xl font-normal text-foreground tracking-tight">Seller Overview</h2>
                     <p className="text-muted-foreground font-normal mt-1 text-sm">Welcome back! Here's what's happening today.</p>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -64,7 +64,7 @@ export default function FreelancerOverview() {
     return (
         <div className="animate-in fade-in duration-500 space-y-4">
             <div>
-                <h2 className="text-2xl font-normal text-foreground tracking-tight">Freelancer Overview</h2>
+                <h2 className="text-2xl font-normal text-foreground tracking-tight">Seller Overview</h2>
                 <p className="text-muted-foreground font-normal mt-1 text-sm">Welcome back! Here's what's happening today.</p>
             </div>
 

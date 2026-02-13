@@ -34,7 +34,7 @@ export const Sidebar = ({ onLogout }) => {
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
         { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
-        { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
+        { icon: <AlertCircle />, label: "Support Tickets", href: "/admin/disputes" },
         { icon: <Star />, label: "Reviews", href: "/admin/reviews" },
         { icon: <FolderTree />, label: "Categories", href: "/admin/categories" },
         { icon: <Tag />, label: "Skills", href: "/admin/skills" },

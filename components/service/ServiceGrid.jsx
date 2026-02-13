@@ -13,6 +13,7 @@ const DEFAULT_SELLER_FILTER = { online: false, offline: false };
 export function ServiceGrid({
   skillSlug,
   sellerFilter = DEFAULT_SELLER_FILTER,
+  searchQuery = '',
   onServiceClick,
   onClearFilters,
 }) {
@@ -77,6 +78,7 @@ export function ServiceGrid({
         }
         const params = new URLSearchParams();
         if (skillSlug) params.set('skill', skillSlug);
+        if (searchQuery?.trim()) params.set('q', searchQuery.trim());
         const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
         const onlineSelected = !!filterState.online;
         const offlineSelected = !!filterState.offline;
@@ -125,7 +127,7 @@ export function ServiceGrid({
         }
       }
     },
-    [skillSlug, sellerFilter, pageSize]
+    [skillSlug, sellerFilter, searchQuery, pageSize]
   );
 
   useEffect(() => {
@@ -137,7 +139,7 @@ export function ServiceGrid({
     // Reset list when filters change before fetch re-runs
     setServices([]);
     setTotal(0);
-  }, [skillSlug, sellerFilter]);
+  }, [skillSlug, sellerFilter, searchQuery]);
 
   const handleLoadMore = () => {
     if (loadingMore) return;
@@ -185,9 +187,17 @@ export function ServiceGrid({
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
       {/* Active Filter Indicator */}
-      {(skillSlug && skillName) || sellerFilter !== 'all' ? (
+      {(skillSlug && skillName) || sellerFilter !== 'all' || searchQuery ? (
         <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
           <div className="flex items-center gap-3 flex-wrap">
+            {searchQuery && (
+              <>
+                <span className="text-sm text-muted-foreground">Search:</span>
+                <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
+                  {searchQuery}
+                </span>
+              </>
+            )}
             {skillSlug && skillName && (
               <>
                 <span className="text-sm text-muted-foreground">Filtered by:</span>
@@ -217,7 +227,7 @@ export function ServiceGrid({
               {services.length} of {total} {total === 1 ? 'result' : 'results'}
             </span>
           </div>
-          {onClearFilters && (skillSlug || (sellerFilter.online || sellerFilter.offline)) && (
+          {onClearFilters && (skillSlug || searchQuery || sellerFilter.online || sellerFilter.offline) && (
             <Button
               onClick={onClearFilters}
               variant="ghost"
@@ -246,10 +256,11 @@ export function ServiceGrid({
               const f = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
               if (f.online && !f.offline) return 'No online sellers found.';
               if (f.offline && !f.online) return 'No offline sellers found.';
+              if (searchQuery) return `No services found for "${searchQuery}".`;
               return skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.';
             })()}
           </p>
-          {onClearFilters && (skillSlug || (sellerFilter?.online || sellerFilter?.offline)) && (
+          {onClearFilters && (skillSlug || searchQuery || sellerFilter?.online || sellerFilter?.offline) && (
             <Button
               onClick={onClearFilters}
               variant="ghost"

@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 import { createNotification } from '@/lib/services/notificationService';
+const { emitDisputeCommentEvent } = require('@/lib/socket');
 
 /**
  * GET /api/disputes/[id]/comments - Get all comments for a dispute
@@ -216,6 +217,16 @@ export async function POST(request, { params }) {
         },
       },
     });
+
+    // Real-time: emit to dispute room and user rooms so thread updates instantly
+    try {
+      emitDisputeCommentEvent(id, comment, {
+        clientId: dispute.clientId,
+        freelancerId: dispute.freelancerId,
+      });
+    } catch (socketError) {
+      console.error('Failed to emit dispute comment socket event:', socketError);
+    }
 
     // Notify the other party: new dispute comment (client and freelancer; skip if admin posted)
     try {

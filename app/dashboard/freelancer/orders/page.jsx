@@ -23,7 +23,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 
 const STATUS_CONFIG = {
@@ -38,11 +38,17 @@ const STATUS_CONFIG = {
 
 export default function FreelancerOrdersPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAuthStore();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || 'all');
+
+    useEffect(() => {
+        const status = searchParams.get('status');
+        if (status) setStatusFilter(status);
+    }, [searchParams]);
 
     useEffect(() => {
         fetchOrders();

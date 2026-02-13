@@ -22,7 +22,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 
 const STATUS_CONFIG = {
@@ -37,11 +37,17 @@ const STATUS_CONFIG = {
 
 export default function ClientOrdersPage() {
     const router = useRouter();
+    const searchParams = useSearchParams();
     const { user } = useAuthStore();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchQuery, setSearchQuery] = useState('');
-    const [statusFilter, setStatusFilter] = useState('all');
+    const [statusFilter, setStatusFilter] = useState(() => searchParams.get('status') || 'all');
+
+    useEffect(() => {
+        const status = searchParams.get('status');
+        if (status) setStatusFilter(status);
+    }, [searchParams]);
 
     useEffect(() => {
         fetchOrders();
@@ -194,7 +200,7 @@ export default function ClientOrdersPage() {
                                                 <ShoppingBag className="w-7 h-7" />
                                             </div>
                                             <div>
-                                                <h3 className="text-lg font-normal text-foreground leading-tight">
+                                                <h3 className="text-lg font-normal break-all text-foreground leading-tight">
                                                     {order.service?.title || 'Service'}
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground mt-1 font-normal">
@@ -241,7 +247,7 @@ export default function ClientOrdersPage() {
                                         className="w-full border-border"
                                         onClick={() => handleChat(order)}
                                     >
-                                        <MessageSquare className="w-4 h-4 " /> Contact Freelancer
+                                        <MessageSquare className="w-4 h-4 " /> Contact Seller
                                     </Button>
                                     {order.status === 'DELIVERED' && (
                                         <Button size="lg" variant="secondary" className="w-full bg-primary/10 text-primary border border-primary/20">

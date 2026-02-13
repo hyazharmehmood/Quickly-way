@@ -22,7 +22,7 @@ export const DashboardHeader = () => {
     const router = useRouter();
     const { user, logout, isSeller, sellerStatus, role } = useAuthStore();
     const normalizedRole = role ? role.toUpperCase() : '';
-    const canAccessBoth = (isSeller && sellerStatus === 'APPROVED') || normalizedRole === 'FREELANCER';
+    const canAccessBoth = (isSeller && sellerStatus === 'APPROVED') || normalizedRole === 'CLIENT & SELLER';
 
     const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
     const dashboardPath = isFreelancerView ? '/dashboard/freelancer' : '/orders';
@@ -36,7 +36,7 @@ export const DashboardHeader = () => {
     };
 
     const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'U');
-    const userRoleDisplay = isFreelancerView ? 'Freelancer' : 'Client';
+    const userRoleDisplay = isFreelancerView ? 'Client & Seller' : 'Client';
     const displayName = user?.name || 'User';
 
     const handleLogout = () => {

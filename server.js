@@ -40,7 +40,8 @@ app.prepare().then(() => {
           const status = parsedUrl.query.status || 'all';
           const page = parsedUrl.query.page;
           const pageSize = parsedUrl.query.pageSize;
-          const services = await getPublicServices(skillSlug, status, page, pageSize);
+          const q = parsedUrl.query.q && String(parsedUrl.query.q).trim() ? String(parsedUrl.query.q).trim() : null;
+          const services = await getPublicServices(skillSlug, status, page, pageSize, q);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(services));
           return;
