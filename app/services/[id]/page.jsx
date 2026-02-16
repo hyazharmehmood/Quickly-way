@@ -103,6 +103,8 @@ export default function ServiceDetailsPage() {
                         isOnline: false,
                         availability: data.freelancer?.availability || [],
                         employmentStatus: data.freelancer?.employmentStatus || null,
+                        email: data.freelancer?.email || null,
+                        phoneNumber: data.freelancer?.phoneNumber || null,
                     },
                     paymentMethods: data.paymentMethods && Array.isArray(data.paymentMethods) ? data.paymentMethods : [],
                     paymentMethodsText: data.paymentMethodsText || null,

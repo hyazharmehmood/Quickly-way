@@ -130,7 +130,9 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
             <ContactModal
                 isOpen={showContactModal}
                 onClose={() => setShowContactModal(false)}
-                providerName={service.provider.name}
+                providerName={service.provider?.name}
+                providerEmail={service.provider?.email}
+                providerPhone={service.provider?.phoneNumber}
                 onChatStart={onContact}
             />
             <ReportModal
