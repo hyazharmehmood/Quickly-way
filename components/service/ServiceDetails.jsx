@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import {
-    Heart, MapPin, Star, User, ChevronLeft, ChevronRight,
+    Heart, MapPin, Star, User, ChevronLeft, ChevronRight, ChevronDown,
     CheckCircle, Clock, ShieldAlert, Plus, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -36,6 +36,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
     const [showReportModal, setShowReportModal] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
     const [avatarError, setAvatarError] = useState(false);
+    const [expandedBreakdownIndex, setExpandedBreakdownIndex] = useState(null);
 
     // Always prioritize propReviews over service.reviewsList
     const [reviews, setReviews] = useState(propReviews || []);
@@ -349,52 +350,66 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                         <div className="sticky top-24 space-y-4">
                             <Card className="border-none shadow-sm">
                                 <CardContent className="p-4 md:p-6 ">
-                                    <h3 className="heading-3  ">Starting price</h3>
+                                  <div className="flex justify-between items-center pb-4">  <h3 className="heading-3  ">Starting price</h3>
                                     <div className="text-xl font-semibold text-gray-900 py-2 tracking-tight">
                                         {service.priceRange ? service.priceRange.split('-')[0].trim() : `$${service.price}`}
-                                    </div>
+                                    </div></div>
 
-                                    <ul className="space-y-3 text-lg text-gray-700 leading-relaxed font-medium mb-10 border-t border-gray-50 pt-4 ">
+                                    <ul className="space-y-2 text-lg text-gray-700 leading-relaxed font-medium mb-10 pt-2 ">
                                         {service.priceBreakdowns && service.priceBreakdowns.length > 0 ? (
                                             service.priceBreakdowns.map((item, idx) => {
-                                                const parseItem = (item) => {
-                                                if (typeof item === 'string') {
-                                                    if (item.trim().startsWith('{')) {
-                                                        try {
-                                                                return JSON.parse(item);
-                                                            } catch {
-                                                                return { text: item };
-                                                            }
-                                                        }
-                                                        return { text: item };
-                                                    }
-                                                    return item;
-                                                };
-
-                                                const parsed = parseItem(item);
+                                                const parsed = typeof item === 'object' && item !== null
+                                                    ? item
+                                                    : (typeof item === 'string' && item.trim().startsWith('{')
+                                                        ? (() => { try { return JSON.parse(item); } catch { return { text: item }; }})()
+                                                        : { text: item });
                                                 const label = parsed.text || parsed.item || parsed.feature || parsed.description || "Service Detail";
-                                                const subDetails = parsed.included || null;
+                                                const subDetails = parsed.included?.trim() || null;
+                                                const isExpanded = expandedBreakdownIndex === idx;
+                                                const includedItems = subDetails
+                                                    ? subDetails.split(/[\n,]+/).map((s) => s.trim()).filter(Boolean)
+                                                    : [];
+                                                const hasIncluded = includedItems.length > 0 || (subDetails && subDetails.length > 0);
 
                                                 return (
-                                                    <li key={idx} className="flex flex-col gap-2">
-                                                        <div className="flex items-center gap-2">
-                                                            <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                                            <span className="text-lg font-medium text-gray-900">{label}</span>
+                                                    <li key={parsed.id ?? idx} className="border border-gray-100 rounded-lg overflow-hidden">
+                                                        <div className="flex items-center justify-start gap-2 p-2">
+                                                            <span className="text-base font-medium">{label}</span>
                                                         </div>
-                                                        {subDetails && (
-                                                            <div className="pl-8 text-base text-gray-600 whitespace-pre-wrap leading-snug">
-                                                                <span className="text-xs font-medium uppercase text-gray-400 block mb-1">Included:</span>
-                                                                {subDetails}
-                                                            </div>
+                                                        {hasIncluded && (
+                                                            <>
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => setExpandedBreakdownIndex(isExpanded ? null : idx)}
+                                                                    className="flex items-center justify-between w-full gap-2 px-3 pb-3 pt-0 text-left hover:bg-gray-50/50 transition-colors"
+                                                                >
+                                                                    <span className="text-sm font-medium text-gray-500">Included</span>
+                                                                    <ChevronDown
+                                                                        className={`w-5 h-5 flex-shrink-0 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                                                    />
+                                                                </button>
+                                                                {isExpanded && includedItems.length > 0 && (
+                                                                    <ul className="px-3 pb-3 pt-0 pl-6 space-y-1">
+                                                                        {includedItems.map((line, i) => (
+                                                                            <li key={i} className="text-sm text-gray-600">{line}</li>
+                                                                        ))}
+                                                                    </ul>
+                                                                )}
+                                                                {isExpanded && includedItems.length === 0 && subDetails && (
+                                                                    <div className="px-3 pb-3 pt-0 pl-6 text-sm text-gray-600 whitespace-pre-wrap">
+                                                                        {subDetails}
+                                                                    </div>
+                                                                )}
+                                                            </>
                                                         )}
                                                     </li>
                                                 );
                                             })
                                         ) : (
-                                                <li className="flex items-start gap-3">
-                                                    <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
-                                                    <span>Service Details Included</span>
-                                                </li>
+                                            <li className="flex items-start gap-3">
+                                                <CheckCircle className="w-5 h-5 text-green-500 mt-1 flex-shrink-0" />
+                                                <span>Service Details Included</span>
+                                            </li>
                                         )}
                                     </ul>
 
