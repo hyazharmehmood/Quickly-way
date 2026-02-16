@@ -46,7 +46,7 @@ export async function PATCH(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { keyword, volume, difficulty, rank, trend, isActive } = body;
+    const { keyword, volume, difficulty, rank, trend, isActive, approvalStatus } = body;
 
     // Check if keyword exists
     const existing = await prisma.keyword.findUnique({
@@ -81,6 +81,9 @@ export async function PATCH(request, { params }) {
     if (rank !== undefined) updateData.rank = rank;
     if (trend !== undefined) updateData.trend = trend;
     if (isActive !== undefined) updateData.isActive = isActive;
+    if (approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') {
+      updateData.approvalStatus = approvalStatus;
+    }
 
     const updated = await prisma.keyword.update({
       where: { id },

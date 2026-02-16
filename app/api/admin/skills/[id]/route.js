@@ -56,7 +56,7 @@ export async function PATCH(request, { params }) {
 
     const { id } = await params;
     const body = await request.json();
-    const { name, categoryId, isActive } = body;
+    const { name, categoryId, isActive, approvalStatus } = body;
 
     // Check if skill exists
     const existingSkill = await prisma.skill.findUnique({
@@ -164,6 +164,11 @@ export async function PATCH(request, { params }) {
     // Update isActive if provided
     if (isActive !== undefined) {
       updateData.isActive = Boolean(isActive);
+    }
+
+    // Approve or reject skill (admin only)
+    if (approvalStatus === 'APPROVED' || approvalStatus === 'REJECTED') {
+      updateData.approvalStatus = approvalStatus;
     }
 
     const skill = await prisma.skill.update({

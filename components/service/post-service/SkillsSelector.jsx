@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, X, Search } from 'lucide-react';
+import { Check, ChevronsUpDown, X, Search, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -31,6 +31,7 @@ export function SkillsSelector({
   const [allSkills, setAllSkills] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [requestingSkill, setRequestingSkill] = useState(false);
 
   useEffect(() => {
     fetchSkills();
@@ -39,33 +40,21 @@ export function SkillsSelector({
 
   const fetchSkills = async () => {
     try {
-      // If editing and we have initial skill IDs, fetch them (including inactive)
       if (initialSkillIds.length > 0) {
-        // Fetch skills by IDs
         const idsParam = initialSkillIds.join(',');
         const response = await api.get(`/skills?ids=${encodeURIComponent(idsParam)}`);
         if (response.data.success) {
           let skills = response.data.skills || [];
-          
-          // Also fetch all active skills to populate the dropdown
           const activeResponse = await api.get('/skills');
           if (activeResponse.data.success) {
-            const activeSkills = activeResponse.data.skills || [];
-            // Merge: active skills + initial skills (including inactive), avoiding duplicates
             const skillMap = new Map();
-            activeSkills.forEach(skill => skillMap.set(skill.id, skill));
-            skills.forEach(skill => {
-              if (!skillMap.has(skill.id)) {
-                skillMap.set(skill.id, skill);
-              }
-            });
+            (activeResponse.data.skills || []).forEach(skill => skillMap.set(skill.id, skill));
+            skills.forEach(skill => { if (!skillMap.has(skill.id)) skillMap.set(skill.id, skill); });
             skills = Array.from(skillMap.values());
           }
-          
           setAllSkills(skills);
         }
       } else {
-        // Just fetch active skills for new service
         const response = await api.get('/skills');
         if (response.data.success) {
           setAllSkills(response.data.skills || []);
@@ -101,6 +90,38 @@ export function SkillsSelector({
 
   const isSelected = (skillId) => selectedSkills.includes(skillId);
 
+  const hasExactMatch = (query) =>
+    allSkills.some(
+      (s) => s.name.toLowerCase() === (query || '').trim().toLowerCase()
+    );
+
+  const handleRequestNewSkill = async () => {
+    const name = searchQuery.trim();
+    if (!name || name.length < 2) return;
+    if (hasExactMatch(name)) {
+      setSearchQuery('');
+      return;
+    }
+    setRequestingSkill(true);
+    try {
+      const res = await api.post('/skills/request', { name });
+      if (res.data.success && res.data.skill) {
+        setAllSkills((prev) => {
+          const next = [...prev, res.data.skill];
+          next.sort((a, b) => a.name.localeCompare(b.name));
+          return next;
+        });
+        onSkillsChange([...selectedSkills, res.data.skill.id]);
+        setSearchQuery('');
+        setOpen(false);
+      }
+    } catch (err) {
+      console.error('Request skill error:', err);
+    } finally {
+      setRequestingSkill(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor="skills" className="">
@@ -124,16 +145,17 @@ export function SkillsSelector({
                 {selectedSkills.map((skillId) => {
                   const skill = allSkills.find(s => s.id === skillId);
                   const isInactive = skill && !skill.isActive;
-                  
+                  const isPending = skill && skill.approvalStatus === 'PENDING';
+                  const isRejected = skill && skill.approvalStatus === 'REJECTED';
                   return (
                     <Badge
                       key={skillId}
                       variant="secondary"
                       className={cn(
                         "px-2 py-1 text-xs font-medium flex items-center gap-1 h-8 rounded-md",
-                        isInactive 
-                          ? "bg-orange-100 text-orange-700 border-orange-200" 
-                          : "bg-primary/10 text-primary border-primary/20"
+                        isRejected && "bg-red-100 text-red-700 border-red-200",
+                        isPending && !isRejected && "bg-amber-100 text-amber-700 border-amber-200",
+                        !isPending && !isRejected && (isInactive ? "bg-orange-100 text-orange-700 border-orange-200" : "bg-primary/10 text-primary border-primary/20")
                       )}
                       onClick={(e) => {
                         e.stopPropagation();
@@ -141,9 +163,9 @@ export function SkillsSelector({
                       }}
                     >
                       {skill ? skill.name : skillId}
-                      {isInactive && (
-                        <span className="text-[10px] opacity-70">(inactive)</span>
-                      )}
+                      {isRejected && <span className="text-[10px] opacity-70">(Rejected)</span>}
+                      {isPending && !isRejected && <span className="text-[10px] opacity-70">(Pending)</span>}
+                      {isInactive && !isPending && !isRejected && <span className="text-[10px] opacity-70">(inactive)</span>}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -182,38 +204,54 @@ export function SkillsSelector({
                   ))}
                 </div>
               ) : filteredSkills.length === 0 ? (
-                <CommandEmpty>No skills found.</CommandEmpty>
+                <CommandEmpty>
+                  {searchQuery.trim().length >= 2 ? (
+                    <div className="flex flex-col gap-2 py-2 px-4">
+                      <span>No skill &quot;{searchQuery.trim()}&quot;. Request it for approval.</span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={handleRequestNewSkill}
+                        disabled={requestingSkill}
+                        className="w-fit"
+                      >
+                        {requestingSkill ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        <span className="">Request skill &quot;{searchQuery.trim()}&quot;</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    'No skills found.'
+                  )}
+                </CommandEmpty>
               ) : (
                 <CommandGroup>
                   {filteredSkills.map((skill) => {
                     const selected = isSelected(skill.id);
                     const inactive = !skill.isActive;
-                    
+                    const pending = skill.approvalStatus === 'PENDING';
+                    const rejected = skill.approvalStatus === 'REJECTED';
                     return (
                       <CommandItem
                         key={skill.id}
                         value={skill.name}
-                        onSelect={() => {
-                          toggleSkill(skill.id);
-                        }}
-                        className={cn(
-                          "cursor-pointer",
-                          inactive && !selected && "opacity-50"
-                        )}
+                        onSelect={() => toggleSkill(skill.id)}
+                        className={cn("cursor-pointer", inactive && !selected && "opacity-70")}
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selected ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div className="flex items-center justify-between w-full">
+                        <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                        <div className="flex items-center justify-between w-full gap-2">
                           <span>{skill.name}</span>
-                          {inactive && (
-                            <Badge variant="outline" className="text-xs ml-2">
-                              Inactive
-                            </Badge>
-                          )}
+                          <span className="flex items-center gap-1.5 shrink-0">
+                            {rejected && (
+                              <Badge variant="destructive" className="text-xs">Rejected</Badge>
+                            )}
+                            {pending && !rejected && (
+                              <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">Pending</Badge>
+                            )}
+                            {inactive && !pending && !rejected && (
+                              <Badge variant="outline" className="text-xs">Inactive</Badge>
+                            )}
+                          </span>
                         </div>
                       </CommandItem>
                     );
@@ -225,8 +263,8 @@ export function SkillsSelector({
         </PopoverContent>
       </Popover>
 
-      <p className="text-xs text-muted-foreground mt-1">
-        Search and select skills from the list. Only active skills are shown, except for skills you've already selected.
+      <p className="text-xs text-muted-foreground">
+        Only approved skills appear for everyone. Your requested skills show as Pending until admin approves; Rejected skills stay visible only to you.
       </p>
     </div>
   );

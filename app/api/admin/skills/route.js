@@ -19,8 +19,12 @@ export async function GET(request) {
     if (categoryId) {
       where.categoryId = categoryId;
     }
-    if (isActive !== null) {
+    if (isActive !== null && isActive !== undefined && isActive !== '') {
       where.isActive = isActive === 'true';
+    }
+    const approvalFilter = searchParams.get('approvalStatus'); // PENDING | APPROVED | REJECTED
+    if (approvalFilter) {
+      where.approvalStatus = approvalFilter;
     }
 
     const skills = await prisma.skill.findMany({
@@ -31,6 +35,13 @@ export async function GET(request) {
             id: true,
             name: true,
             slug: true,
+          },
+        },
+        createdBy: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
           },
         },
       },

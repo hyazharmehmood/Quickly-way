@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Check, ChevronsUpDown, X } from 'lucide-react';
+import { Check, ChevronsUpDown, X, Plus, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -32,6 +32,7 @@ export function KeywordSelector({
   const [allKeywords, setAllKeywords] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [requestingKeyword, setRequestingKeyword] = useState(false);
 
   useEffect(() => {
     fetchKeywords();
@@ -77,6 +78,36 @@ export function KeywordSelector({
 
   const isSelected = (keywordName) => selectedKeywords.includes(keywordName);
 
+  const hasExactMatch = (q) =>
+    allKeywords.some((k) => k.keyword.toLowerCase() === (q || '').trim().toLowerCase());
+
+  const handleRequestNewKeyword = async () => {
+    const name = searchQuery.trim();
+    if (!name || name.length < 2) return;
+    if (hasExactMatch(name)) return;
+    setRequestingKeyword(true);
+    try {
+      const res = await api.post('/keywords/request', { keyword: name });
+      if (res.data.success && res.data.keyword) {
+        const kw = res.data.keyword;
+        setAllKeywords((prev) => {
+          const next = [...prev, { ...kw, approvalStatus: kw.approvalStatus || 'PENDING' }];
+          next.sort((a, b) => (a.keyword || '').localeCompare(b.keyword || ''));
+          return next;
+        });
+        if (selectedKeywords.length < maxKeywords) {
+          onKeywordsChange([...selectedKeywords, kw.keyword]);
+        }
+        setSearchQuery('');
+        setOpen(false);
+      }
+    } catch (err) {
+      console.error('Request keyword error:', err);
+    } finally {
+      setRequestingKeyword(false);
+    }
+  };
+
   return (
     <div className="space-y-2">
       <Label htmlFor="keywords" className="">
@@ -99,18 +130,26 @@ export function KeywordSelector({
               <>
                 {selectedKeywords.map((keywordName) => {
                   const keyword = allKeywords.find(k => k.keyword === keywordName);
-                  
+                  const isPending = keyword && keyword.approvalStatus === 'PENDING';
+                  const isRejected = keyword && keyword.approvalStatus === 'REJECTED';
                   return (
                     <Badge
                       key={keywordName}
                       variant="secondary"
-                      className="px-2 py-1 text-xs font-medium flex items-center gap-1 h-8 rounded-md bg-primary/10 text-primary border-primary/20"
+                      className={cn(
+                        "px-2 py-1 text-xs font-medium flex items-center gap-1 h-8 rounded-md",
+                        isRejected && "bg-red-100 text-red-700 border-red-200",
+                        isPending && !isRejected && "bg-amber-100 text-amber-700 border-amber-200",
+                        !isPending && !isRejected && "bg-primary/10 text-primary border-primary/20"
+                      )}
                       onClick={(e) => {
                         e.stopPropagation();
                         removeKeyword(keywordName);
                       }}
                     >
                       {keywordName}
+                      {isRejected && <span className="text-[10px] opacity-70">(Rejected)</span>}
+                      {isPending && !isRejected && <span className="text-[10px] opacity-70">(Pending)</span>}
                       <button
                         type="button"
                         onClick={(e) => {
@@ -152,41 +191,44 @@ export function KeywordSelector({
                   ))}
                 </div>
               ) : filteredKeywords.length === 0 ? (
-                <CommandEmpty>No keywords found.</CommandEmpty>
+                <CommandEmpty>
+                  {searchQuery.trim().length >= 2 ? (
+                    <div className="flex flex-col px-2 gap-2 py-2">
+                      <span>No keyword &quot;{searchQuery.trim()}&quot;. Request it for approval.</span>
+                      <Button type="button" size="sm" variant="outline" onClick={handleRequestNewKeyword} disabled={requestingKeyword} className="w-fit">
+                        {requestingKeyword ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                        <span className="">Request keyword &quot;{searchQuery.trim()}&quot;</span>
+                      </Button>
+                    </div>
+                  ) : (
+                    'No keywords found.'
+                  )}
+                </CommandEmpty>
               ) : (
                 <CommandGroup>
                   {filteredKeywords.map((keyword) => {
                     const selected = isSelected(keyword.keyword);
                     const isMaxReached = selectedKeywords.length >= maxKeywords && !selected;
-                    
+                    const pending = keyword.approvalStatus === 'PENDING';
+                    const rejected = keyword.approvalStatus === 'REJECTED';
                     return (
                       <CommandItem
                         key={keyword.id}
                         value={keyword.keyword}
-                        onSelect={() => {
-                          if (!isMaxReached) {
-                            toggleKeyword(keyword.keyword);
-                          }
-                        }}
-                        className={cn(
-                          "cursor-pointer",
-                          isMaxReached && "opacity-50 cursor-not-allowed"
-                        )}
+                        onSelect={() => { if (!isMaxReached) toggleKeyword(keyword.keyword); }}
+                        className={cn("cursor-pointer", isMaxReached && "opacity-50 cursor-not-allowed")}
                         disabled={isMaxReached}
                       >
-                        <Check
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            selected ? "opacity-100" : "opacity-0"
-                          )}
-                        />
-                        <div className="flex items-center justify-between w-full">
+                        <Check className={cn("mr-2 h-4 w-4", selected ? "opacity-100" : "opacity-0")} />
+                        <div className="flex items-center justify-between w-full gap-2">
                           <span>{keyword.keyword}</span>
-                          {keyword.volume && (
-                            <Badge variant="outline" className="text-xs ml-2">
-                              {keyword.volume}
-                            </Badge>
-                          )}
+                          <span className="flex items-center gap-1.5 shrink-0">
+                            {rejected && <Badge variant="destructive" className="text-xs">Rejected</Badge>}
+                            {pending && !rejected && <Badge variant="secondary" className="text-xs bg-amber-100 text-amber-700">Pending</Badge>}
+                            {keyword.volume && !rejected && !pending && (
+                              <Badge variant="outline" className="text-xs">{keyword.volume}</Badge>
+                            )}
+                          </span>
                         </div>
                       </CommandItem>
                     );
@@ -198,8 +240,8 @@ export function KeywordSelector({
         </PopoverContent>
       </Popover>
 
-      <p className="text-xs text-muted-foreground mt-1">
-        {maxKeywords} keywords maximum. Select from admin-managed keywords to get found.
+      <p className="text-xs text-muted-foreground ">
+        Only approved keywords appear for everyone. Your requested keywords show as Pending until admin approves.
         {selectedKeywords.length > 0 && ` (${selectedKeywords.length}/${maxKeywords} selected)`}
       </p>
     </div>

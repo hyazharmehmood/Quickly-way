@@ -1,38 +1,56 @@
 import { NextResponse } from 'next/server';
+import { cookies, headers } from 'next/headers';
 import prisma from '@/lib/prisma';
+import { verifyToken } from '@/lib/utils/jwt';
+
+async function getOptionalUserId(request) {
+  try {
+    const headersList = await headers();
+    const authHeader = headersList.get('authorization');
+    if (authHeader?.startsWith('Bearer ')) {
+      const token = authHeader.slice(7);
+      const decoded = verifyToken(token);
+      return decoded?.id || null;
+    }
+    const cookieStore = await cookies();
+    const token = cookieStore.get('token')?.value;
+    if (!token) return null;
+    const decoded = verifyToken(token);
+    return decoded?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 /**
- * GET /api/skills - Get all active skills (public endpoint)
- * This endpoint is accessible to all authenticated users (freelancers/clients)
+ * GET /api/skills
+ * - For dropdown: only APPROVED + isActive skills (global). If logged in, also include current user's PENDING and REJECTED skills.
+ * - When ids= is provided (editing): include those skills even if pending/rejected so creator can see them.
  */
 export async function GET(request) {
   try {
+    const userId = await getOptionalUserId(request);
     const { searchParams } = new URL(request.url);
     const includeInactive = searchParams.get('includeInactive') === 'true';
-    const skillIds = searchParams.get('ids'); // Comma-separated skill IDs to include even if inactive
-    const skillNames = searchParams.get('names'); // Comma-separated skill names to include even if inactive
+    const skillIds = searchParams.get('ids');
+    const skillNames = searchParams.get('names');
 
-    const where = {};
-    
-    // If includeInactive is false, only show active skills
-    // But if skillIds or skillNames are provided, include those even if inactive
-    if (!includeInactive) {
-      if (skillIds) {
-        const idsArray = skillIds.split(',').filter(Boolean);
-        where.OR = [
-          { isActive: true },
-          { id: { in: idsArray } }
-        ];
-      } else if (skillNames) {
-        const namesArray = skillNames.split(',').filter(Boolean);
-        where.OR = [
-          { isActive: true },
-          { name: { in: namesArray } }
-        ];
-      } else {
-        where.isActive = true;
-      }
+    const orConditions = [
+      { approvalStatus: 'APPROVED', ...(includeInactive ? {} : { isActive: true }) },
+      ...(userId ? [
+        { approvalStatus: 'PENDING', createdByUserId: userId },
+        { approvalStatus: 'REJECTED', createdByUserId: userId },
+      ] : []),
+    ];
+    if (skillIds) {
+      const idsArray = skillIds.split(',').filter(Boolean);
+      if (idsArray.length) orConditions.push({ id: { in: idsArray } });
     }
+    if (skillNames) {
+      const namesArray = skillNames.split(',').map((n) => n.trim()).filter(Boolean);
+      if (namesArray.length) orConditions.push({ name: { in: namesArray } });
+    }
+    const where = { OR: orConditions };
 
     const skills = await prisma.skill.findMany({
       where,

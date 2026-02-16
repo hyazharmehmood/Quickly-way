@@ -52,7 +52,10 @@ export default function SkillsPage() {
   const [formData, setFormData] = useState({ name: '', categoryId: '', mainCategoryId: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [filterActive, setFilterActive] = useState(null);
+  const [filterApproval, setFilterApproval] = useState(null); // null | 'PENDING' | 'APPROVED' | 'REJECTED'
   const [togglingSkills, setTogglingSkills] = useState(new Set());
+  const [approvingSkillId, setApprovingSkillId] = useState(null);
+  const [rejectingSkillId, setRejectingSkillId] = useState(null);
 
   // Fetch categories with subcategories
   const fetchCategories = async () => {
@@ -82,12 +85,13 @@ export default function SkillsPage() {
     }
   };
 
-  // Fetch all skills (optional filter: isActive only)
+  // Fetch all skills (optional filters: isActive, approvalStatus)
   const fetchSkills = async () => {
     try {
-
+      setLoading(true);
       const params = new URLSearchParams();
       if (filterActive !== null) params.append('isActive', filterActive.toString());
+      if (filterApproval) params.append('approvalStatus', filterApproval);
 
       const response = await api.get(`/admin/skills?${params.toString()}`);
       if (response.data.success) {
@@ -107,7 +111,7 @@ export default function SkillsPage() {
 
   useEffect(() => {
     fetchSkills();
-  }, [filterActive]);
+  }, [filterActive, filterApproval]);
 
   // Filter skills by search query
   const filteredSkills = skills.filter(skill =>
@@ -265,6 +269,36 @@ export default function SkillsPage() {
     }
   };
 
+  const handleApproveSkill = async (skill) => {
+    setApprovingSkillId(skill.id);
+    try {
+      const response = await api.patch(`/admin/skills/${skill.id}`, { approvalStatus: 'APPROVED' });
+      if (response.data.success) {
+        toast.success(`"${skill.name}" approved — now visible to all freelancers`);
+        fetchSkills();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to approve');
+    } finally {
+      setApprovingSkillId(null);
+    }
+  };
+
+  const handleRejectSkill = async (skill) => {
+    setRejectingSkillId(skill.id);
+    try {
+      const response = await api.patch(`/admin/skills/${skill.id}`, { approvalStatus: 'REJECTED' });
+      if (response.data.success) {
+        toast.success(`"${skill.name}" rejected — only requester will see it as Rejected`);
+        fetchSkills();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to reject');
+    } finally {
+      setRejectingSkillId(null);
+    }
+  };
+
   return (
     <div className="animate-in fade-in duration-500 space-y-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -297,12 +331,41 @@ export default function SkillsPage() {
                 className="pl-9 pr-4 "
               />
             </div>
-            <div className="flex items-center gap-1.5">
+            <div className="flex items-center gap-1.5 flex-wrap">
+              <span className="text-xs text-muted-foreground mr-1">Approval:</span>
+              <Button
+                variant={filterApproval === null ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterApproval(null)}
+              >
+                All
+              </Button>
+              <Button
+                variant={filterApproval === 'PENDING' ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterApproval('PENDING')}
+              >
+                Pending
+              </Button>
+              <Button
+                variant={filterApproval === 'APPROVED' ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterApproval('APPROVED')}
+              >
+                Approved
+              </Button>
+              <Button
+                variant={filterApproval === 'REJECTED' ? "default" : "outline"}
+                size="sm"
+                onClick={() => setFilterApproval('REJECTED')}
+              >
+                Rejected
+              </Button>
+              <span className="text-xs text-muted-foreground ml-2 mr-1">Active:</span>
               <Button
                 variant={filterActive === null ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(null)}
-                className=""
               >
                 All
               </Button>
@@ -310,16 +373,13 @@ export default function SkillsPage() {
                 variant={filterActive === true ? "default" : "outline"}
                 size="sm"
                 onClick={() => setFilterActive(true)}
-                className=""
               >
                 Active
               </Button>
               <Button
                 variant={filterActive === false ? "default" : "outline"}
                 size="sm"
-
                 onClick={() => setFilterActive(false)}
-                className=""
               >
                 Inactive
               </Button>
@@ -334,7 +394,9 @@ export default function SkillsPage() {
                   <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                     <TableHead className="pl-6">Name</TableHead>
                     <TableHead>Slug</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>Approval</TableHead>
+                    <TableHead>Requested by</TableHead>
+                    <TableHead>Active</TableHead>
                     <TableHead>Created</TableHead>
                     <TableHead className="text-right pr-6">Actions</TableHead>
                   </TableRow>
@@ -342,18 +404,12 @@ export default function SkillsPage() {
                 <TableBody>
                   {[...Array(8)].map((_, i) => (
                     <TableRow key={i} className="border-b border-border">
-                      <TableCell className="pl-6">
-                        <Skeleton className="h-5 w-36" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-28" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-6 w-16 rounded-full" />
-                      </TableCell>
-                      <TableCell>
-                        <Skeleton className="h-4 w-24" />
-                      </TableCell>
+                      <TableCell className="pl-6"><Skeleton className="h-5 w-36" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-20" /></TableCell>
+                      <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-24" /></TableCell>
                       <TableCell className="text-right pr-6">
                         <div className="flex items-center justify-end gap-2">
                           <Skeleton className="h-8 w-8 rounded-lg" />
@@ -375,7 +431,9 @@ export default function SkillsPage() {
                 <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                   <TableHead className="pl-6">Name</TableHead>
                   <TableHead>Slug</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Approval</TableHead>
+                  <TableHead>Requested by</TableHead>
+                  <TableHead>Active</TableHead>
                   <TableHead>Created</TableHead>
                   <TableHead className="text-right pr-6">Actions</TableHead>
                 </TableRow>
@@ -386,6 +444,17 @@ export default function SkillsPage() {
                     <TableCell className="pl-6 font-medium text-foreground">{skill.name}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{skill.slug}</TableCell>
                     <TableCell>
+                      <Badge
+                        variant={skill.approvalStatus === 'APPROVED' ? 'default' : skill.approvalStatus === 'PENDING' ? 'secondary' : 'destructive'}
+                        className="rounded-full"
+                      >
+                        {skill.approvalStatus === 'PENDING' ? 'Pending' : skill.approvalStatus === 'APPROVED' ? 'Approved' : 'Rejected'}
+                      </Badge>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {skill.createdBy ? `${skill.createdBy.name || skill.createdBy.email || '—'}` : '—'}
+                    </TableCell>
+                    <TableCell>
                       <Badge variant={skill.isActive ? "default" : "secondary"} className="rounded-full">
                         {skill.isActive ? 'Active' : 'Inactive'}
                       </Badge>
@@ -394,7 +463,31 @@ export default function SkillsPage() {
                       {new Date(skill.createdAt).toLocaleDateString()}
                     </TableCell>
                     <TableCell className="text-right pr-6">
-                      <div className="flex items-center justify-end gap-0.5">
+                      <div className="flex items-center justify-end gap-0.5 flex-wrap">
+                        {skill.approvalStatus === 'PENDING' && (
+                          <>
+                            <Button
+                              variant="default"
+                              size="sm"
+                              onClick={() => handleApproveSkill(skill)}
+                              disabled={approvingSkillId === skill.id}
+                              className="h-8"
+                            >
+                              {approvingSkillId === skill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                              <span className="ml-1">Approve</span>
+                            </Button>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRejectSkill(skill)}
+                              disabled={rejectingSkillId === skill.id}
+                              className="h-8"
+                            >
+                              {rejectingSkillId === skill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                              <span className="ml-1">Reject</span>
+                            </Button>
+                          </>
+                        )}
                         <Button
                           variant="ghost"
                           size="icon"

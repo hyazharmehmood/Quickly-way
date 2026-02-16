@@ -262,7 +262,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                         <div className="relative aspect-video rounded-3xl overflow-hidden bg-black group">
                                             {service.coverType === 'TEXT' && currentImageIndex === 0 ? (
                                                 <div className={`w-full h-full ${service.coverColor || 'bg-black'} flex items-center justify-center p-10 text-center`}>
-                                                    <span className="text-white font-bold text-4xl md:text-5xl leading-tight line-clamp-4 break-words" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
+                                                    <span className="text-white font-bold text-3xl md:text-4xl leading-tight line-clamp-4 break-words" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.3)' }}>
                                                         {service.coverText}
                                                     </span>
                                                 </div>

@@ -41,6 +41,9 @@ export default function SEOPage() {
     const [selectedKeyword, setSelectedKeyword] = useState(null);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [togglingKeywords, setTogglingKeywords] = useState(new Set());
+    const [filterApproval, setFilterApproval] = useState(null);
+    const [approvingKeywordId, setApprovingKeywordId] = useState(null);
+    const [rejectingKeywordId, setRejectingKeywordId] = useState(null);
     const [formData, setFormData] = useState({
         keyword: '',
         isActive: true,
@@ -48,12 +51,14 @@ export default function SEOPage() {
 
     useEffect(() => {
         fetchKeywords();
-    }, []);
+    }, [filterApproval]);
 
     const fetchKeywords = async () => {
         try {
-
-            const response = await api.get('/admin/keywords');
+            setLoading(true);
+            const params = new URLSearchParams();
+            if (filterApproval) params.append('approvalStatus', filterApproval);
+            const response = await api.get(`/admin/keywords?${params.toString()}`);
             if (response.data.success) {
                 setKeywords(response.data.keywords || []);
             }
@@ -62,6 +67,36 @@ export default function SEOPage() {
             toast.error('Failed to fetch keywords');
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleApproveKeyword = async (item) => {
+        setApprovingKeywordId(item.id);
+        try {
+            const res = await api.patch(`/admin/keywords/${item.id}`, { approvalStatus: 'APPROVED' });
+            if (res.data.success) {
+                toast.success(`"${item.keyword}" approved — now visible to all`);
+                fetchKeywords();
+            }
+        } catch (e) {
+            toast.error(e.response?.data?.error || 'Failed to approve');
+        } finally {
+            setApprovingKeywordId(null);
+        }
+    };
+
+    const handleRejectKeyword = async (item) => {
+        setRejectingKeywordId(item.id);
+        try {
+            const res = await api.patch(`/admin/keywords/${item.id}`, { approvalStatus: 'REJECTED' });
+            if (res.data.success) {
+                toast.success(`"${item.keyword}" rejected — only requester will see it`);
+                fetchKeywords();
+            }
+        } catch (e) {
+            toast.error(e.response?.data?.error || 'Failed to reject');
+        } finally {
+            setRejectingKeywordId(null);
         }
     };
 
@@ -211,14 +246,21 @@ export default function SEOPage() {
                         <CardTitle className="text-xl font-normal text-foreground">Keyword Tracking</CardTitle>
                         <p className="text-muted-foreground font-normal mt-0.5 text-sm">Monitor search engine visibility for core terms</p>
                     </div>
-                    <Button
-                        onClick={() => setIsCreateDialogOpen(true)}
-                        variant="default"
-                        className=""
-                    >
-                        <Plus className="w-4 h-4 " />
-                        Add Keyword
-                    </Button>
+                    <div className="flex items-center gap-2 flex-wrap">
+                        <span className="text-xs text-muted-foreground">Approval:</span>
+                        <Button variant={filterApproval === null ? 'default' : 'outline'} size="sm" onClick={() => setFilterApproval(null)}>All</Button>
+                        <Button variant={filterApproval === 'PENDING' ? 'default' : 'outline'} size="sm" onClick={() => setFilterApproval('PENDING')}>Pending</Button>
+                        <Button variant={filterApproval === 'APPROVED' ? 'default' : 'outline'} size="sm" onClick={() => setFilterApproval('APPROVED')}>Approved</Button>
+                        <Button variant={filterApproval === 'REJECTED' ? 'default' : 'outline'} size="sm" onClick={() => setFilterApproval('REJECTED')}>Rejected</Button>
+                        <Button
+                            onClick={() => setIsCreateDialogOpen(true)}
+                            variant="default"
+                            className="ml-2"
+                        >
+                            <Plus className="w-4 h-4 " />
+                            Add Keyword
+                        </Button>
+                    </div>
                 </CardHeader>
                 <CardContent className="p-0">
                     {loading ? (
@@ -270,15 +312,17 @@ export default function SEOPage() {
                                     <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Target Keyword</TableHead>
                                     <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Monthly Vol.</TableHead>
                                     <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Difficulty</TableHead>
-                                    <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Current Rank</TableHead>
-                                    <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Status</TableHead>
-                                    <TableHead className="px-4 py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Actions</TableHead>
-                                </TableRow>
+                                        <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Current Rank</TableHead>
+                                        <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Approval</TableHead>
+                                        <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Requested by</TableHead>
+                                        <TableHead className="px-4 py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Status</TableHead>
+                                        <TableHead className="px-4 py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.2em] whitespace-nowrap">Actions</TableHead>
+                                    </TableRow>
                             </TableHeader>
                             <TableBody>
                                 {keywords.length === 0 ? (
                                     <TableRow>
-                                        <TableCell colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
+                                        <TableCell colSpan={8} className="px-4 py-8 text-center text-muted-foreground">
                                             No keywords found. Click "Add Keyword" to create one.
                                         </TableCell>
                                     </TableRow>
@@ -308,12 +352,35 @@ export default function SEOPage() {
                                                 {item.rank ? `#${item.rank}` : '-'}
                                             </TableCell>
                                             <TableCell className="px-4 py-6">
+                                                <Badge
+                                                    variant={item.approvalStatus === 'APPROVED' ? 'default' : item.approvalStatus === 'PENDING' ? 'secondary' : 'destructive'}
+                                                    className="rounded-full"
+                                                >
+                                                    {item.approvalStatus === 'PENDING' ? 'Pending' : item.approvalStatus === 'APPROVED' ? 'Approved' : 'Rejected'}
+                                                </Badge>
+                                            </TableCell>
+                                            <TableCell className="px-4 py-6 text-sm text-muted-foreground">
+                                                {item.createdBy ? (item.createdBy.name || item.createdBy.email || '—') : '—'}
+                                            </TableCell>
+                                            <TableCell className="px-4 py-6">
                                                 <Badge variant={item.isActive ? "default" : "secondary"}>
                                                     {item.isActive ? 'Active' : 'Inactive'}
                                                 </Badge>
                                             </TableCell>
                                             <TableCell className="px-4 py-6 text-right">
-                                                <div className="flex items-center justify-end gap-1">
+                                                <div className="flex items-center justify-end gap-1 flex-wrap">
+                                                    {item.approvalStatus === 'PENDING' && (
+                                                        <>
+                                                            <Button variant="default" size="sm" onClick={() => handleApproveKeyword(item)} disabled={approvingKeywordId === item.id} className="h-8">
+                                                                {approvingKeywordId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                                                                <span className="ml-1">Approve</span>
+                                                            </Button>
+                                                            <Button variant="destructive" size="sm" onClick={() => handleRejectKeyword(item)} disabled={rejectingKeywordId === item.id} className="h-8">
+                                                                {rejectingKeywordId === item.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
+                                                                <span className="ml-1">Reject</span>
+                                                            </Button>
+                                                        </>
+                                                    )}
                                                     <Button
                                                         variant="ghost"
                                                         size="icon"

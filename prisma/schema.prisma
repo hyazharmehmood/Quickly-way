@@ -53,6 +53,8 @@ model User {
   notifications             Notification[]
   rating                    Float?                   @default(0) // Average rating from reviews
   reviewCount               Int                       @default(0) // Total number of reviews received
+  requestedSkills           Skill[]                  @relation("RequestedSkills") // Skills requested by this user (pending/rejected)
+  requestedKeywords         Keyword[]                @relation("RequestedKeywords") // Keywords requested by this user (pending/rejected)
 }
 
 model Project {
@@ -223,21 +225,26 @@ model Category {
 }
 
 model Skill {
-  id          String        @id @default(uuid())
-  categoryId  String
-  name        String
-  slug        String
-  isActive    Boolean       @default(true)
-  createdAt   DateTime      @default(now())
-  updatedAt   DateTime      @updatedAt
-  category    Category      @relation(fields: [categoryId], references: [id], onDelete: Cascade)
-  services    ServiceSkill[]
+  id               String              @id @default(uuid())
+  categoryId       String
+  name             String
+  slug             String
+  isActive         Boolean             @default(true)
+  approvalStatus   SkillApprovalStatus @default(APPROVED) // PENDING = only creator sees; APPROVED = global; REJECTED = only creator sees
+  createdByUserId  String?             // Who requested (for PENDING/REJECTED); null = admin-created or legacy
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  category         Category            @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  createdBy        User?               @relation("RequestedSkills", fields: [createdByUserId], references: [id], onDelete: SetNull)
+  services         ServiceSkill[]
 
   @@unique([categoryId, name]) // Skill name unique within category
   @@unique([categoryId, slug]) // Slug unique within category
   @@index([categoryId])
   @@index([slug])
   @@index([isActive])
+  @@index([approvalStatus])
+  @@index([createdByUserId])
 }
 
 model ServiceSkill {
@@ -253,19 +260,30 @@ model ServiceSkill {
   @@index([skillId])
 }
 
+enum KeywordApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
 model Keyword {
-  id          String   @id @default(uuid())
-  keyword     String   @unique
-  volume      String?  // e.g., "12k", "4.5k"
-  difficulty  String?  // "Low", "Medium", "High"
-  rank        Int?     // Current search rank
-  trend       String?  // "up", "down", "stable"
-  isActive    Boolean  @default(true)
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  id               String                @id @default(uuid())
+  keyword          String                @unique
+  volume           String?               // e.g., "12k", "4.5k"
+  difficulty       String?               // "Low", "Medium", "High"
+  rank             Int?                  // Current search rank
+  trend            String?               // "up", "down", "stable"
+  isActive         Boolean               @default(true)
+  approvalStatus   KeywordApprovalStatus @default(APPROVED)
+  createdByUserId  String?               // Who requested (for PENDING/REJECTED)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  createdBy        User?                 @relation("RequestedKeywords", fields: [createdByUserId], references: [id], onDelete: SetNull)
 
   @@index([keyword])
   @@index([isActive])
+  @@index([approvalStatus])
+  @@index([createdByUserId])
 }
 
 // Trending search keywords - count incremented on each search
@@ -291,6 +309,12 @@ enum SellerStatus {
   PENDING
   APPROVED
   REJECTED
+}
+
+enum SkillApprovalStatus {
+  PENDING   // Freelancer requested; only creator sees it until admin approves/rejects
+  APPROVED  // Admin approved; visible to all freelancers in dropdown
+  REJECTED  // Admin rejected; only creator sees it, labeled "Rejected"
 }
 
 enum ProjectStatus {

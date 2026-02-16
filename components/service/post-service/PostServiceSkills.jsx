@@ -31,7 +31,7 @@ const PostServiceSkills = (props) => {
                     initialSkillIds={initialSkillIds}
                 />
 
-                <div className="pt-2 border-t border-border">
+                <div className="space-y-2 py-2 mt-4 border-t border-border">
                     <KeywordSelector
                     selectedKeywords={searchTags}
                     onKeywordsChange={(newKeywords) => {

@@ -15,8 +15,12 @@ export async function GET(request) {
     const search = searchParams.get('search');
 
     const where = {};
-    if (isActive !== null) {
+    if (isActive !== null && isActive !== undefined && isActive !== '') {
       where.isActive = isActive === 'true';
+    }
+    const approvalFilter = searchParams.get('approvalStatus');
+    if (approvalFilter) {
+      where.approvalStatus = approvalFilter;
     }
     if (search) {
       where.keyword = {
@@ -27,6 +31,11 @@ export async function GET(request) {
 
     const keywords = await prisma.keyword.findMany({
       where,
+      include: {
+        createdBy: {
+          select: { id: true, name: true, email: true },
+        },
+      },
       orderBy: [
         { createdAt: 'desc' },
       ],

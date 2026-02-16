@@ -89,7 +89,10 @@ export default function ServiceDetailsPage() {
                     coverColor: data.coverColor,
                     galleryUrls: getUniqueGalleryUrls(),
                     bio: data.freelancer?.bio || "",
-                    skills: data.skills?.map(ss => ss.skill?.name || '').filter(Boolean) || [],
+                    skills: data.skills?.filter(ss => {
+                        const status = ss.skill?.approvalStatus;
+                        return (status === 'APPROVED' || status == null) && ss.skill?.name;
+                    }).map(ss => ss.skill?.name || '').filter(Boolean) || [],
                     yearsExperience: 1,
                     provider: {
                         name: data.freelancer?.name || "Freelancer",
