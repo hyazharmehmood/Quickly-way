@@ -154,8 +154,10 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     const [priceBreakdowns, setPriceBreakdowns] = useState([
         { id: `pb-0`, text: "", price: "", included: "" }
     ]);
-    const [paymentRegion, setPaymentRegion] = useState("GLOBAL");
+    const [paymentRegion, setPaymentRegion] = useState("SAUDI_ARABIA");
     const [paymentMethods, setPaymentMethods] = useState([]);
+    const [paymentMethodsText, setPaymentMethodsText] = useState("");
+    const [paymentMethodsTextAr, setPaymentMethodsTextAr] = useState("");
     const [availableForJob, setAvailableForJob] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -217,9 +219,11 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 setPriceBreakdowns(initialData.priceBreakdowns);
             }
 
-            setPaymentRegion(initialData.paymentRegion || "GLOBAL");
+            setPaymentRegion(initialData.paymentRegion || "SAUDI_ARABIA");
             setPaymentMethods(Array.isArray(initialData.paymentMethods) ? initialData.paymentMethods : []);
-            setAvailableForJob(initialData.freelancer?.availableForJob || false); // If this exists
+            setPaymentMethodsText(initialData.paymentMethodsText || "");
+            setPaymentMethodsTextAr(initialData.paymentMethodsTextAr || "");
+            setAvailableForJob(initialData.freelancer?.employmentStatus === "I am ready for full-time employment");
         }
     }, [initialData]);
 
@@ -279,8 +283,10 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 images: validImages,
                 searchTags, // Add tags to payload
                 skillIds: skills, // Add skill IDs to payload for service
-                paymentRegion: paymentRegion || "GLOBAL",
+                paymentRegion: paymentRegion || "SAUDI_ARABIA",
                 paymentMethods,
+                paymentMethodsText: paymentMethodsText?.trim() || null,
+                paymentMethodsTextAr: paymentMethodsTextAr?.trim() || null,
 
                 showEmail: user?.showEmail || false,
                 showMobile: user?.showMobile || false,
@@ -298,7 +304,11 @@ const PostService = ({ onCancel, onSave, initialData }) => {
 
             const data = response.data;
 
-            // 4. Cleanup / Redirect
+            // 4. Update user profile with employment status (stored on user, not service)
+            const employmentStatus = availableForJob ? "I am ready for full-time employment" : null;
+            await api.put('/auth/profile', { employmentStatus }).catch(() => {});
+
+            // 5. Cleanup / Redirect
             if (onSave) onSave(data);
 
         } catch (error) {
@@ -353,6 +363,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                         priceBreakdowns={priceBreakdowns} setPriceBreakdowns={setPriceBreakdowns}
                         paymentRegion={paymentRegion} setPaymentRegion={setPaymentRegion}
                         paymentMethods={paymentMethods} setPaymentMethods={setPaymentMethods}
+                        paymentMethodsText={paymentMethodsText} setPaymentMethodsText={setPaymentMethodsText}
                         availableForJob={availableForJob} setAvailableForJob={setAvailableForJob}
                         defaultPriceBreakdowns={DEFAULT_PRICE_BREAKDOWNS}
                         onBack={() => setStep(3)}

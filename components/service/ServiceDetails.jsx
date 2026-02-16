@@ -1,8 +1,11 @@
+"use client";
+
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
     Heart, MapPin, Star, User, ChevronLeft, ChevronRight,
-    CheckCircle, Clock, ShieldAlert, Plus
+    CheckCircle, Clock, ShieldAlert, Plus, MessageCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,6 +15,7 @@ import ReportModal from './modals/ReportModal';
 import SubmitReviewModal from './modals/SubmitReviewModal';
 import { ServiceCard } from './ServiceCard';
 import { UserStatus } from '@/components/chat/UserStatus';
+import useAuthStore from '@/store/useAuthStore';
 
 const getTimezoneFromLocation = (location) => {
     const loc = location?.toLowerCase() || '';
@@ -23,6 +27,8 @@ const getTimezoneFromLocation = (location) => {
 };
 
 const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNavigateToService, onContact }) => {
+    const router = useRouter();
+    const { isLoggedIn } = useAuthStore();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentTime, setCurrentTime] = useState("");
     const [timeZoneDisplay, setTimeZoneDisplay] = useState("");
@@ -51,6 +57,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
     }, [service.id, service.reviewsList, propReviews]);
 
     useEffect(() => {
+        console.log('ServiceDetails: service.provider.location', service);
         if (!service.provider?.location) return;
 
         const providerTimezone = getTimezoneFromLocation(service.provider.location);
@@ -93,6 +100,14 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
         if (galleryLength > 0) {
             setCurrentImageIndex((prev) => (prev - 1 + galleryLength) % galleryLength);
         }
+    };
+
+    const handleContactMeClick = () => {
+        if (!isLoggedIn) {
+            router.push('/login');
+            return;
+        }
+        setShowContactModal(true);
     };
 
     const handleSubmitReview = (reviewData) => {
@@ -167,54 +182,74 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                 {service.provider.name}
                                             </Link>
                                             <div className="flex flex-wrap items-center gap-4 mt-1 text-base text-gray-700">
-                                                <div className="flex items-center gap-2">
-                                                    <Star className="w-5 h-5 fill-[#ff9529] text-[#ff9529]" />
-                                                    <span className="font-bold">{service.rating}</span>
+                                                <div className="flex items-center gap-1.5">
+                                                    <Star className="w-5 h-5 fill-yellow-400 text-yellow-400" />
+                                                    <span className="font-bold">{service.rating?.toFixed(1)}</span>
                                                 </div>
                                                 <span className="text-gray-300">|</span>
-                                                <span className="font-medium text-gray-500">{service.reviewCount} ratings</span>
+                                                <span className="font-medium text-gray-500">{service.reviewCount?.toFixed(0)} ratings</span>
                                                 <span className="text-gray-300">|</span>
-                                                <span className="font-medium text-gray-500">{service.hires} hires</span>
+                                                <span className="font-medium text-gray-500">{service.hires?.toFixed(0) } hires</span>
                                             </div>
                                         </div>
-                                        {/* <Button variant="outline" className="flex items-center gap-2 transition-all flex-shrink-0">
-                                            <Heart className="w-5 h-5" />
-                                            <span>Favorite</span>
-                                        </Button> */}
+                                        <Button type="button" variant="outline" className="">
+                                            <Heart className="w-4 h-4" />
+                                            Favorite
+                                        </Button>
                                     </div>
 
-                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4  text-gray-600 max-w-3xl">
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4 text-gray-600 max-w-3xl">
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600 shrink-0">
                                                 <MapPin className="w-4 h-4" />
                                             </div>
                                             <span>{service.provider.location}</span>
                                         </div>
+                                       
+                                        {service.provider.languages && service.provider.languages.length > 0 && (
+                                            <div className="flex items-center gap-2">
+                                                <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600 shrink-0">
+                                                    <MessageCircle className="w-4 h-4" />
+                                                </div>
+                                                <span className="line-clamp-1">
+                                                    {service.provider.languages.length <= 3
+                                                        ? service.provider.languages.join(', ')
+                                                        : `${service.provider.languages.slice(0, 2).join(', ')} ...`}
+                                                </span>
+                                            </div>
+                                        )}
+                                     
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600 shrink-0">
                                                 <User className="w-4 h-4" />
                                             </div>
-                                            <span>Member since {service.provider.memberSince}</span>
+                                            <span>Member since : {service.provider.memberSince}</span>
                                         </div>
                                         <div className="flex items-center gap-2">
-                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600">
+                                            <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600 shrink-0">
                                                 <CheckCircle className="w-4 h-4" />
                                             </div>
-                                            <span>{service.yearsExperience} Years of experience</span>
+                                            <span>Years of experience : {service.yearsExperience} </span>
                                         </div>
                                     </div>
 
-                                    <div className="flex flex-wrap items-center gap-4 mt-4 border-t border-gray-50 pt-4">
-                                        <Button onClick={() => setShowContactModal(true)}
+                                    <div className="flex flex-wrap flex-row justify-between items-center gap-4 mt-4 border-t border-gray-50 pt-4">
+                                        <Button onClick={handleContactMeClick}
                                             variant="default"
+                                       
                                             size="lg"
                                         >
                                             Contact me
                                         </Button>
-                                        <div className="flex items-center gap-2 text-lg text-gray-500 font-medium">
-                                            <Clock className="w-5 h-5 text-gray-400" />
-                                            <span>{currentTime}</span>
-                                        </div>
+                                          
+                                            <div className="text-base  flex-1 justify-center flex items-center gap-2  ">
+                                                {service.freelancerId ?<><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-green-600">Online</span></> : <><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-gray-500">Offline</span></>}
+                                            </div> 
+                                            <div className="flex-1 justify-center flex items-center gap-2 text-base text-gray-500 font-medium">
+                                                <Clock className="w-5 h-5 text-gray-400" />
+                                                <span>{currentTime}</span>
+                                            </div>
+                                       
                                     </div>
                                 </div>
                             </CardContent>
@@ -272,7 +307,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                 <CardContent className="p-4 md:p-6 gap-1  ">
                                     <h3 className="heading-3  ">Description</h3>
                                 
-                                    <p className="text-base text-gray-700 leading-relaxed font-normal">
+                                    <p className="text-base text-gray-700 break-all leading-relaxed font-normal">
                                         {service.description}
                                     </p>
                                 </CardContent>
@@ -364,7 +399,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                     </ul>
 
                                     <Button
-                                        onClick={() => setShowContactModal(true)}
+                                        onClick={handleContactMeClick}
                                         className="w-full"
                                         variant="default"
 
@@ -374,12 +409,14 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                 </CardContent>
                             </Card>
 
+                         
+
                             {service.provider?.availability && (
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 ">
                                         <div className="flex justify-between items-center mb-4">
                                             <h3 className="heading-3  ">Working hours</h3>
-                                            <Badge variant="secondary" size="default" className="text-sm font-medium text-green-600 ">Live</Badge>
+                                            <span className='flex gap-2'>{service.freelancerId ?<><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-green-600">Online</span></> : <><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-gray-500">Offline</span></>}</span>
                                         </div>
                                         <div className="text-base text-gray-500 font-medium mb-6">
                                             Typical Response Time: <span className="text-gray-900 text-base font-semibold">1 Hour</span>
@@ -403,12 +440,19 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                     </CardContent>
                                 </Card>
                             )}
-
+                           {service.provider?.employmentStatus && (
+                                <Card className="border-none shadow-sm">
+                                    <CardContent className="p-4 md:p-6">
+                                        <h3 className="heading-3 mb-2">Employment Status</h3>
+                                        <p className="text-base">{service.provider.employmentStatus}</p>
+                                    </CardContent>
+                                </Card>
+                            )}
                             <Card className="border-none shadow-sm">
                                 <CardContent className="p-4 md:p-6">
                                     <h3 className="heading-3 mb-3">Payment methods</h3>
                                     {service.paymentMethods?.length > 0 ? (
-                                        <ul className="space-y-2 list-none p-0 m-0">
+                                        <ul className="space-y-2 list-none p-0 m-0 mb-4">
                                             {service.paymentMethods.map((method, index) => (
                                                 <li
                                                     key={index}
@@ -423,7 +467,11 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                 </li>
                                             ))}
                                         </ul>
-                                    ) : (
+                                    ) : null}
+                                    {service.paymentMethodsText && (
+                                        <p className="text-base text-gray-800 font-medium">{service.paymentMethodsText}</p>
+                                    )}
+                                    {!service.paymentMethods?.length && !service.paymentMethodsText && (
                                         <p className="text-base text-gray-500 leading-relaxed font-normal">
                                             Payment methods not specified.
                                         </p>
@@ -457,15 +505,15 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8 items-center">
-                                <div className="text-center p-8 bg-[#f8faff] rounded-[2rem] border border-gray-50">
-                                    <div className="text-3xl font-black text-gray-900 mb-4">{service.rating}</div>
+                                <Card className="text-center p-8  border-none shadow-none bg-gray-50">
+                                    <div className="text-3xl font-black text-gray-900 mb-4">{service.rating?.toFixed(1)}</div>
                                     <div className="flex justify-center gap-1.5 mb-3">
                                     {[1, 2, 3, 4, 5].map(i => (
-                                        <Star key={i} className={`w-6 h-6 ${i <= Math.round(service.rating) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
+                                        <Star key={i} className={`w-6 h-6 ${i <= Math.round(service.rating?.toFixed(1)) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
                                     ))}
                                     </div>
-                                    <div className="text-sm  font-bold uppercase tracking-widest">{service.reviewCount} total reviews</div>
-                                </div>
+                                    <div className="text-sm  font-bold uppercase tracking-widest">{service.reviewCount?.toFixed(0)} total reviews</div>
+                                </Card>
                                 <div className="lg:col-span-2 space-y-4">
                                     {[5, 4, 3, 2, 1].map((num) => {
                                         // Calculate actual rating distribution from reviews

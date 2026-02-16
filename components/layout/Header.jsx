@@ -429,6 +429,14 @@ export function Header() {
                       {/* CLIENT MENU */}
                       {(normalizedRole === 'CLIENT' || normalizedRole === '' || !role) && !isAdmin && (
                         <>
+                         {canAccessFreelancerDashboard && (
+                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer')} className="cursor-pointer">
+                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                <LayoutDashboard className="w-4 h-4" />
+                              </div>
+                              <span className="text-sm font-medium">Seller Dashboard</span>
+                            </DropdownMenuItem>
+                          )}
                           <DropdownMenuItem onClick={() => router.push('/profile')} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <UserIcon className="w-4 h-4" />
@@ -477,14 +485,7 @@ export function Header() {
                             </div>
                             <span className="text-sm font-medium">Help & Support</span>
                           </DropdownMenuItem>
-                          {canAccessFreelancerDashboard && (
-                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer')} className="cursor-pointer">
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
-                                <LayoutDashboard className="w-4 h-4" />
-                              </div>
-                              <span className="text-sm font-medium">Seller dashboard</span>
-                            </DropdownMenuItem>
-                          )}
+                         
                         </>
                       )}
 

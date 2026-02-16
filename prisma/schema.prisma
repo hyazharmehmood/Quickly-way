@@ -30,6 +30,7 @@ model User {
   phoneNumber              String?
   showEmail                Boolean                   @default(false)
   showMobile               Boolean                   @default(false)
+  employmentStatus         String?                   // e.g. "I am ready for full-time employment" when checkbox checked
   conversationParticipants ConversationParticipant[] @relation("ConversationParticipants")
   messages                 Message[]
   clientProjects           Project[]                 @relation("ClientProjects")
@@ -133,8 +134,10 @@ model Service {
   coverText       String?
   coverType       String        @default("IMAGE")
   searchTags      String[]
-  paymentRegion   String?       // e.g. "SAUDI_ARABIA", "GLOBAL"
+  paymentRegion   String?       // e.g. "SAUDI_ARABIA", "GLOBAL" - default SAUDI_ARABIA (backend only)
   paymentMethods  String[]      // Selected method labels, e.g. ["Mada (HyperPay)", "Moyasar"]
+  paymentMethodsText   String?  // Custom text e.g. "I accept payments via quicklyway"
+  paymentMethodsTextAr String?  // Arabic version of payment methods text
   freelancer      User          @relation(fields: [freelancerId], references: [id])
   skills          ServiceSkill[]
   orders          Order[]

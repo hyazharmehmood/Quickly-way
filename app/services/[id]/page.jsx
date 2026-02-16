@@ -98,9 +98,12 @@ export default function ServiceDetailsPage() {
                         languages: data.freelancer?.languages || ["English"],
                         memberSince: new Date(data.freelancer?.createdAt).getFullYear().toString(),
                         isOnline: false,
-                        availability: data.freelancer?.availability || []
+                        availability: data.freelancer?.availability || [],
+                        employmentStatus: data.freelancer?.employmentStatus || null,
                     },
                     paymentMethods: data.paymentMethods && Array.isArray(data.paymentMethods) ? data.paymentMethods : [],
+                    paymentMethodsText: data.paymentMethodsText || null,
+                    paymentMethodsTextAr: data.paymentMethodsTextAr || null,
                     reviewsList: transformedReviews,
                     freelancerId: data.freelancerId || data.freelancer?.id,
                     rawData: data

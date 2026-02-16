@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { CURRENCIES, PAYMENT_REGIONS, getPaymentMethodsByRegion } from '@/utils/constants';
+import { CURRENCIES, getPaymentMethodsByRegion } from '@/utils/constants';
 import { Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,16 +10,35 @@ const PostServicePrice = (props) => {
         priceStr, setPriceStr,
         selectedCurrency, setSelectedCurrency,
         priceBreakdowns, setPriceBreakdowns,
-        paymentRegion, setPaymentRegion,
+        paymentRegion,
         paymentMethods, setPaymentMethods,
+        paymentMethodsText, setPaymentMethodsText,
         availableForJob, setAvailableForJob,
         onBack, onSave, onCancel,
         defaultPriceBreakdowns,
         isLoading
     } = props;
 
+    // Region fixed to Saudi Arabia (no dropdown); show only Saudi payment methods
+    const regionMethods = getPaymentMethodsByRegion(paymentRegion || 'SAUDI_ARABIA');
+    const selectedSet = new Set(paymentMethods || []);
+
+    const togglePaymentMethod = (label) => {
+        setPaymentMethods(prev => {
+            const next = new Set(prev || []);
+            if (next.has(label)) next.delete(label);
+            else next.add(label);
+            return Array.from(next);
+        });
+    };
+
+    const selectAllPaymentMethods = () => {
+        setPaymentMethods(regionMethods.map(m => m.label));
+    };
+
     const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
     const [isManualPriceEdit, setIsManualPriceEdit] = useState(false);
+    const [isPriceGroupFocused, setIsPriceGroupFocused] = useState(false);
 
     // Auto-calculate total price from breakdowns (deferred to avoid setState-during-render)
     useEffect(() => {
@@ -74,22 +93,6 @@ const PostServicePrice = (props) => {
 
 
 
-    const regionMethods = getPaymentMethodsByRegion(paymentRegion || 'GLOBAL');
-    const selectedSet = new Set(paymentMethods || []);
-
-    const togglePaymentMethod = (label) => {
-        setPaymentMethods(prev => {
-            const next = new Set(prev || []);
-            if (next.has(label)) next.delete(label);
-            else next.add(label);
-            return Array.from(next);
-        });
-    };
-
-    const selectAllPaymentMethods = () => {
-        setPaymentMethods(regionMethods.map(m => m.label));
-    };
-
     return (
         <div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
@@ -102,7 +105,7 @@ const PostServicePrice = (props) => {
                                 <select
                                     value={selectedCurrency}
                                     onChange={(e) => setSelectedCurrency(e.target.value)}
-                                    className="appearance-none bg-gray-50 border border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-11"
+                                    className="appearance-none bg-gray-50 border border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-6 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-11"
                                 >
                                     {CURRENCIES.map(c => (
                                         <option key={c.code} value={c.code}>{c.code}</option>
@@ -210,51 +213,39 @@ const PostServicePrice = (props) => {
                             })}
                         </div>
 
-                        {/* Add New Button */}
-                        <button
-                            type="button"
-                            onClick={() => {
-                                setPriceBreakdowns([
-                                    ...priceBreakdowns,
-                                    { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
-                                ]);
-                                setIsManualPriceEdit(false); // Allow auto-calculation after adding new breakdown
-                            }}
-                            className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
-                        >
-                            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                            Add another price option
-                        </button>
+                        {/* Add New Button - max 5 price breakdowns */}
+                        {priceBreakdowns.length < 5 && (
+                            <button
+                                type="button"
+                                onClick={() => {
+                                    if (priceBreakdowns.length >= 5) return;
+                                    setPriceBreakdowns([
+                                        ...priceBreakdowns,
+                                        { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
+                                    ]);
+                                    setIsManualPriceEdit(false); // Allow auto-calculation after adding new breakdown
+                                }}
+                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
+                            >
+                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                Add another price option
+                            </button>
+                        )}
                     </div>
                 </div>
 
 
             </div>
 
-            {/* Row 5: Payment methods (Fiverr-style: region-based, list design) */}
+            {/* Row 5: Payment methods - Saudi Arabia only (no region dropdown), checkboxes + description */}
             <div className="mb-6 space-y-4">
                 <div>
                     <label className="block text-base font-medium text-gray-900">Payment methods</label>
-                    <p className="text-sm text-gray-500 mt-0.5">Choose your payment region. Buyers will only be able to pay using the methods you enable.</p>
+                    <p className="text-sm text-gray-500 mt-0.5">Choose the payment methods you accept.</p>
                 </div>
                 <div className="space-y-2">
-                    <label className="block text-sm font-medium text-gray-700">Region</label>
-                    <select
-                        value={paymentRegion || 'GLOBAL'}
-                        onChange={(e) => {
-                            setPaymentRegion(e.target.value);
-                            setPaymentMethods([]);
-                        }}
-                        className="w-full max-w-xs bg-gray-50 border border-gray-200 rounded-xl py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-2 focus:ring-green-500/20 focus:border-green-500"
-                    >
-                        {PAYMENT_REGIONS.map((r) => (
-                            <option key={r.value} value={r.value}>{r.label}</option>
-                        ))}
-                    </select>
-                </div>
-                <div className="space-y-2">
-                    <div className="flex items-center justify-between">
-                        <label className="block text-sm font-medium text-gray-700">Accept these payment methods</label>
+                    <div className="flex items-center justify-end">
+                        {/* <label className="block text-sm font-medium text-gray-700">Accept these payment methods</label> */}
                         <button
                             type="button"
                             onClick={selectAllPaymentMethods}
@@ -302,18 +293,44 @@ const PostServicePrice = (props) => {
                         </p>
                     )}
                 </div>
+                <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1.5">Payment methods</label>
+                    <Textarea
+                        value={paymentMethodsText || ""}
+                        onChange={(e) => setPaymentMethodsText(e.target.value)}
+                        placeholder="e.g. I accept payments via quicklyway"
+                        rows={3}
+                        className="w-full"
+                    />
+                </div>
             </div>
 
             {/* Row 6: Employment Status */}
+                       {/* Row 6: Employment Status - same card style as payment methods */}
             <div className="mb-10">
-                <label className="flex items-center gap-3 cursor-pointer p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                    <Input
-                        type="checkbox"
-                        checked={availableForJob}
-                        onChange={(e) => setAvailableForJob(e.target.checked)}
-                        className="w-5 h-5 rounded border-gray-300 text-green-600 focus:ring-green-500 accent-[#10b981]"
-                    />
-                    <span className="text-base text-gray-700 font-medium">I am ready for full-time employment</span>
+                <label
+                    className={`flex items-center gap-4 cursor-pointer rounded-xl border px-4 py-3.5 transition-all ${
+                        availableForJob
+                            ? 'border-primary shadow-sm'
+                            : 'border-gray-200 bg-white hover:border-gray-300 hover:bg-gray-50/50'
+                    }`}
+                >
+                    <span className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${availableForJob ? 'bg-green-500 border-green-500' : 'bg-white border-gray-300'}`}>
+                        <Input
+                            type="checkbox"
+                            checked={availableForJob}
+                            onChange={(e) => setAvailableForJob(e.target.checked)}
+                            className="sr-only"
+                        />
+                        {availableForJob ? (
+                            <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M5 13l4 4L19 7" />
+                            </svg>
+                        ) : null}
+                    </span>
+                    <span className={`text-sm font-medium ${availableForJob ? 'text-gray-900' : 'text-gray-700'}`}>
+                        I am ready for full-time employment
+                    </span>
                 </label>
             </div>
 
