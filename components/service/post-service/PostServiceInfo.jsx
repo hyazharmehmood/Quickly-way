@@ -1,8 +1,9 @@
 "use client";
 
 import React, { useState, useRef, useEffect, useCallback } from "react";
-import { Camera, Image as ImageIcon, AlertCircle, Trash2, GripVertical, Type, ChevronDown, Check } from "lucide-react";
+import { Camera, Image as ImageIcon, AlertCircle, Trash2, GripVertical, Type, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +13,8 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { cn } from "@/utils";
 import { toast } from "sonner";
+
+const getWordCount = (str) => (str.trim() ? str.trim().split(/\s+/).length : 0);
 
 const COVER_COLORS = [
   "bg-black",
@@ -28,6 +31,7 @@ const COVER_COLORS = [
 
 const COVER_TEXT_MIN = 4;
 const COVER_TEXT_MAX = 88;
+const COVER_TEXT_MAX_WORDS = 15;
 const GALLERY_MAX = 5;
 const MAX_IMAGE_DIMENSION = 1280;
 const TARGET_IMAGE_SIZE = 100 * 1024;
@@ -212,6 +216,10 @@ const PostServiceInfo = (props) => {
         setCoverTextError(`Minimum ${COVER_TEXT_MIN} characters required`);
         return;
       }
+      if (getWordCount(coverText) > COVER_TEXT_MAX_WORDS) {
+        setCoverTextError(`Maximum ${COVER_TEXT_MAX_WORDS} words allowed`);
+        return;
+      }
       setCoverTextError("");
     } else {
       if (!galleryImages[0]) {
@@ -260,53 +268,54 @@ const PostServiceInfo = (props) => {
           onChange={handleGalleryUpload}
         />
 
-        {/* Cover type: one button → menu → Text cover or Image */}
+        {/* Cover type: dropdown — Choose cover type, items show circle on left (no check icon), labels: Text cover / Image cover */}
         <div className="flex flex-col gap-1.5">
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 type="button"
                 variant="outline"
-                className={cn(
-                  "rounded-lg gap-2 min-w-[140px] justify-between",
-                  (coverMode === "text" || coverMode === "image") &&
-                    ""
-                )}
+                className="rounded-lg gap-2 min-w-[140px] justify-between"
                 title="Choose cover type"
               >
                 <span className="flex items-center gap-2">
                   {coverMode === "text" && <Type className="h-4 w-4 shrink-0" />}
                   {coverMode === "image" && <Camera className="h-4 w-4 shrink-0" />}
                   {!coverMode && <ImageIcon className="h-4 w-4 shrink-0" />}
-                  {coverMode === "text" ? "Text cover" : coverMode === "image" ? "Image" : "Cover type"}
+                  {coverMode === "text" ? "Text cover" : coverMode === "image" ? "Image cover" : "Cover type"}
                 </span>
                 <ChevronDown className="h-4 w-4 shrink-0 opacity-60" />
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="start" className="min-w-[180px]">
+            <DropdownMenuContent align="start" className="min-w-[200px]">
               <DropdownMenuLabel className="text-xs text-muted-foreground">
                 Choose cover type
               </DropdownMenuLabel>
               <DropdownMenuItem
-                onClick={() => {
-                  switchToText();
-                }}
+                onClick={() => switchToText()}
                 className="gap-2 cursor-pointer"
               >
-                <Type className="h-4 w-4" />
-                Text cover
-                {coverMode === "text" && <Check className="ml-auto h-4 w-4 text-emerald-600" />}
+                <span className={cn(
+                  "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                  coverMode === "text" ? "bg-green-500 border-green-500" : "bg-white border-gray-300"
+                )}>
+                  {coverMode === "text" && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
+                <Type className="h-4 w-4 shrink-0 text-gray-600" />
+                <span>Text cover</span>
               </DropdownMenuItem>
               <DropdownMenuItem
-                onClick={() => {
-                  setCoverMode("image");
-                  setCoverTextError("");
-                }}
+                onClick={() => { setCoverMode("image"); setCoverTextError(""); }}
                 className="gap-2 cursor-pointer"
               >
-                <Camera className="h-4 w-4" />
-                Image
-                {coverMode === "image" && <Check className="ml-auto h-4 w-4 text-emerald-600" />}
+                <span className={cn(
+                  "w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
+                  coverMode === "image" ? "bg-green-500 border-green-500" : "bg-white border-gray-300"
+                )}>
+                  {coverMode === "image" && <span className="w-2 h-2 rounded-full bg-white" />}
+                </span>
+                <Camera className="h-4 w-4 shrink-0 text-gray-600" />
+                <span>Image</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
@@ -346,27 +355,34 @@ const PostServiceInfo = (props) => {
               ) : (
                 <div
                   className={cn(
-                    "w-full h-full flex items-center justify-center p-4",
+                    "w-full h-full min-h-[190px] flex flex-col overflow-hidden rounded-xl",
                     coverBgColor
                   )}
                 >
-                  <textarea
-                    ref={coverTextRef}
-                    value={coverText}
-                    onChange={(e) => {
-                      setCoverText(e.target.value);
-                      clearCoverTextError();
-                    }}
-                    onBlur={() =>
-                      coverText.length > 0 &&
-                      coverText.length < COVER_TEXT_MIN &&
-                      setCoverTextError(`Minimum ${COVER_TEXT_MIN} characters`)
-                    }
-                    maxLength={COVER_TEXT_MAX}
-                    placeholder="Type your cover text..."
-                    className="w-full h-full bg-transparent text-white text-center text-2xl md:text-3xl font-extrabold resize-none focus:outline-none placeholder-white/70 leading-tight flex items-center justify-center"
-                    style={{ padding: "0 12px" }}
-                  />
+                  <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden p-4 flex items-center justify-center">
+                    <textarea
+                      ref={coverTextRef}
+                      value={coverText}
+                      onChange={(e) => {
+                        let v = e.target.value.slice(0, COVER_TEXT_MAX);
+                        const words = getWordCount(v);
+                        if (words > COVER_TEXT_MAX_WORDS) {
+                          v = v.trim().split(/\s+/).slice(0, COVER_TEXT_MAX_WORDS).join(" ").slice(0, COVER_TEXT_MAX);
+                        }
+                        setCoverText(v);
+                        clearCoverTextError();
+                      }}
+                      onBlur={() =>
+                        coverText.length > 0 &&
+                        coverText.length < COVER_TEXT_MIN &&
+                        setCoverTextError(`Minimum ${COVER_TEXT_MIN} characters`)
+                      }
+                      maxLength={COVER_TEXT_MAX}
+                      placeholder="Type your cover text..."
+                      className="w-full min-h-full bg-transparent  text-white text-center text-xl md:text-2xl font-extrabold resize-none focus:outline-none placeholder-white/70 leading-tight"
+                      style={{ padding: "0 8px" }}
+                    />
+                  </div>
                 </div>
               )}
             </div>
@@ -391,24 +407,32 @@ const PostServiceInfo = (props) => {
               </div>
             )}
 
-            <div className="flex justify-between items-center w-full max-w-[300px] min-h-5">
+            <div className="flex justify-between items-center w-full max-w-[300px] min-h-5 gap-2">
               {coverMode === "text" && coverTextError ? (
-                <p className="flex items-center gap-1.5 text-xs text-red-500">
+                <p className="flex items-center gap-1.5 text-xs text-red-500 flex-1 min-w-0">
                   <AlertCircle className="h-3.5 w-3.5 shrink-0" />
-                  {coverTextError}
+                  <span className="truncate">{coverTextError}</span>
                 </p>
               ) : (
                 <span />
               )}
               {coverMode === "text" && (
-                <span
-                  className={cn(
-                    "text-xs tabular-nums",
-                    coverText.length >= COVER_TEXT_MAX ? "text-amber-600" : "text-muted-foreground"
-                  )}
-                >
-                  {coverText.length}/{COVER_TEXT_MAX}
-                </span>
+                <div className="flex items-center gap-3 text-xs tabular-nums shrink-0">
+                  <span
+                    className={cn(
+                      getWordCount(coverText) >= COVER_TEXT_MAX_WORDS ? "text-amber-600" : "text-muted-foreground"
+                    )}
+                  >
+                    {getWordCount(coverText)}/{COVER_TEXT_MAX_WORDS} words
+                  </span>
+                  <span
+                    className={cn(
+                      coverText.length >= COVER_TEXT_MAX ? "text-amber-600" : "text-muted-foreground"
+                    )}
+                  >
+                    {coverText.length}/{COVER_TEXT_MAX}
+                  </span>
+                </div>
               )}
               {coverMode === "image" && (
                 <span className="text-xs text-muted-foreground">
