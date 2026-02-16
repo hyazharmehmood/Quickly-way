@@ -50,16 +50,25 @@ export function Header() {
   const switchToSeller = () => router.push('/dashboard/freelancer');
 
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('All Locations');
+  const [currentLocation, setCurrentLocation] = useState('All location');
   const [manualLocation, setManualLocation] = useState('');
+  const [manualCountry, setManualCountry] = useState('');
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [isResolvingManual, setIsResolvingManual] = useState(false);
-  const displayLocation = currentLocation;
+  const [isResolvingCountry, setIsResolvingCountry] = useState(false);
+  // Header display: when area/city/zip selected show city only (e.g. Lahore); else show full
+  const displayLocation = currentLocation.includes(',')
+    ? currentLocation.split(',')[0].trim()
+    : currentLocation;
 
   // Load saved location from profile when user is logged in
   useEffect(() => {
-    if (isLoggedIn && user?.location) {
-      setCurrentLocation(user.location);
+    if (!isLoggedIn) return;
+    if (user?.location) {
+      const loc = user.location.trim();
+      setCurrentLocation(loc === 'All World' ? 'All location' : loc);
+    } else {
+      setCurrentLocation('All location');
     }
   }, [isLoggedIn, user?.location]);
 
@@ -91,6 +100,7 @@ export function Header() {
     saveLocationToProfile(location);
   };
 
+  // Returns "City, Country" when available (e.g. Lahore detected → Lahore, Pakistan)
   const reverseGeocode = async (lat, lng) => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
     if (!apiKey) return null;
@@ -98,9 +108,13 @@ export function Header() {
     const res = await fetch(url);
     const data = await res.json();
     if (data.status !== 'OK' || !data.results?.[0]) return null;
-    const result = data.results[0];
-    const countryComponent = result.address_components?.find((c) => c.types?.includes('country'));
-    return countryComponent ? countryComponent.long_name : result.formatted_address || null;
+    const comp = data.results[0].address_components || [];
+    const country = comp.find((c) => c.types?.includes('country'))?.long_name;
+    const city = comp.find((c) => c.types?.includes('locality'))?.long_name ||
+      comp.find((c) => c.types?.includes('administrative_area_level_1'))?.long_name;
+    if (country && city) return `${city}, ${country}`;
+    if (country) return country;
+    return data.results[0].formatted_address || null;
   };
 
   /** Forward geocode: address text → country (and optionally city, country). Returns { country, display } or null. */
@@ -170,10 +184,37 @@ export function Header() {
     );
   };
 
+  const handleSetCountry = async () => {
+    const raw = manualCountry.trim();
+    if (!raw) {
+      toast.error('Please enter a country');
+      return;
+    }
+    setIsResolvingCountry(true);
+    try {
+      const resolved = await forwardGeocode(raw);
+      const loc = resolved ? (resolved.country || resolved.display) : raw;
+      setCurrentLocation(loc);
+      setManualCountry('');
+      setIsLocationPickerOpen(false);
+      await saveLocationToProfile(loc);
+      toast.success('Country set. Search limited to ' + loc);
+    } catch (err) {
+      console.error('Geocode country error:', err);
+      setCurrentLocation(raw);
+      setManualCountry('');
+      setIsLocationPickerOpen(false);
+      await saveLocationToProfile(raw);
+      toast.success('Country saved');
+    } finally {
+      setIsResolvingCountry(false);
+    }
+  };
+
   const handleSetManualLocation = async () => {
     const raw = manualLocation.trim();
     if (!raw) {
-      toast.error('Please enter a location');
+      toast.error('Please enter area, city, or zip');
       return;
     }
     setIsResolvingManual(true);
@@ -184,14 +225,14 @@ export function Header() {
       setManualLocation('');
       setIsLocationPickerOpen(false);
       await saveLocationToProfile(loc);
-      toast.success(resolved ? 'Location resolved and saved to profile' : 'Location saved to profile');
+      toast.success(resolved ? 'Location resolved and saved' : 'Location saved');
     } catch (err) {
       console.error('Geocode manual error:', err);
       setCurrentLocation(raw);
       setManualLocation('');
       setIsLocationPickerOpen(false);
       await saveLocationToProfile(raw);
-      toast.success('Location saved to profile');
+      toast.success('Location saved');
     } finally {
       setIsResolvingManual(false);
     }
@@ -262,16 +303,14 @@ export function Header() {
                   <p className="text-xs text-muted-foreground">Detect my location or enter manually</p>
                 </div>
 
-                {/* All World Option */}
+                {/* All location Option */}
                 <Button 
                   variant="outline"
-                  onClick={() => handleLocationChange('All World')}
-                  className="w-full "
+                  onClick={() => handleLocationChange('All location')}
+                  className="w-full"
                 >
-     
-                    <Globe className="w-4 h-4 text-primary" />
-                 
-                All World
+                  <Globe className="w-4 h-4 text-primary" />
+                  All location
                 </Button>
 
                 {/* Detect Location Option */}
@@ -299,27 +338,45 @@ export function Header() {
                   </div>
                 </div>
 
-                {/* Manual Input */}
+                {/* Country only - search limited to one country (e.g. Pakistan) */}
                 <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
                   <Input
                     type="text"
-                    placeholder="Area, City, Country, Zip"
+                    placeholder="Country"
+                    value={manualCountry}
+                    onChange={(e) => setManualCountry(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSetCountry(); }}
+                    size="lg"
+                    disabled={isResolvingCountry}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); handleSetCountry(); }}
+                    size="lg"
+                    className="rounded-full shrink-0"
+                    variant="default"
+                    disabled={isResolvingCountry}
+                  >
+                    {isResolvingCountry ? 'Resolving...' : 'Set'}
+                  </Button>
+                </div>
+
+                {/* Area, City, Zip - search in specific location (e.g. Lahore only) */}
+                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
+                  <Input
+                    type="text"
+                    placeholder="Area, City, Zip"
                     value={manualLocation}
                     onChange={(e) => setManualLocation(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') handleSetManualLocation();
-                    }}
+                    onKeyDown={(e) => { if (e.key === 'Enter') handleSetManualLocation(); }}
                     size="lg"
                     disabled={isResolvingManual}
                     onClick={(e) => e.stopPropagation()}
                   />
                   <Button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleSetManualLocation();
-                    }}
+                    onClick={(e) => { e.stopPropagation(); handleSetManualLocation(); }}
                     size="lg"
-                    className="rounded-full"
+                    className="rounded-full shrink-0"
                     variant="default"
                     disabled={isResolvingManual}
                   >

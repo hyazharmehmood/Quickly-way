@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { ServiceCard } from './ServiceCard';
+import { OnlineSellerFilter } from './OnlineSellerFilter';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
@@ -13,6 +14,7 @@ const DEFAULT_SELLER_FILTER = { online: false, offline: false };
 export function ServiceGrid({
   skillSlug,
   sellerFilter = DEFAULT_SELLER_FILTER,
+  onSellerFilterChange,
   searchQuery = '',
   onServiceClick,
   onClearFilters,
@@ -98,16 +100,14 @@ export function ServiceGrid({
         }
 
         const data = await res.json();
-        console.log(data);
         const items = Array.isArray(data.items) ? data.items : [];
-
         const transformed = items.map((svc) => ({
           ...svc,
           freelancerId: svc.freelancerId || svc.freelancer?.id,
           provider: {
             name: svc.freelancer?.name || "Service Provider",
             avatarUrl: svc.freelancer?.profileImage,
-            location: "Remote"
+            location: svc.freelancer?.location || "Remote"
           },
           thumbnailUrl: svc.coverImage || svc.images?.[0],
           rating: svc.rating || 5.0,
@@ -154,13 +154,58 @@ export function ServiceGrid({
     }
   };
 
-  if (loading && services.length === 0) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
-          {[...Array(10)].map((_, i) => (
+  const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
+  const hasSellerFilter = filterState.online || filterState.offline;
+  const hasAnyFilter = skillSlug || searchQuery || hasSellerFilter;
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
+      {/* Seller dropdown + Applied filters + Results + Clear - all in one row */}
+      <div className="mb-6 flex items-center gap-3 flex-wrap border-b border-border pb-4">
+        {onSellerFilterChange && (
+          <OnlineSellerFilter value={sellerFilter} onChange={onSellerFilterChange} />
+        )}
+        {searchQuery && (
+          <>
+            <span className="text-sm text-muted-foreground">Search:</span>
+            <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
+              {searchQuery}
+            </span>
+          </>
+        )}
+        {skillSlug && skillName && (
+          <>
+            <span className="text-sm text-muted-foreground">Filtered by:</span>
+            <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
+              {skillName}
+            </span>
+          </>
+        )}
+        {hasSellerFilter && (
+          <span className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium">
+            {filterState.online && !filterState.offline ? 'Online sellers' : 'Offline sellers'}
+          </span>
+        )}
+        <span className="text-sm text-muted-foreground flex-1 min-w-0" />
+        <span className="text-sm text-muted-foreground shrink-0">
+          {services.length} of {total} {total === 1 ? 'result' : 'results'}
+        </span>
+        {onClearFilters && hasAnyFilter && (
+          <Button
+            onClick={onClearFilters}
+            variant="ghost"
+            size="sm"
+            className="text-muted-foreground hover:text-foreground shrink-0"
+          >
+            Clear filter
+          </Button>
+        )}
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
+        {loading && services.length === 0 ? (
+          [...Array(10)].map((_, i) => (
             <div key={i} className="space-y-3">
-              {/* Aspect Ratio 11/7 match ServiceCard */}
               <Skeleton className="w-full aspect-[11/7] rounded-xl" />
               <div className="space-y-2 px-1">
                 <div className="flex items-center gap-3">
@@ -178,76 +223,16 @@ export function ServiceGrid({
                 </div>
               </div>
             </div>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
-      {/* Active Filter Indicator */}
-      {(skillSlug && skillName) || sellerFilter !== 'all' || searchQuery ? (
-        <div className="mb-6 flex items-center justify-between flex-wrap gap-4">
-          <div className="flex items-center gap-3 flex-wrap">
-            {searchQuery && (
-              <>
-                <span className="text-sm text-muted-foreground">Search:</span>
-                <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
-                  {searchQuery}
-                </span>
-              </>
-            )}
-            {skillSlug && skillName && (
-              <>
-                <span className="text-sm text-muted-foreground">Filtered by:</span>
-                <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
-                  {skillName}
-                </span>
-              </>
-            )}
-            {(() => {
-              const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
-              const chips = [];
-              if (filterState.online && !filterState.offline) {
-                chips.push('Online sellers');
-              } else if (filterState.offline && !filterState.online) {
-                chips.push('Offline sellers');
-              }
-              return chips.map((label) => (
-                <span
-                  key={label}
-                  className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium"
-                >
-                  {label}
-                </span>
-              ));
-            })()}
-            <span className="text-sm text-muted-foreground">
-              {services.length} of {total} {total === 1 ? 'result' : 'results'}
-            </span>
-          </div>
-          {onClearFilters && (skillSlug || searchQuery || sellerFilter.online || sellerFilter.offline) && (
-            <Button
-              onClick={onClearFilters}
-              variant="ghost"
-              size="sm"
-              className="text-muted-foreground hover:text-foreground"
-            >
-              Clear filter
-            </Button>
-          )}
-        </div>
-      ) : null}
-
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
-        {services.map((service, index) => (
-          <ServiceCard
-            key={service.id || index}
-            service={service}
-            onClick={() => handleServiceClick(service)}
-          />
-        ))}
+          ))
+        ) : (
+          services.map((service, index) => (
+            <ServiceCard
+              key={service.id || index}
+              service={service}
+              onClick={() => handleServiceClick(service)}
+            />
+          ))
+        )}
       </div>
       {services.length === 0 && !loading && (
         <div className="flex flex-col items-center justify-center py-20 text-center">

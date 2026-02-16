@@ -10,6 +10,7 @@ import { UserStatus } from '@/components/chat/UserStatus';
 
 export function ServiceCard({ service }) {
   const router = useRouter();
+  console.log('service', service);
   const [avatarError, setAvatarError] = useState(false);
   
   // Handle potentially missing nested data if the API structure varies

@@ -4,7 +4,6 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/category/CategoryFilter';
 import { ServiceGrid } from '@/components/service/ServiceGrid';
-import { OnlineSellerFilter } from '@/components/service/OnlineSellerFilter';
 
 function HomeContent() {
   const router = useRouter();
@@ -35,12 +34,10 @@ function HomeContent() {
         selectedCategory={selectedSkill || 'All'}
         onSelectCategory={handleCategorySelect}
       />
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-2 pb-2 flex items-center gap-4 border-b border-border">
-        <OnlineSellerFilter value={sellerFilter} onChange={setSellerFilter} />
-      </div>
       <ServiceGrid
         skillSlug={selectedSkill}
         sellerFilter={sellerFilter}
+        onSellerFilterChange={setSellerFilter}
         searchQuery={searchQuery}
         onClearFilters={handleClearFilters}
       />
