@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import LocationAutocomplete from "@/components/ui/LocationAutocomplete";
 import TagInput from "@/components/ui/TagInput";
 import useAuthStore from '@/store/useAuthStore';
 import api from '@/utils/api';
@@ -251,19 +252,13 @@ export default function EditProfilePage() {
                                     />
                                 </div>
                                 <div className="space-y-2">
-                                    <Label className="  ">
-                                        Location
-                                    </Label>
-                                    <div className="relative">
-                                        <Input
-                                            value={location}
-                                            onChange={(e) => setLocation(e.target.value)}
-                                            disabled={isLoading}
-                                            placeholder="e.g. New York, USA"
-                                            className="w-full pl-9"
-                                        />
-                                        <MapPin className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                                    </div>
+                                    <Label>Location</Label>
+                                    <LocationAutocomplete
+                                        value={location}
+                                        onChange={setLocation}
+                                        disabled={isLoading}
+                                        placeholder="Search city or country (e.g. Jubail, Saudi Arabia)"
+                                    />
                                 </div>
 
                                 <div className="space-y-2">
