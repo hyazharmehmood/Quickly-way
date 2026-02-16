@@ -105,7 +105,7 @@ export function ServiceGrid({
           ...svc,
           freelancerId: svc.freelancerId || svc.freelancer?.id,
           provider: {
-            name: svc.freelancer?.name || "Freelancer",
+            name: svc.freelancer?.name || "Service Provider",
             avatarUrl: svc.freelancer?.profileImage,
             location: "Remote"
           },

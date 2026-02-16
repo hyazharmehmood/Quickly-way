@@ -22,7 +22,7 @@ const freelancerMenu = [
 
 export default function FreelancerDashboardLayout({ children }) {
     return (
-        <DashboardLayout menuItems={freelancerMenu} roleName="Freelancer">
+        <DashboardLayout menuItems={freelancerMenu} roleName="Seller">
             {children}
         </DashboardLayout>
     );

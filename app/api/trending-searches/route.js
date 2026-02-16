@@ -8,10 +8,17 @@ const TRENDING_CACHE_MS = 60000;
 /** GET /api/trending-searches - Top 8 most searched keywords */
 export async function GET() {
   try {
+    if (!prisma) {
+      return NextResponse.json({ keywords: [] });
+    }
     if (trendingCache && Date.now() - trendingCacheTs < TRENDING_CACHE_MS) {
       return NextResponse.json(trendingCache);
     }
-    const keywords = await prisma.searchKeyword.findMany({
+    const searchKeywordModel = prisma.searchKeyword;
+    if (!searchKeywordModel) {
+      return NextResponse.json({ keywords: [] });
+    }
+    const keywords = await searchKeywordModel.findMany({
       orderBy: { count: 'desc' },
       take: 8,
       select: { keyword: true, count: true },
@@ -23,13 +30,18 @@ export async function GET() {
       return NextResponse.json(out);
     }
     // Fallback when empty: show category/skill names as popular (until real searches populate)
-    const categories = await prisma.category.findMany({
+    const categoryModel = prisma?.category;
+    const skillModel = prisma?.skill;
+    if (!categoryModel || !skillModel) {
+      return NextResponse.json({ keywords: [] });
+    }
+    const categories = await categoryModel.findMany({
       where: { isActive: true, parentId: null },
       select: { name: true },
       take: 4,
       orderBy: { name: 'asc' },
     });
-    const skills = await prisma.skill.findMany({
+    const skills = await skillModel.findMany({
       where: { isActive: true },
       select: { name: true },
       take: 4,

@@ -238,7 +238,7 @@ export default function OrdersPage() {
                                     <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                                         <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Job ID</TableHead>
                                         <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Client / Assignment</TableHead>
-                                        <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Freelancer</TableHead>
+                                        <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Seller</TableHead>
                                         <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Value</TableHead>
                                         <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Stage</TableHead>
                                         <TableHead className="px-4 whitespace-nowrap py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Actions</TableHead>
@@ -284,7 +284,7 @@ export default function OrdersPage() {
                                 <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                                     <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Job ID</TableHead>
                                     <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Client / Assignment</TableHead>
-                                    <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Freelancer</TableHead>
+                                    <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Seller</TableHead>
                                     <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Value</TableHead>
                                     <TableHead className="px-4 whitespace-nowrap py-6 text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Stage</TableHead>
                                     <TableHead className="px-4 whitespace-nowrap py-6 text-right text-[10px] font-normal text-muted-foreground uppercase tracking-[0.25em]">Actions</TableHead>
@@ -306,7 +306,7 @@ export default function OrdersPage() {
                                         </TableCell>
                                         <TableCell className="px-4 whitespace-nowrap py-6">
                                             <div className="font-normal text-foreground text-sm">
-                                                {order.freelancer?.name || 'Unknown Freelancer'}
+                                                {order.freelancer?.name || 'Unknown'}
                                             </div>
                                         </TableCell>
                                         <TableCell className="px-4 py-6 whitespace-nowrap font-normal text-foreground text-base">

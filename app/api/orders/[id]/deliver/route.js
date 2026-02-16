@@ -97,7 +97,7 @@ export async function POST(request, { params }) {
     // Notify client: freelancer delivered (or submitted revision)
     try {
       const order = result.order;
-      const freelancerName = order.freelancer?.name || 'The freelancer';
+      const freelancerName = order.freelancer?.name || 'The seller';
       const isRevision = result.deliverable?.isRevision;
       await createNotification({
         userId: order.clientId,

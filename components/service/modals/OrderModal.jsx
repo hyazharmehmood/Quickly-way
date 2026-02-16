@@ -77,7 +77,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
       });
 
       if (response.data.success) {
-        toast.success('Order created successfully! Waiting for freelancer acceptance.');
+        toast.success('Order created successfully! Waiting for seller acceptance.');
         
         // Callback to parent
         if (onOrderCreated) {
@@ -130,7 +130,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
             </div>
           </div>
 
-          {/* Payment method (freelancer's accepted methods) */}
+          {/* Payment method (seller's accepted methods) */}
           {servicePaymentMethods.length > 0 && (
             <div className="space-y-2">
               <Label htmlFor="paymentMethod" className="flex items-center gap-2">
@@ -150,7 +150,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
                 ))}
               </select>
               <p className="text-xs text-gray-500">
-                You can pay only with the methods this freelancer accepts for this service.
+                You can pay only with the methods this seller accepts for this service.
               </p>
             </div>
           )}
@@ -218,7 +218,7 @@ const OrderModal = ({ isOpen, onClose, service, conversationId, onOrderCreated }
           {/* Info Box */}
           <div className="bg-blue-50 border border-blue-100 rounded-xl p-3">
             <p className="text-xs text-blue-700">
-              <strong>Note:</strong> After you create this order, the freelancer will need to accept it. 
+              <strong>Note:</strong> After you create this order, the seller will need to accept it. 
               Once accepted, the order will be created and work will begin.
             </p>
           </div>

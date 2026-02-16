@@ -206,7 +206,7 @@ export default function AdminOrderDetailPage() {
                             </CardContent>
                         </Card>
 
-                        {/* Freelancer Info Skeleton */}
+                        {/* Seller Info Skeleton */}
                         <Card className="rounded-[2rem] border-none">
                             <CardHeader>
                                 <Skeleton className="h-6 w-48" />
@@ -507,10 +507,10 @@ export default function AdminOrderDetailPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Freelancer Info */}
+                    {/* Seller Info */}
                     <Card className="rounded-[2rem] border-none">
                         <CardHeader>
-                            <CardTitle className="text-lg font-normal">Freelancer Information</CardTitle>
+                            <CardTitle className="text-lg font-normal">Seller Information</CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div className="flex items-center gap-4">
@@ -527,7 +527,7 @@ export default function AdminOrderDetailPage() {
                                 </div>
                                 <div className="flex-1">
                                     <p className="font-normal text-foreground">
-                                        {order.freelancer?.name || 'Unknown Freelancer'}
+                                        {order.freelancer?.name || 'Unknown'}
                                     </p>
                                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                                         <Mail className="w-3 h-3" />

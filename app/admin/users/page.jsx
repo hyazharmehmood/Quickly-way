@@ -73,7 +73,7 @@ export default function UsersPage() {
 
     const getUserType = (user) => {
         if (user.role === 'ADMIN') return 'Admin';
-        if (user.role === 'FREELANCER') return 'Freelancer';
+        if (user.role === 'FREELANCER') return 'Seller';
         return 'Client';
     };
 
@@ -119,7 +119,7 @@ export default function UsersPage() {
                     icon={<UsersIcon />} 
                 />
                 <MetricCard 
-                    title="Freelancers" 
+                    title="Sellers" 
                     value={metrics.providers.toLocaleString()} 
                     trend={`${metrics.providers} total`} 
                     icon={<Briefcase />} 
@@ -193,7 +193,7 @@ export default function UsersPage() {
                                     value="freelancer" 
                                     className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-[0.5rem] px-6 py-2"
                                 >
-                                    Freelancers
+                                    Sellers
                                 </TabsTrigger>
                                 <TabsTrigger 
                                     value="admin" 

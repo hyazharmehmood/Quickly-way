@@ -5,11 +5,11 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 ---
 
-## 💼 Offer System (Freelancer to Client)
+## 💼 Offer System (Seller to Client)
 
 ### Offer Creation
-- **Freelancer-initiated**: Freelancers can create and send offers to clients
-- **Service-based**: Offers are created for freelancer's own services
+- **Seller-initiated**: Sellers can create and send offers to clients
+- **Service-based**: Offers are created for seller's own services
 - **Offer details**: Includes custom pricing, delivery time, revisions, scope of work, and cancellation policy
 - **Initial status**: Offers start with `PENDING` status
 - **No order created**: Offers do NOT create orders automatically - order is created only when client accepts
@@ -21,7 +21,7 @@ Complete Fiverr-like order management system with integrated review functionalit
 - Number of revisions included
 - Detailed scope of work
 - Cancellation policy
-- Client and freelancer information
+- Client and seller information
 - Conversation linking (if offer created from chat)
 
 ### Offer Acceptance
@@ -30,17 +30,17 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Status transition**: Offer status changes to `ACCEPTED`, order status starts as `IN_PROGRESS`
 - **Direct to work**: Since offer was already accepted, order skips `PENDING_ACCEPTANCE` and goes directly to `IN_PROGRESS`
 - **Order linking**: Created order is linked to the original offer
-- **Real-time notifications**: Both freelancer and client receive notifications
+- **Real-time notifications**: Both seller and client receive notifications
 
 ### Offer Rejection
 - **Client action**: Clients can reject offers with an optional reason
 - **Status update**: Offer status changes to `REJECTED`
 - **No order created**: Rejected offers do not create orders
-- **Freelancer notification**: Freelancer is notified of the rejection
+- **Seller notification**: Seller is notified of the rejection
 - **Rejection reason**: Optional reason can be provided by client
 
 ### Offer Workflow
-1. **Freelancer creates offer** → Status: `PENDING`
+1. **Seller creates offer** → Status: `PENDING`
 2. **Client receives offer** → Can accept or reject
 3. **If accepted** → Order created, Offer status: `ACCEPTED`, Order status: `IN_PROGRESS`
 4. **If rejected** → Offer status: `REJECTED`, No order created
@@ -56,10 +56,10 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Order details**: Includes service selection, custom pricing (optional), delivery time, and revision count
 - **Order number generation**: Unique order numbers (e.g., ORD-2024-001) automatically generated
 - **Initial status**: Orders start with `PENDING_ACCEPTANCE` status
-- **Real-time notifications**: Socket.IO events notify freelancers when new orders are created
+- **Real-time notifications**: Socket.IO events notify sellers when new orders are created
 
 #### Method 2: Order from Accepted Offer
-- **Automatic creation**: Orders are automatically created when client accepts a freelancer's offer
+- **Automatic creation**: Orders are automatically created when client accepts a seller's offer
 - **Status**: Orders from accepted offers start directly at `IN_PROGRESS` (skip acceptance step)
 - **Offer linking**: Order is linked to the original offer
 - **Same details**: Order inherits all details from the accepted offer (price, delivery time, revisions, etc.)
@@ -68,7 +68,7 @@ Complete Fiverr-like order management system with integrated review functionalit
 - Service details and pricing
 - Delivery timeline (customizable days)
 - Number of revisions included
-- Client and freelancer information
+- Client and seller information
 - Conversation linking (if order created from chat)
 
 ---
@@ -76,12 +76,12 @@ Complete Fiverr-like order management system with integrated review functionalit
 ## ✅ Order Acceptance & Workflow
 
 ### Order Acceptance
-- **Freelancer action**: Freelancers can accept or reject incoming orders
+- **Seller action**: Sellers can accept or reject incoming orders
 - **Status transition**: Upon acceptance, order status changes to `IN_PROGRESS`
-- **Work begins**: Freelancer can start working on the order immediately after acceptance
+- **Work begins**: Seller can start working on the order immediately after acceptance
 
 ### Order Rejection
-- **Rejection option**: Freelancers can reject orders with a reason
+- **Rejection option**: Sellers can reject orders with a reason
 - **Status update**: Order status changes to `REJECTED`
 - **Client notification**: Client is notified of the rejection
 
@@ -90,23 +90,23 @@ Complete Fiverr-like order management system with integrated review functionalit
 ## 📦 Order Delivery System
 
 ### Initial Delivery
-- **Delivery submission**: Freelancers can deliver work with files, messages, or both
+- **Delivery submission**: Sellers (service providers) can deliver work with files, messages, or both
 - **Status change**: Order status changes to `DELIVERED` upon submission
 - **Client notification**: Client receives notification of delivery
-- **Waiting state**: Freelancer sees "Waiting for client response" message
+- **Waiting state**: Seller sees "Waiting for client response" message
 
 ### Revision Requests
 - **Client action**: Clients can request revisions if work doesn't meet requirements
 - **Revision limit**: System tracks revisions used vs. revisions included
 - **Status change**: Order status changes to `REVISION_REQUESTED`
-- **Freelancer response**: Freelancer can re-deliver work, status returns to `DELIVERED`
+- **Seller response**: Seller can re-deliver work, status returns to `DELIVERED`
 - **Revision tracking**: System automatically tracks number of revisions used
 
 ### Delivery Acceptance
 - **Client approval**: Clients can accept delivery and complete the order
 - **Status change**: Order status changes to `COMPLETED`
 - **Completion timestamp**: System records completion date and time
-- **Review prompt**: Client is prompted to review the freelancer
+- **Review prompt**: Client is prompted to review the seller
 
 ---
 
@@ -138,7 +138,7 @@ Complete Fiverr-like order management system with integrated review functionalit
 #### Order-Based Reviews
 - **Linked to orders**: Reviews are directly linked to completed orders
 - **Service association**: Reviews also linked to the service/gig
-- **Two-way reviews**: Both client and freelancer can review each other
+- **Two-way reviews**: Both client and seller can review each other
 
 #### Service-Based Reviews
 - **Standalone reviews**: Reviews can be created for services without orders
@@ -148,24 +148,24 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 #### Client Review (Mandatory First)
 - **Completion trigger**: Review popup appears when order is completed
-- **Mandatory requirement**: Client review is required before freelancer can review
+- **Mandatory requirement**: Client review is required before seller can review
 - **Review content**: Includes rating (1-5 stars) and optional comment
 - **Skip option**: Client can skip initially, but "Create Review" button remains visible
 - **One-time review**: Client reviews cannot be edited after submission
-- **Profile update**: Freelancer's rating and review count updated automatically
+- **Profile update**: Seller's rating and review count updated automatically
 
-#### Freelancer Review (Unlocked After Client Review)
-- **Unlock condition**: Freelancer can only review after client has reviewed
+#### Seller Review (Unlocked After Client Review)
+- **Unlock condition**: Seller can only review after client has reviewed
 - **Review content**: Includes rating (1-5 stars) and optional comment
 - **Client profile update**: Client's rating and review count updated automatically
-- **One-time review**: Freelancer reviews cannot be edited after submission
+- **One-time review**: Seller reviews cannot be edited after submission
 
 ### Review Display
 
 #### Order Detail Page
 - **Review section**: Dedicated section showing all reviews for the order
-- **Client view**: Shows freelancer's review of client (if available)
-- **Freelancer view**: Shows client's review and can review client after client reviews
+- **Client view**: Shows seller's review of client (if available)
+- **Seller view**: Shows client's review and can review client after client reviews
 
 #### Service Detail Page
 - **Combined reviews**: Shows both service-based and order-based reviews
@@ -177,7 +177,7 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Rating display**: Shows average rating and total review count
 - **Quick view**: Users can see service quality at a glance
 
-#### Freelancer Profile Page
+#### Seller Profile Page
 - **All reviews**: Displays all reviews from all gigs/services
 - **Order-based reviews**: Shows reviews linked to completed orders
 - **Review details**: Includes reviewer info, rating, comment, order price, duration, and service thumbnail
@@ -189,7 +189,7 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Reviewer information**: Shows reviewer's profile, name, and avatar
 - **Order context**: Reviews show associated order details (price, duration, service)
 - **Timestamp**: Review creation date displayed
-- **Non-editable**: Reviews cannot be edited after submission (both client and freelancer)
+- **Non-editable**: Reviews cannot be edited after submission (both client and seller)
 
 ---
 
@@ -197,18 +197,18 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 ### Order Status Tracking
 - **Status flow**: PENDING_ACCEPTANCE → IN_PROGRESS → DELIVERED → COMPLETED
-- **Status visibility**: Both client and freelancer can see current order status
+- **Status visibility**: Both client and seller can see current order status
 - **Status history**: Order events track all status changes
 
 ### Order Filtering & Search
 - **Status filter**: Filter orders by status (pending, in progress, delivered, completed, etc.)
 - **Service filter**: Filter orders by specific service
-- **Role-based views**: Clients see their orders, freelancers see their orders
+- **Role-based views**: Clients see their orders, sellers see their orders
 - **Pagination**: Support for large order lists
 
 ### Order Details
 - **Complete information**: Service details, pricing, delivery timeline
-- **Participant info**: Client and freelancer profiles with ratings
+- **Participant info**: Client and seller profiles with ratings
 - **Delivery history**: All deliverables and revisions tracked
 - **Event timeline**: Complete order event history
 - **Dispute information**: Dispute details if applicable
@@ -262,9 +262,9 @@ Central notification system with bell icon in all headers, real-time toasts, opt
 - **Click**: Clicking the browser notification focuses the app
 
 ### Offer & Order Notifications
-- **Freelancer creates offer** → Client gets: “New offer received” with freelancer name and service title
-- **Client accepts offer** → Freelancer gets: “Offer accepted” and “Order created — you can start working”
-- **Client rejects offer** → Freelancer gets: “Offer declined”
+- **Seller creates offer** → Client gets: “New offer received” with seller name and service title
+- **Client accepts offer** → Seller gets: “Offer accepted” and “Order created — you can start working”
+- **Client rejects offer** → Seller gets: “Offer declined”
 - **Links**: Notifications include `data.linkUrl` for messages or order page where applicable
 
 ### Technical Notes
@@ -278,7 +278,7 @@ Central notification system with bell icon in all headers, real-time toasts, opt
 ## 🛒 Become Seller (Seller Application)
 
 ### Overview
-Clients can apply to become sellers (freelancers). Admins review requests and approve or reject them. Applicants are notified of the decision.
+Clients can apply to become sellers (service providers). Admins review requests and approve or reject them. Applicants are notified of the decision.
 
 ### Applicant Flow
 - **Become Seller page**: Dedicated page (e.g. `/become-seller`) for clients to submit a seller application
@@ -288,7 +288,7 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 
 ### Admin Flow
 - **Seller requests**: Admin area (e.g. `/admin/seller-requests`) lists all pending and processed seller applications
-- **Approve**: Admin can approve a request; user becomes an approved seller and can access freelancer dashboard and create offers
+- **Approve**: Admin can approve a request; user becomes an approved seller and can access seller dashboard and create offers
 - **Reject**: Admin can reject with an optional reason; user stays client-only
 - **Audit**: Admin can see request details and history
 
@@ -299,7 +299,7 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 
 ### Status & Access
 - **Seller status**: User model has `sellerStatus` (e.g. NONE, PENDING, APPROVED, REJECTED) and `isSeller`
-- **After approval**: User can switch to freelancer view, create services, send offers, and manage orders as a freelancer
+- **After approval**: User can switch to seller view, create services, send offers, and manage orders as a seller
 - **After rejection**: User remains client; can re-apply if the flow allows
 
 ---
@@ -307,7 +307,7 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 ## 🎯 Key Business Rules
 
 ### Offer Rules
-1. Only freelancers can create offers for their own services
+1. Only sellers can create offers for their own services
 2. Only clients can accept or reject offers
 3. Offers must be in `PENDING` status to be accepted or rejected
 4. Accepted offers automatically create orders with `IN_PROGRESS` status
@@ -324,7 +324,7 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 
 ### Review Rules
 1. Client review is mandatory first for order-based reviews
-2. Freelancer review unlocks only after client review exists
+2. Seller review unlocks only after client review exists
 3. Reviews cannot be edited after submission
 4. Reviews update user profile ratings and counts
 5. Reviews are linked to both order and service
@@ -344,7 +344,7 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 ## 🔐 Security & Validation
 
 ### Authorization
-- **Order access**: Only order participants (client/freelancer) can view orders
+- **Order access**: Only order participants (client/seller) can view orders
 - **Review validation**: Only order participants can review
 - **Action restrictions**: Status-based action restrictions enforced
 
@@ -402,9 +402,18 @@ Clients can apply to become sellers (freelancers). Admins review requests and ap
 
 ---
 
-**Version**: 1.1.0  
+**Version**: 1.2.0  
 **Release Date**: February 2026  
 **Status**: Production Ready  
+
+### v1.2.0 (Feb 2026)
+- **Rebrand: Freelancer → Service Provider / Seller** — All client-facing text updated to reflect service provider marketplace:
+  - "Freelancer" replaced with "Seller" or "Service Provider" across the app (dashboard, orders, disputes, admin)
+  - Role labels: "Client" and "Seller" (RoleSwitcher, header)
+  - Order details: "Service Provider" section and badges
+  - Notifications and API messages use "seller" instead of "freelancer"
+  - Metadata and SEO: "Service Provider Marketplace" instead of "Freelance Marketplace"
+  - Admin: "Sellers" tab, "Seller" labels in orders, disputes, and user management
 
 ### v1.1.0 (Feb 2026)
 - In-app notification system (bell icon, dropdown, toasts, sound, offer/order/seller notifications)

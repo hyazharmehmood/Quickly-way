@@ -85,7 +85,7 @@ export function DisputeDialog({ open, onOpenChange, order, onSubmit }) {
                 </DialogHeader>
                 <div className="space-y-5 pt-2">
                     <p className="text-sm text-muted-foreground">
-                        Normal chat will be locked. You’ll use the dispute thread to communicate with the freelancer and our team until the dispute is resolved.
+                        Normal chat will be locked. You’ll use the dispute thread to communicate with the seller and our team until the dispute is resolved.
                     </p>
 
                     <div className="space-y-2">

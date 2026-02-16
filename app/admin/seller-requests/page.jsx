@@ -76,7 +76,7 @@ export default function AdminSellerRequests() {
             <div className="flex justify-between items-center">
                 <div>
                     <h2 className="text-3xl font-normal text-foreground tracking-tight">Seller Requests</h2>
-                    <p className="text-muted-foreground mt-1 text-sm font-normal">Review and approve new freelancer applications.</p>
+                    <p className="text-muted-foreground mt-1 text-sm font-normal">Review and approve new seller applications.</p>
                 </div>
                 <div className="flex gap-3">
                     <div className="relative w-64">

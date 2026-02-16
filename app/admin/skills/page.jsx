@@ -632,7 +632,7 @@ export default function SkillsPage() {
           <AlertDialogHeader>
             <AlertDialogTitle>Disable Skill</AlertDialogTitle>
             <AlertDialogDescription>
-              Are you sure you want to disable "{selectedSkill?.name}"? This will hide it from freelancers, but existing data will be preserved.
+              Are you sure you want to disable "{selectedSkill?.name}"? This will hide it from sellers, but existing data will be preserved.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

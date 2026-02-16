@@ -39,7 +39,7 @@ export default function FreelancerProfilePage() {
                 setLoading(true);
                 const response = await fetch(`/api/freelancer/${freelancerId}`);
                 if (!response.ok) {
-                    if (response.status === 404) throw new Error("Freelancer not found");
+                    if (response.status === 404) throw new Error("Seller not found");
                     throw new Error("Failed to load profile");
                 }
                 const data = await response.json();
@@ -62,7 +62,7 @@ export default function FreelancerProfilePage() {
     const handleContact = () => {
         try {
             if (!isLoggedIn || !user) {
-                toast.error('Please login to contact the freelancer');
+                toast.error('Please login to contact the seller');
                 router.push('/login');
                 return;
             }
@@ -146,7 +146,7 @@ export default function FreelancerProfilePage() {
             <div className="max-w-7xl mx-auto py-6 px-4 md:px-6">
                 <Card className="rounded-[2rem] border-none">
                     <CardContent className="p-8 text-center">
-                        <p className="text-muted-foreground">{error || 'Freelancer not found'}</p>
+                        <p className="text-muted-foreground">{error || 'Seller not found'}</p>
                         <Button onClick={() => router.back()} className="mt-4">
                             <ArrowLeft className="w-4 h-4 mr-2" /> Go Back
                         </Button>

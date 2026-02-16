@@ -269,7 +269,7 @@ export default function DisputesPage() {
                                         <span>•</span>
                                         <span>Client: {dispute.client?.name || 'Unknown'}</span>
                                         <span>•</span>
-                                        <span>Freelancer: {dispute.freelancer?.name || 'Unknown'}</span>
+                                        <span>Seller: {dispute.freelancer?.name || 'Unknown'}</span>
                                         {dispute.order?.price && (
                                             <>
                                                 <span>•</span>
@@ -367,7 +367,7 @@ export default function DisputesPage() {
                                     <SelectContent>
                                         <SelectItem value="NONE">No Action</SelectItem>
                                         <SelectItem value="REFUND_CLIENT">Refund Client</SelectItem>
-                                        <SelectItem value="PAY_FREELANCER">Pay Freelancer</SelectItem>
+                                        <SelectItem value="PAY_FREELANCER">Pay Seller</SelectItem>
                                         <SelectItem value="SPLIT">Split Payment</SelectItem>
                                     </SelectContent>
                                 </Select>

@@ -12,11 +12,11 @@ const poppins = Poppins({
 export const metadata = {
   metadataBase: new URL('http://localhost:3000'),
   title: {
-    default: 'Quicklyway | Modern Freelance Marketplace',
+    default: 'Quicklyway | Service Provider Marketplace',
     template: '%s | Quicklyway'
   },
-  description: 'Connect with top freelancers and clients on Quicklyway. The fastest growing marketplace for digital services, graphic design, web development, and more.',
-  keywords: ['freelance', 'marketplace', 'hire freelancers', 'digital services', 'web development', 'graphic design', 'remote work'],
+  description: 'Connect with top service providers and clients on Quicklyway. The fastest growing marketplace for digital services, graphic design, web development, and more.',
+  keywords: ['services', 'marketplace', 'hire service providers', 'digital services', 'web development', 'graphic design', 'remote work'],
   authors: [{ name: 'Quicklyway Team' }],
   creator: 'Quicklyway',
   publisher: 'Quicklyway',
@@ -35,8 +35,8 @@ export const metadata = {
     type: 'website',
     locale: 'en_US',
     url: 'https://quicklyway.com',
-    title: 'Quicklyway | Modern Freelance Marketplace',
-    description: 'Find the perfect professional for your project on Quicklyway.',
+    title: 'Quicklyway | Service Provider Marketplace',
+    description: 'Find the perfect service provider for your project on Quicklyway.',
     siteName: 'Quicklyway',
     images: [
       {
@@ -49,8 +49,8 @@ export const metadata = {
   },
   twitter: {
     card: 'summary_large_image',
-    title: 'Quicklyway | Modern Freelance Marketplace',
-    description: 'Find the perfect professional for your project on Quicklyway.',
+    title: 'Quicklyway | Service Provider Marketplace',
+    description: 'Find the perfect service provider for your project on Quicklyway.',
     images: ['/og-image.png'],
     creator: '@quicklyway',
   },

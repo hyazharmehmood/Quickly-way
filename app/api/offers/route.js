@@ -88,7 +88,7 @@ export async function POST(request) {
 
     // Notify client: freelancer sent an offer
     try {
-      const freelancerName = offer.freelancer?.name || 'A freelancer';
+      const freelancerName = offer.freelancer?.name || 'A seller';
       await createNotification({
         userId: offer.clientId,
         title: 'New offer received',

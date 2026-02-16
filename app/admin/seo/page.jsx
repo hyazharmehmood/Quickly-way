@@ -418,7 +418,7 @@ export default function SEOPage() {
                     <DialogHeader>
                         <DialogTitle>Add Keyword</DialogTitle>
                         <DialogDescription>
-                            Add a keyword for freelancers to use when creating gigs. Volume, difficulty, and rank will be auto-calculated later.
+                            Add a keyword for sellers to use when creating gigs. Volume, difficulty, and rank will be auto-calculated later.
                         </DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
@@ -434,7 +434,7 @@ export default function SEOPage() {
                         <div className="flex items-center justify-between rounded-lg border border-border p-4">
                             <div>
                                 <Label className="text-base">Active</Label>
-                                <p className="text-sm text-muted-foreground">Show this keyword to freelancers</p>
+                                <p className="text-sm text-muted-foreground">Show this keyword to sellers</p>
                             </div>
                             <Switch
                                 checked={formData.isActive}
@@ -492,7 +492,7 @@ export default function SEOPage() {
                         <div className="flex items-center justify-between rounded-lg border border-border p-4">
                             <div>
                                 <Label className="text-base">Active</Label>
-                                <p className="text-sm text-muted-foreground">Show this keyword to freelancers</p>
+                                <p className="text-sm text-muted-foreground">Show this keyword to sellers</p>
                             </div>
                             <Switch
                                 checked={formData.isActive}
@@ -535,7 +535,7 @@ export default function SEOPage() {
                     <AlertDialogHeader>
                         <AlertDialogTitle>Delete Keyword</AlertDialogTitle>
                         <AlertDialogDescription>
-                            Are you sure you want to delete "{selectedKeyword?.keyword}"? This will remove it from the list and freelancers won't be able to use it.
+                            Are you sure you want to delete "{selectedKeyword?.keyword}"? This will remove it from the list and sellers won't be able to use it.
                         </AlertDialogDescription>
                     </AlertDialogHeader>
                     <AlertDialogFooter>

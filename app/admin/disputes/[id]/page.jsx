@@ -27,7 +27,7 @@ const ROLE_CONFIG = {
     icon: <User className="w-4 h-4" />,
   },
   FREELANCER: {
-    label: 'Freelancer',
+    label: 'Seller',
     color: 'bg-green-100 text-green-700 border-green-200',
     bgColor: 'bg-green-50',
     icon: <User className="w-4 h-4" />,
@@ -367,7 +367,7 @@ export default function AdminDisputeDetailPage() {
                   <p className="text-sm font-medium truncate">{dispute.client?.name || 'Unknown'}</p>
                 </div>
                 <div className="min-w-0">
-                  <Label className="text-xs text-muted-foreground uppercase">Freelancer</Label>
+                  <Label className="text-xs text-muted-foreground uppercase">Seller</Label>
                   <p className="text-sm font-medium truncate">{dispute.freelancer?.name || 'Unknown'}</p>
                 </div>
               </div>
@@ -552,7 +552,7 @@ export default function AdminDisputeDetailPage() {
                   onClick={() => handleRequestInfo('MORE_INFO', 'FREELANCER')}
                 >
                   <Info className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs leading-tight">Request More Info from Freelancer</span>
+                  <span className="text-xs leading-tight">Request More Info from Seller</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -568,7 +568,7 @@ export default function AdminDisputeDetailPage() {
                   onClick={() => handleRequestInfo('APPROVAL', 'FREELANCER')}
                 >
                   <CheckSquare className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs leading-tight">Request Approval from Freelancer</span>
+                  <span className="text-xs leading-tight">Request Approval from Seller</span>
                 </Button>
                 <Button
                   variant="outline"
@@ -584,7 +584,7 @@ export default function AdminDisputeDetailPage() {
                   onClick={() => handleRequestInfo('CLARIFICATION', 'FREELANCER')}
                 >
                   <HelpCircle className="w-4 h-4 flex-shrink-0" />
-                  <span className="text-xs leading-tight">Ask Freelancer for Clarification</span>
+                  <span className="text-xs leading-tight">Ask Seller for Clarification</span>
                 </Button>
               </CardContent>
             </Card>
@@ -612,7 +612,7 @@ export default function AdminDisputeDetailPage() {
               </div>
               <Separator />
               <div>
-                <Label className="text-xs text-muted-foreground uppercase">Freelancer</Label>
+                <Label className="text-xs text-muted-foreground uppercase">Seller</Label>
                 <div className="flex items-center gap-2 mt-2">
                   {dispute.freelancer?.profileImage ? (
                     <img src={dispute.freelancer.profileImage} alt={dispute.freelancer.name} className="w-8 h-8 rounded-full flex-shrink-0" />
@@ -700,7 +700,7 @@ export default function AdminDisputeDetailPage() {
                 <SelectContent>
                   <SelectItem value="NONE">No Action</SelectItem>
                   <SelectItem value="REFUND_CLIENT">Refund Client</SelectItem>
-                  <SelectItem value="PAY_FREELANCER">Pay Freelancer</SelectItem>
+                  <SelectItem value="PAY_FREELANCER">Pay Seller</SelectItem>
                   <SelectItem value="SPLIT">Split Payment</SelectItem>
                 </SelectContent>
               </Select>

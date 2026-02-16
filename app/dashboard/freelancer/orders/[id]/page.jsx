@@ -26,7 +26,7 @@ import { useRouter, useParams } from 'next/navigation';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
-export default function FreelancerOrderDetailPage() {
+export default function SellerOrderDetailPage() {
     const router = useRouter();
     const params = useParams();
     const { user } = useAuthStore();
@@ -96,7 +96,7 @@ export default function FreelancerOrderDetailPage() {
         await fetchOrder();
     };
 
-    const getFreelancerReview = () => {
+    const getSellerReview = () => {
         return reviews.find(r => r.isClientReview === false && r.reviewerId === user?.id);
     };
 
@@ -444,7 +444,7 @@ export default function FreelancerOrderDetailPage() {
                                                                     )}
                                                                     {!isClientReview && (
                                                                         <Badge variant="outline" className="text-xs">
-                                                                            Freelancer
+                                                                            Service Provider
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -664,7 +664,7 @@ export default function FreelancerOrderDetailPage() {
                             {/* Review Section - Show for completed orders */}
                             {order.status === 'COMPLETED' && canReview.canReview && (
                                 <>
-                                    {!getFreelancerReview() && (
+                                    {!getSellerReview() && (
                                         <Button
                                             className="w-full bg-primary text-primary-foreground"
                                             onClick={() => setShowReviewModal(true)}
@@ -689,9 +689,9 @@ export default function FreelancerOrderDetailPage() {
                     revieweeId={order.clientId}
                     revieweeName={order.client?.name}
                     isClientReview={false}
-                    existingReview={getFreelancerReview()}
+                    existingReview={getSellerReview()}
                     onReviewSubmitted={handleReviewSubmitted}
-                    allowEdit={false} // Freelancers also cannot edit reviews for now
+                    allowEdit={false} // Service Providers also cannot edit reviews for now
                 />
             )}
 

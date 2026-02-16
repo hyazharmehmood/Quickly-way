@@ -23,7 +23,7 @@ const ROLE_CONFIG = {
     icon: <User className="w-4 h-4" />,
   },
   FREELANCER: {
-    label: 'Freelancer',
+    label: 'Service Provider',
     color: 'bg-green-100 text-green-700 border-green-200',
     bgColor: 'bg-green-50',
     icon: <User className="w-4 h-4" />,

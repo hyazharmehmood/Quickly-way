@@ -109,26 +109,39 @@ export async function GET(request) {
       OR: searchWords.map((word) => ({ name: { contains: word, mode: 'insensitive' } })),
     };
 
-    const [trendingKeywords, services, categories, skills] = await Promise.all([
-      prisma.searchKeyword
-        .findMany({
+    if (!prisma) {
+      return NextResponse.json({ suggestions: [] });
+    }
+    const searchKeywordModel = prisma.searchKeyword;
+    const searchKeywordQuery = searchKeywordModel
+      ? searchKeywordModel.findMany({
           where: { keyword: { contains: searchWords[0], mode: 'insensitive' } },
           orderBy: { count: 'desc' },
           take: 8,
           select: { keyword: true, count: true },
-        })
-        .catch(() => []),
-      prisma.service.findMany({
+        }).catch(() => [])
+      : Promise.resolve([]);
+
+    const serviceModel = prisma.service;
+    const categoryModel = prisma.category;
+    const skillModel = prisma.skill;
+    if (!serviceModel || !categoryModel || !skillModel) {
+      return NextResponse.json({ suggestions: [] });
+    }
+
+    const [trendingKeywords, services, categories, skills] = await Promise.all([
+      searchKeywordQuery,
+      serviceModel.findMany({
         where: serviceWhere,
         select: { title: true, searchTags: true, category: true, subCategory: true },
         take: 20,
       }),
-      prisma.category.findMany({
+      categoryModel.findMany({
         where: categoryWhere,
         select: { name: true },
         take: 5,
       }),
-      prisma.skill.findMany({
+      skillModel.findMany({
         where: skillWhere,
         select: { name: true },
         take: 5,

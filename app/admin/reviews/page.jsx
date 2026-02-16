@@ -302,7 +302,7 @@ export default function ReviewsPage() {
                                             </p>
                                             <p className="text-xs text-muted-foreground mt-1">
                                                 Reviewing: {review.reviewee?.name || 'Unknown'}
-                                                {review.isClientReview ? ' (Client → Freelancer)' : ' (Freelancer → Client)'}
+                                                {review.isClientReview ? ' (Client → Seller)' : ' (Seller → Client)'}
                                             </p>
                                     </div>
                                 </div>

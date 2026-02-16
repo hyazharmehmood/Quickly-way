@@ -118,7 +118,7 @@ export function ReviewModal({
               : existingReview && allowEdit
               ? 'Update your review for this order'
               : isClientReview
-              ? 'Share your experience with the freelancer'
+              ? 'Share your experience with the seller'
               : 'Share your experience with the client'}
           </DialogDescription>
         </DialogHeader>

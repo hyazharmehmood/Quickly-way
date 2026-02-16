@@ -6,6 +6,7 @@
     "seed": "node prisma/seed.js"
   },
   "scripts": {
+    "postinstall": "prisma generate",
     "dev": "NODE_ENV=development node server.js",
     "dev:next": "next dev --turbopack -p 3000",
     "build": "next build",

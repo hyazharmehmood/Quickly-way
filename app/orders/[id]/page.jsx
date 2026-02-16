@@ -257,7 +257,7 @@ export default function OrderDetailPage() {
         return reviews.find(r => r.isClientReview === true && r.reviewerId === user?.id);
     };
 
-    const getFreelancerReview = () => {
+    const getSellerReview = () => {
         return reviews.find(r => r.isClientReview === false && r.reviewerId === user?.id);
     };
 
@@ -581,7 +581,7 @@ export default function OrderDetailPage() {
                                                                     )}
                                                                     {!isClientReview && (
                                                                         <Badge variant="outline" className="text-xs">
-                                                                            Freelancer
+                                                                            Service Provider
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -744,12 +744,12 @@ export default function OrderDetailPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Freelancer Info */}
+                    {/* Service Provider Info */}
                     <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal flex items-center gap-2">
                                 <User className="w-5 h-5" />
-                                Freelancer
+                                Service Provider
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">
@@ -912,7 +912,7 @@ export default function OrderDetailPage() {
                                     )}
                                     {isFreelancer && canReview.canReview && (
                                         <>
-                                            {!getFreelancerReview() && (
+                                            {!getSellerReview() && (
                                                 <Button
                                                     className="w-full bg-primary text-primary-foreground"
                                                     onClick={() => setShowReviewModal(true)}
@@ -939,7 +939,7 @@ export default function OrderDetailPage() {
                     revieweeId={isClient ? order.freelancerId : order.clientId}
                     revieweeName={isClient ? order.freelancer?.name : order.client?.name}
                     isClientReview={isClient}
-                    existingReview={isClient ? getClientReview() : getFreelancerReview()}
+                    existingReview={isClient ? getClientReview() : getSellerReview()}
                     onReviewSubmitted={handleReviewSubmitted}
                     allowEdit={!isClient} // Clients cannot edit reviews, freelancers can (if needed in future)
                 />
