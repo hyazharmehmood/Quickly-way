@@ -27,6 +27,7 @@ const getTimezoneFromLocation = (location) => {
 };
 
 const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNavigateToService, onContact }) => {
+    console.log('service', service);
     const router = useRouter();
     const { isLoggedIn } = useAuthStore();
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
@@ -511,82 +512,84 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
 
                 <Card className="mt-8 border-none shadow-sm">
                     <CardContent className="p-4 md:p-6">
-                            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 mb-12">
-                                <div>
-                                <h3 className="heading-3  ">Customer Feedback</h3>
-                                    <p className="text-gray-500 text-base">Verified reviews from actual clients who hired this pro.</p>
-                                </div>
-                          
+                            <div className="mb-8">
+                                <h3 className=" heading-3 text-gray-900 mb-2">Reviews</h3>
+                                <p className="text-gray-600 text-base">
+                                    Customers rated this pro highly for <span className="font-semibold text-gray-900">work quality</span>, <span className="font-semibold text-gray-900">professionalism</span>, and <span className="font-semibold text-gray-900">responsiveness</span>.
+                                </p>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-12 mb-8 items-center">
-                                <Card className="text-center p-8  border-none shadow-none bg-gray-50">
-                                    <div className="text-3xl font-black text-gray-900 mb-4">{service.rating?.toFixed(1)}</div>
-                                    <div className="flex justify-center gap-1.5 mb-3">
-                                    {[1, 2, 3, 4, 5].map(i => (
-                                        <Star key={i} className={`w-6 h-6 ${i <= Math.round(service.rating?.toFixed(1)) ? 'fill-yellow-400 text-yellow-400' : 'text-gray-200'}`} />
-                                    ))}
+                            <div className="flex flex-col md:flex-row gap-10 mb-10">
+                                <div className="flex flex-col">
+                                    <div className="text-2xl font-bold text-emerald-600 mb-2">
+                                        {Number(service.rating) >= 4.5 ? 'Excellent' : Number(service.rating) >= 4 ? 'Good' : Number(service.rating) >= 3 ? 'Average' : 'Below Average'} {service.rating?.toFixed(1)}
                                     </div>
-                                    <div className="text-sm  font-bold uppercase tracking-widest">{service.reviewCount?.toFixed(0)} total reviews</div>
-                                </Card>
-                                <div className="lg:col-span-2 space-y-4">
+                                    <div className="flex gap-1 mb-2">
+                                        {[1, 2, 3, 4, 5].map((i) => (
+                                            <Star key={i} className={`w-6 h-6 ${i <= Math.round(Number(service.rating)) ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                                        ))}
+                                    </div>
+                                    <span className="text-sm text-gray-500">{service.reviewCount ?? 0} reviews</span>
+                                </div>
+                                <div className="flex-1 space-y-3">
                                     {[5, 4, 3, 2, 1].map((num) => {
-                                        // Calculate actual rating distribution from reviews
-                                        const reviewsWithRating = reviews.filter(r => r.rating === num);
-                                        const pct = reviews.length > 0 
-                                            ? Math.round((reviewsWithRating.length / reviews.length) * 100) 
+                                        const reviewsWithRating = reviews.filter((r) => r.rating === num);
+                                        const pct = reviews.length > 0
+                                            ? Math.round((reviewsWithRating.length / reviews.length) * 100)
                                             : 0;
                                         return (
-                                            <div key={num} className="flex items-center gap-4 text-sm font-bold text-gray-500">
-                                                <div className="w-10 flex items-center gap-1">{num} <Star className="w-3.5 h-3.5 text-gray-300" /></div>
-                                                <div className="flex-1 h-2.5 bg-gray-100 rounded-full overflow-hidden">
-                                                    <div className="h-full bg-yellow-400 rounded-full transition-all duration-1000" style={{ width: `${pct}%` }}></div>
+                                            <div key={num} className="flex items-center gap-3 text-sm">
+                                                <span className="w-4 text-gray-600">{num}</span>
+                                                <Star className="w-4 h-4 text-gray-300 shrink-0" />
+                                                <div className="flex-1 h-2.5 bg-gray-100 rounded overflow-hidden">
+                                                    <div
+                                                        className={`h-full rounded transition-all duration-500 ${pct > 0 ? 'bg-emerald-500' : 'bg-gray-200'}`}
+                                                        style={{ width: `${pct}%` }}
+                                                    />
                                                 </div>
-                                                <span className="w-10 text-right text-gray-400">{pct}%</span>
+                                                <span className="w-10 text-right text-gray-500">{pct}%</span>
                                             </div>
                                         );
                                     })}
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <div className="space-y-8">
                             {reviews && Array.isArray(reviews) && reviews.length > 0 ? (
-                                reviews.map((review, index) => {
-                                    console.log('Rendering review:', index, review);
+                                reviews.map((review) => {
+                                    const initial = (review.userName || 'A').charAt(0).toUpperCase();
                                     return (
-                                <Card key={review.id} className=" shadow-sm transition-all">
-                                    <CardContent className="p-4 md:p-6">
-                                        <div className="flex justify-between items-start mb-3">
-                                            <div className="flex items-center gap-3">
+                                        <div key={review.id} className="border-b border-gray-100 pb-8 last:border-0 last:pb-0">
+                                            <div className="flex gap-4">
                                                 {review.userAvatar ? (
-                                                    <img src={review.userAvatar} alt={review.userName} className="w-14 h-14 rounded-2xl object-cover border border-white shadow-sm" />
+                                                    <img src={review.userAvatar} alt={review.userName} className="w-12 h-12 rounded-full object-cover shrink-0" />
                                                 ) : (
-                                                   
+                                                    
                                                         <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0">
                   <User className="w-5 h-5 text-primary/60" />
                                                     </div>
-                                                 
                                                 )}
-                                                <div>
-                                                    <div className="font-bold text-base text-gray-900">{review.userName}</div>
-                                                    <div className="flex items-center gap-1 mt-0.5">
-                                                        <div className="flex text-yellow-400">
-                                                            {[...Array(5)].map((_, i) => (
-                                                                <Star key={i} className={`w-3.5 h-3.5 ${i < review.rating ? 'fill-current' : 'text-gray-200'}`} />
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-sm text-gray-400  ml-1">{review.date}</span>
+                                                <div className="flex-1 min-w-0">
+                                                    <div className="flex justify-between items-start gap-4">
+                                                        <span className="font-bold text-gray-900">{review.userName}</span>
+                                                        <span className="text-sm text-gray-400 shrink-0">{review.date}</span>
                                                     </div>
+                                                    <div className="flex gap-1 mt-1 mb-2">
+                                                        {[1, 2, 3, 4, 5].map((i) => (
+                                                            <Star key={i} className={`w-4 h-4 ${i < review.rating ? 'fill-amber-400 text-amber-400' : 'text-gray-200'}`} />
+                                                        ))}
+                                                    </div>
+                                                    <p className="text-gray-700 leading-relaxed">"{review.comment}"</p>
+                                                    {review.details && (
+                                                        <p className="text-sm text-gray-400 mt-2">{review.details}</p>
+                                                    )}
                                                 </div>
                                             </div>
                                         </div>
-                                        <p className="text-base text-gray-700 leading-relaxed font-normal ">"{review.comment}"</p>
-                                        </CardContent>
-                                    </Card>
                                     );
                                 })
                             ) : (
-                                <div className="col-span-2 text-center py-12">
+                                <div className="text-center py-12">
                                     <p className="text-gray-500 text-lg">No reviews yet. Be the first to review this service!</p>
                                 </div>
                             )}

@@ -32,7 +32,7 @@ export default function ServiceDetailsPage() {
                     throw new Error("Failed to load service");
                 }
                 const data = await response.json();
-
+                console.log('SERVICE DATA', data);
                 // Reviews are now included in the service API response (optimized - no separate API calls)
                 const allReviews = data.reviews || [];
                 const avgRating = data.rating || 5.0;
@@ -97,7 +97,7 @@ export default function ServiceDetailsPage() {
                     provider: {
                         name: data.freelancer?.name || "Freelancer",
                         avatarUrl: data.freelancer?.profileImage || "",
-                        location: "Remote",
+                        location: data.freelancer?.location || "Remote",
                         languages: data.freelancer?.languages || ["English"],
                         memberSince: new Date(data.freelancer?.createdAt).getFullYear().toString(),
                         isOnline: false,

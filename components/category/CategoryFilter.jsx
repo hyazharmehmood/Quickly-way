@@ -179,9 +179,9 @@ export function CategoryFilter({
                       )}
                     >
                       <span className="truncate max-w-[120px] sm:max-w-none">{category.name}</span>
-                      {hasSubcategories && (
+                      {/* {hasSubcategories && (
                         <ChevronDown className="w-3 h-3 ml-1 inline-block opacity-70 flex-shrink-0" />
-                      )}
+                      )} */}
                      
               </Button>
                   </HoverCardTrigger>
