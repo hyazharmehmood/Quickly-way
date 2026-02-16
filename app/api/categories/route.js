@@ -22,7 +22,7 @@ export async function GET(request) {
           where: { isActive: true },
           include: {
             skills: includeSkills ? {
-              where: { isActive: true },
+              where: { isActive: true, approvalStatus: 'APPROVED' },
               orderBy: { name: 'asc' },
             } : false,
             _count: {
@@ -32,7 +32,7 @@ export async function GET(request) {
           orderBy: { name: 'asc' },
         } : false,
         skills: includeSkills ? {
-          where: { isActive: true },
+          where: { isActive: true, approvalStatus: 'APPROVED' },
           orderBy: { name: 'asc' },
         } : false,
         _count: {

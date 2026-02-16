@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Search, X, Check, XCircle, Loader2 } from 'lucide-react';
+import { Plus, Edit2, Trash2, Search, X, Check, XCircle, Loader2, ChevronDown } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,6 +22,12 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -56,6 +62,10 @@ export default function SkillsPage() {
   const [togglingSkills, setTogglingSkills] = useState(new Set());
   const [approvingSkillId, setApprovingSkillId] = useState(null);
   const [rejectingSkillId, setRejectingSkillId] = useState(null);
+  const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
+  const [approveSkill, setApproveSkill] = useState(null);
+  const [approveForm, setApproveForm] = useState({ mainCategoryId: '', categoryId: '' });
+  const [newSubcategoryName, setNewSubcategoryName] = useState('');
 
   // Fetch categories with subcategories
   const fetchCategories = async () => {
@@ -269,16 +279,82 @@ export default function SkillsPage() {
     }
   };
 
-  const handleApproveSkill = async (skill) => {
-    setApprovingSkillId(skill.id);
+  const handleOpenApproveDialog = (skill) => {
+    setApproveSkill(skill);
+    const subcat = subcategories.find(s => s.id === skill.categoryId);
+    const mainId = subcat?.mainCategoryId || skill.category?.parent?.id || (skill.category?.parentId == null ? skill.categoryId : '') || '';
+    setApproveForm({
+      mainCategoryId: mainId || '',
+      categoryId: skill.categoryId || '',
+    });
+    setNewSubcategoryName('');
+    setIsApproveDialogOpen(true);
+  };
+
+  const handleApproveMainCategoryChange = (mainCategoryId) => {
+    setApproveForm({ mainCategoryId: mainCategoryId || '', categoryId: '' });
+  };
+
+  const getSubcategoriesForApprove = () => {
+    if (!approveForm.mainCategoryId) return [];
+    const main = categories.find(c => c.id === approveForm.mainCategoryId);
+    return main?.children || [];
+  };
+
+  const handleApproveWithAssign = async () => {
+    if (!approveSkill || !approveForm.categoryId) {
+      toast.error('Please select a subcategory to assign the skill to');
+      return;
+    }
+    setApprovingSkillId(approveSkill.id);
     try {
-      const response = await api.patch(`/admin/skills/${skill.id}`, { approvalStatus: 'APPROVED' });
+      const response = await api.patch(`/admin/skills/${approveSkill.id}`, {
+        approvalStatus: 'APPROVED',
+        categoryId: approveForm.categoryId,
+      });
       if (response.data.success) {
-        toast.success(`"${skill.name}" approved — now visible to all freelancers`);
+        toast.success(`"${approveSkill.name}" approved and assigned to subcategory`);
+        setIsApproveDialogOpen(false);
+        setApproveSkill(null);
+        setApproveForm({ mainCategoryId: '', categoryId: '' });
         fetchSkills();
       }
     } catch (error) {
       toast.error(error.response?.data?.error || 'Failed to approve');
+    } finally {
+      setApprovingSkillId(null);
+    }
+  };
+
+  const handleCreateSubcategoryAndApprove = async () => {
+    const name = newSubcategoryName.trim();
+    if (!approveSkill || !approveForm.mainCategoryId || !name) {
+      toast.error('Enter a subcategory name');
+      return;
+    }
+    setApprovingSkillId(approveSkill.id);
+    try {
+      const createRes = await api.post(`/admin/categories/${approveForm.mainCategoryId}/subcategories`, {
+        subcategories: [{ name }],
+      });
+      if (createRes.data.success && createRes.data.subcategories?.length > 0) {
+        const newSub = createRes.data.subcategories[0];
+        const newCategoryId = newSub.id;
+        const patchRes = await api.patch(`/admin/skills/${approveSkill.id}`, {
+          approvalStatus: 'APPROVED',
+          categoryId: newCategoryId,
+        });
+        if (patchRes.data.success) {
+          toast.success(`"${approveSkill.name}" approved and assigned to new subcategory "${name}"`);
+          setIsApproveDialogOpen(false);
+          setApproveSkill(null);
+          setApproveForm({ mainCategoryId: '', categoryId: '' });
+          setNewSubcategoryName('');
+          fetchSkills();
+        }
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.error || 'Failed to create subcategory or approve');
     } finally {
       setApprovingSkillId(null);
     }
@@ -332,12 +408,16 @@ export default function SkillsPage() {
               />
             </div>
             <div className="flex items-center gap-1.5 flex-wrap">
-              <span className="text-xs text-muted-foreground mr-1">Approval:</span>
+          
               <Button
                 variant={filterApproval === null ? "default" : "outline"}
                 size="sm"
-                onClick={() => setFilterApproval(null)}
-              >
+                onClick={() => {
+                  setFilterActive(null)
+                  setFilterApproval(null)
+                }}
+                
+              > 
                 All
               </Button>
               <Button
@@ -361,14 +441,8 @@ export default function SkillsPage() {
               >
                 Rejected
               </Button>
-              <span className="text-xs text-muted-foreground ml-2 mr-1">Active:</span>
-              <Button
-                variant={filterActive === null ? "default" : "outline"}
-                size="sm"
-                onClick={() => setFilterActive(null)}
-              >
-                All
-              </Button>
+             
+            
               <Button
                 variant={filterActive === true ? "default" : "outline"}
                 size="sm"
@@ -394,6 +468,7 @@ export default function SkillsPage() {
                   <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                     <TableHead className="pl-6">Name</TableHead>
                     <TableHead>Slug</TableHead>
+                    <TableHead>Category / Subcategory</TableHead>
                     <TableHead>Approval</TableHead>
                     <TableHead>Requested by</TableHead>
                     <TableHead>Active</TableHead>
@@ -406,6 +481,7 @@ export default function SkillsPage() {
                     <TableRow key={i} className="border-b border-border">
                       <TableCell className="pl-6"><Skeleton className="h-5 w-36" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-28" /></TableCell>
+                      <TableCell><Skeleton className="h-4 w-32" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
                       <TableCell><Skeleton className="h-4 w-20" /></TableCell>
                       <TableCell><Skeleton className="h-6 w-16 rounded-full" /></TableCell>
@@ -431,6 +507,7 @@ export default function SkillsPage() {
                 <TableRow className="bg-secondary/40 hover:bg-secondary/40">
                   <TableHead className="pl-6">Name</TableHead>
                   <TableHead>Slug</TableHead>
+                  <TableHead>Category / Subcategory</TableHead>
                   <TableHead>Approval</TableHead>
                   <TableHead>Requested by</TableHead>
                   <TableHead>Active</TableHead>
@@ -443,6 +520,11 @@ export default function SkillsPage() {
                   <TableRow key={skill.id} className="border-b border-border hover:bg-secondary/20 transition-colors">
                     <TableCell className="pl-6 font-medium text-foreground">{skill.name}</TableCell>
                     <TableCell className="text-muted-foreground text-sm">{skill.slug}</TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {skill.category?.parent
+                        ? `${skill.category.parent.name} / ${skill.category.name}`
+                        : skill.category?.name || '—'}
+                    </TableCell>
                     <TableCell>
                       <Badge
                         variant={skill.approvalStatus === 'APPROVED' ? 'default' : skill.approvalStatus === 'PENDING' ? 'secondary' : 'destructive'}
@@ -462,31 +544,44 @@ export default function SkillsPage() {
                     <TableCell className="text-muted-foreground text-sm">
                       {new Date(skill.createdAt).toLocaleDateString()}
                     </TableCell>
-                    <TableCell className="text-right pr-6">
-                      <div className="flex items-center justify-end gap-0.5 flex-wrap">
+                    <TableCell className="text-right whitespace-nowrap">
+                      <div className="flex items-center justify-end gap-0.5">
                         {skill.approvalStatus === 'PENDING' && (
-                          <>
-                            <Button
-                              variant="default"
-                              size="sm"
-                              onClick={() => handleApproveSkill(skill)}
-                              disabled={approvingSkillId === skill.id}
-                              className="h-8"
-                            >
-                              {approvingSkillId === skill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
-                              <span className="ml-1">Approve</span>
-                            </Button>
-                            <Button
-                              variant="destructive"
-                              size="sm"
-                              onClick={() => handleRejectSkill(skill)}
-                              disabled={rejectingSkillId === skill.id}
-                              className="h-8"
-                            >
-                              {rejectingSkillId === skill.id ? <Loader2 className="w-4 h-4 animate-spin" /> : <XCircle className="w-4 h-4" />}
-                              <span className="ml-1">Reject</span>
-                            </Button>
-                          </>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                disabled={approvingSkillId === skill.id || rejectingSkillId === skill.id}
+                                className="h-8 gap-1"
+                              >
+                                {approvingSkillId === skill.id || rejectingSkillId === skill.id ? (
+                                  <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                  <>
+                                    Actions
+                                    <ChevronDown className="w-4 h-4" />
+                                  </>
+                                )}
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="min-w-[140px]">
+                              <DropdownMenuItem
+                                onClick={() => handleOpenApproveDialog(skill)}
+                                className="text-green-600 focus:text-green-600 cursor-pointer"
+                              >
+                                <Check className="w-4 h-4 " />
+                                Approve
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleRejectSkill(skill)}
+                                className="text-destructive focus:text-destructive cursor-pointer"
+                              >
+                                <XCircle className="w-4 h-4" />
+                                Reject
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         )}
                         <Button
                           variant="ghost"
@@ -719,14 +814,101 @@ export default function SkillsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Approve & Assign Dialog - assign skill to category/subcategory when approving */}
+      <Dialog open={isApproveDialogOpen} onOpenChange={setIsApproveDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approve & Assign Skill</DialogTitle>
+            <DialogDescription>
+              Assign &quot;{approveSkill?.name}&quot; to the correct subcategory. Approved skills are visible under their subcategory.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div>
+              <label className="text-sm font-medium mb-2 block">Main Category</label>
+              <Select
+                value={approveForm.mainCategoryId}
+                onValueChange={handleApproveMainCategoryChange}
+                disabled={approvingSkillId || categoriesLoading}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select main category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.filter(c => c.isActive).map((cat) => (
+                    <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            {approveForm.mainCategoryId && (
+              <>
+                <div>
+                  <label className="text-sm font-medium mb-2 block">Subcategory *</label>
+                  <Select
+                    value={approveForm.categoryId}
+                    onValueChange={(v) => setApproveForm(f => ({ ...f, categoryId: v }))}
+                    disabled={approvingSkillId || categoriesLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select subcategory" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {getSubcategoriesForApprove()
+                        .filter(sub => sub.isActive)
+                        .map((sub) => (
+                          <SelectItem key={sub.id} value={sub.id}>{sub.name}</SelectItem>
+                        ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                {getSubcategoriesForApprove().length === 0 && (
+                  <p className="text-xs text-muted-foreground">No subcategories. Create one below.</p>
+                )}
+                <div className="border-t pt-4 space-y-2">
+                  <label className="text-sm font-medium">Create new subcategory</label>
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="New subcategory name"
+                      value={newSubcategoryName}
+                      onChange={(e) => setNewSubcategoryName(e.target.value)}
+                      disabled={approvingSkillId}
+                    />
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleCreateSubcategoryAndApprove}
+                      disabled={!newSubcategoryName.trim() || approvingSkillId}
+                    >
+                      {approvingSkillId ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Create & Approve'}
+                    </Button>
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsApproveDialogOpen(false)} disabled={approvingSkillId}>
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApproveWithAssign}
+              disabled={!approveForm.categoryId || approvingSkillId}
+            >
+              {approvingSkillId ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Approve & Assign'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Delete Dialog */}
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Disable Skill</AlertDialogTitle>
-            <AlertDialogDescription>
+            <DialogDescription>
               Are you sure you want to disable "{selectedSkill?.name}"? This will hide it from sellers, but existing data will be preserved.
-            </AlertDialogDescription>
+            </DialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
