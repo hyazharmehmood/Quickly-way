@@ -96,7 +96,7 @@ const PostServiceTitle = (props) => {
             clearTitleError();
           }}
           onBlur={() => setServiceTitleError(validateServiceTitle(serviceTitle))}
-          placeholder="e.g. Logo, Business Card, Flyer, Brochure, Poster, Banner, and Website Design"
+          placeholder="Enter service title"
           className={cn(
             "transition-colors",
             serviceTitleError && " focus-visible:ring-red-500"
@@ -147,7 +147,7 @@ const PostServiceTitle = (props) => {
             clearAboutError();
           }}
           onBlur={() => setAboutError(validateAbout(aboutText))}
-          placeholder="I am a professional designer specializing in logos, brochures, flyers, and complete branding solutions. I deliver high-quality work with quick turnaround..."
+          placeholder="Share details about yourself and the services you provide. Be specific and descriptive."
           className={cn(
             "resize-none text-base leading-relaxed transition-colors",
             aboutError && " focus-visible:ring-red-500"
