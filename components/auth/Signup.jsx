@@ -68,8 +68,8 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
         signupAs,
       });
       toast.success(signupAs === 'client' ? 'Account created! You can use all client features.' : 'Account created! Complete the seller agreement.');
-      if (signupAs === 'client') router.push('/');
-      else router.push('/join-as-freelancer');
+      router.replace('/');
+      // else router.push('/join-as-freelancer');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Something went wrong.');
     }
