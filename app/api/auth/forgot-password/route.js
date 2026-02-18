@@ -47,7 +47,7 @@ export async function POST(request) {
             await sendPasswordResetEmail(user.email, resetURL, user.name);
 
             return NextResponse.json(
-                { message: 'Token sent to email!' },
+                { message: 'Password reset link sent to email!' },
                 { status: HTTP_STATUS.OK }
             );
         } catch (err) {
