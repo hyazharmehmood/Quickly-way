@@ -637,7 +637,7 @@ export function ChatWindow({ conversation, onBack }) {
               {messages.length > 0 && (
                 <>
                   <span>•</span>
-                  <span>Last message: {moment(messages[messages.length - 1].createdAt).format('HH:mm A')}</span>
+                  <span>Last message: {moment(messages[messages.length - 1].createdAt).format('h:mm A')}</span>
                 </>
               )}
             </div>

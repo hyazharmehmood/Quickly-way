@@ -90,7 +90,9 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
             ...updated.filter((_, idx) => idx !== existingIndex),
           ];
         } else {
-          // Add new conversation to top
+          // Only show conversation to the other user when it has at least one message (don't show empty "Contact me" convos)
+          const hasMessage = !!(conversation.lastMessageAt ?? conversation.lastMessageText ?? conversation.lastMessage);
+          if (!hasMessage) return prev;
           return [conversation, ...prev];
         }
       });
@@ -131,19 +133,17 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
       });
     };
 
-    // Listen for new conversation created
+    // Listen for new conversation created - only show in list when at least one message exists (same rule for creator and other user)
     const handleNewConversation = (data) => {
-      if (data.conversation) {
-        setConversations((prev) => {
-          // Check if conversation already exists
-          const exists = prev.find((c) => c.id === data.conversation.id);
-          if (exists) {
-            return prev;
-          }
-          // Add new conversation to the top
-          return [{ ...data.conversation, unreadCount: 0 }, ...prev];
-        });
-      }
+      if (!data.conversation) return;
+      const conv = data.conversation;
+      const hasMessage = !!(conv.lastMessageAt ?? conv.lastMessageText ?? conv.lastMessage);
+      if (!hasMessage) return; // don't add empty "Contact me" conversations to list
+      setConversations((prev) => {
+        const exists = prev.find((c) => c.id === conv.id);
+        if (exists) return prev;
+        return [{ ...conv, unreadCount: 0 }, ...prev];
+      });
     };
 
     // Listen for messages read (decrease unread count)
