@@ -1,7 +1,73 @@
-# Release Notes - Order Management & Review System
+# Release Notes - Quicklyway Service Provider Marketplace
 
 ## Overview
-Complete Fiverr-like order management system with integrated review functionality, enabling seamless order lifecycle from creation to completion and review.
+Full-featured service provider (Fiverr-like) marketplace: authentication, service discovery, real-time messaging, offers and orders, reviews, disputes, notifications, support tickets, admin dashboard, and seller onboarding. Built with Next.js, Prisma, PostgreSQL, and Socket.IO. **Branding**: Quicklyway original logo and favicon applied across the app.
+
+---
+
+## 🔐 Authentication
+
+### Auth Flows
+- **Login / Signup**: Email and password with JWT access and refresh tokens
+- **Forgot password**: Request reset link; email sent via Resend
+- **Reset password**: Token-based reset from email link; success/error feedback via toaster (fixed)
+- **Change password**: Authenticated users can change password (auth and user profile)
+- **Profile**: Get/update current user (auth/profile, user/profile)
+
+### Security
+- **JWT**: Access and refresh tokens; refresh rotation
+- **API**: Auth routes under `/api/auth/*` (login, signup, forgot-password, reset-password, me, refresh, profile, change-password)
+
+---
+
+## 🛍 Service Discovery & Management
+
+### Public Service Discovery
+- **Home page**: Service listings with global search, category filters, and service cards
+- **Service detail**: Full service page with gallery, description, pricing, payment methods, seller info, reviews, and “Contact” / “Order” actions
+- **Search**: Full-text and filter-based search; results from public services
+
+### Seller Service Management
+- **Create service**: Sellers create services with title, description, category, subcategory, price, delivery, images/cover, skills, search tags, payment methods/region, contact visibility
+- **Service post first step — add profile**: When creating a service (service post), first step can include or require profile completion so seller profile is set before listing services
+- **Edit service**: Full edit from dashboard (dashboard/freelancer/services/[id]/edit)
+- **List my services**: Seller’s services in dashboard with stats
+
+### Service Data
+- **Categories**: Hierarchical (main categories → subcategories); admin-managed
+- **Skills**: Per-category skills; sellers attach skills to services; users can request new skills (admin approve/reject)
+- **Keywords**: Admin-managed keywords (SEO); users can request keywords (admin approve/reject)
+- **Search tags**: Free-form tags on services for discovery
+
+---
+
+## 📂 Categories, Skills & Keywords (Admin + User Requests)
+
+### Categories
+- **Admin CRUD**: Create/update/delete main categories and subcategories
+- **Category tree**: Parent/child; slugs; active flag
+- **Category-full-create**: Bulk create category structure
+- **Skills per category**: Admin assigns or creates skills per category
+
+### Skills
+- **Approval**: PENDING (creator-only) → APPROVED (global) or REJECTED
+- **User request**: Sellers request new skills via `/api/skills/request`; admin approves/rejects in admin/skills
+- **Service skills**: Services link to approved (or creator’s pending) skills
+
+### Keywords (SEO)
+- **Admin**: CRUD keywords; volume, difficulty, rank, trend, active, approval
+- **User request**: Users request keywords; admin approves/rejects
+- **Admin SEO page**: Dedicated SEO/keyword management (admin/seo)
+
+---
+
+## 🔍 Search & Discovery
+
+### Search Features
+- **Search suggestions**: API suggests queries (e.g. from services, categories)
+- **Trending searches**: Popular search terms (SearchKeyword model)
+- **Search history**: Per-user search history support (API and lib)
+- **Filters**: Category, subcategory, skills, price, and other filters on service listing
 
 ---
 
@@ -129,6 +195,10 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Status change**: Order status changes to `DISPUTED`
 - **Resolution tracking**: Disputes are tracked separately for admin review
 
+### Dispute as Ticket & Thread
+- **Dispute as ticket**: Order disputes are handled in a ticket-like flow; admin can manage from disputes area
+- **Thread**: Each dispute has a thread (comments/messages) for back-and-forth between parties and admin resolution
+
 ---
 
 ## ⭐ Review System
@@ -215,6 +285,32 @@ Complete Fiverr-like order management system with integrated review functionalit
 
 ---
 
+## 💬 Messaging (Real-Time Chat)
+
+### Overview
+Real-time messaging via Socket.IO: conversations between two users, linked to offers and orders when applicable.
+
+### Conversation & Messages
+- **Conversations**: Get or create 1:1 conversation between two users (used when client contacts seller)
+- **List conversations**: Socket event `get_conversations` → `conversations:fetched` with list and unread counts
+- **Open conversation**: By `conversationId` or create new with `otherUserId` (e.g. from service page “Contact”)
+- **Send message**: Socket `send_message`; optimistic UI; `new_message` event for delivery
+- **Create conversation**: Socket `create_conversation` with `otherUserId` when starting new chat
+- **Message types**: Text; support for image/video/file and offer/order context in schema
+
+### In-Chat Offers & Orders
+- **Create offer from chat**: Sellers can send offers from conversation (CreateOfferModal); offer appears in thread
+- **Order from offer**: When client accepts offer, order is created and linked to conversation
+- **Order in chat**: Messages can reference order (orderId); conversation linked to order for context
+
+### UX
+- **Typing indicator**: Real-time typing status
+- **Read receipts**: Delivered/seen tracking (deliveredAt, seenAt, lastReadAt)
+- **Unread counts**: Per-conversation unread; mark read on open
+- **Messages page**: `/messages` with ChatContainer (list + thread)
+
+---
+
 ## 🔔 Real-time Features
 
 ### Socket.IO Integration
@@ -222,7 +318,9 @@ Complete Fiverr-like order management system with integrated review functionalit
 - **Order events**: Real-time notifications for order status changes
 - **Delivery notifications**: Instant notifications when work is delivered
 - **Review notifications**: Notifications when reviews are submitted
-- **Status updates**: Live status updates without page refresh
+- **Status updates**: Live order/offer status updates without page refresh
+- **Messaging**: Conversations list, get/create conversation, send message, new_message, typing, read receipts
+- **Presence**: Logged-in presence (full); public namespace for guest-visible freelancer online status
 
 ---
 
@@ -267,6 +365,11 @@ Central notification system with bell icon in all headers, real-time toasts, opt
 - **Client rejects offer** → Seller gets: “Offer declined”
 - **Links**: Notifications include `data.linkUrl` for messages or order page where applicable
 
+### Chat / Message Notifications
+- **Real-time message notification**: New chat messages trigger real-time notifications (Socket.IO)
+- **Toast & sound**: Incoming message shows toast and optional sound (same as other notification types)
+- **Bell dropdown**: Message notifications appear in the notification bell dropdown with mail icon
+
 ### Technical Notes
 - **API**: `GET /api/notifications` (paginated), `PATCH /api/notifications` (mark read)
 - **Store**: Zustand store for list, unread count, and “last added” for toast/sound
@@ -281,10 +384,11 @@ Central notification system with bell icon in all headers, real-time toasts, opt
 Clients can apply to become sellers (service providers). Admins review requests and approve or reject them. Applicants are notified of the decision.
 
 ### Applicant Flow
-- **Become Seller page**: Dedicated page (e.g. `/become-seller`) for clients to submit a seller application
+- **Become Seller page**: Dedicated page (e.g. `/become-seller`) for clients to submit a seller application (become as seller)
 - **Application data**: Typically full name, skills, bio, portfolio, etc., as configured
 - **Status**: Application is created with status `PENDING`
 - **Pending state**: UI can show “Request pending” or similar until admin acts
+- **Request approved**: When admin approves, user becomes seller; “Become as seller request approved” (and “Become as client” via role agreement) notifications delivered
 
 ### Admin Flow
 - **Seller requests**: Admin area (e.g. `/admin/seller-requests`) lists all pending and processed seller applications
@@ -301,6 +405,111 @@ Clients can apply to become sellers (service providers). Admins review requests 
 - **Seller status**: User model has `sellerStatus` (e.g. NONE, PENDING, APPROVED, REJECTED) and `isSeller`
 - **After approval**: User can switch to seller view, create services, send offers, and manage orders as a seller
 - **After rejection**: User remains client; can re-apply if the flow allows
+
+---
+
+## 📋 Role Agreement (Join as Client / Join as Freelancer)
+
+### Overview
+Users can request to “join as client” or “join as freelancer” by agreeing to terms; admins approve or reject. Separate from “Become Seller” (seller application).
+
+### Flow
+- **Join as Client / Join as Freelancer pages**: User agrees to terms and submits request (`RoleAgreementRequest` with `requestedRole`: CLIENT or FREELANCER)
+- **Status**: PENDING → APPROVED or REJECTED by admin
+- **Become as client request approved**: When admin approves a “Join as Client” request, user is notified; same for “Join as Freelancer”
+- **API**: `POST /api/role-agreement-requests`, `GET /api/role-agreement-requests/my`; admin: `GET /api/admin/role-agreement-requests`, `PATCH .../status`
+- **Admin**: Join requests list and approve/reject in admin/join-requests
+
+---
+
+## 🎫 Support Tickets
+
+### Overview
+Contact/support system: users can open tickets; admins/agents manage and reply. Dedicated support ticket design and thread-based conversation. Separate from order disputes.
+
+### Design & UX
+- **Support ticket design**: Dedicated UI for ticket list and ticket detail with clear status, labels, and thread layout
+- **My support tickets**: User-facing page listing all own tickets at `/support` (My support tickets)
+- **Ticket thread**: Each ticket has a full message thread; open ticket at `/support/[id]` to view and reply in thread
+
+### User Flow
+- **Contact / Submit ticket**: Public or logged-in user submits ticket (title, description, full name, email, optional attachments)
+- **My tickets**: Logged-in users can see their tickets at `/support` and open ticket detail `/support/[id]` with full thread
+- **Messages**: Thread of messages on each ticket; attachments supported
+- **API**: `POST /api/support/contact`, `GET/POST /api/support/tickets`, `GET/PATCH /api/support/tickets/[id]`, `POST /api/support/tickets/[id]/messages`
+
+### Admin Flow
+- **Support tickets**: List all tickets; filter by status (OPEN, AGENT_ASSIGNED, RESOLVED)
+- **Assign agent**: Assign admin/agent to ticket
+- **Reply**: Add messages as AGENT/ADMIN; resolve ticket
+- **Pages**: admin/support-tickets, admin/support-tickets/[id]
+
+---
+
+## 🛠 Admin Dashboard
+
+### Implemented Admin Features
+- **Dashboard**: Stats overview (admin/stats)
+- **Users**: List and manage users (admin/users)
+- **Orders**: List all orders; order detail (admin/orders, admin/orders/[id])
+- **Disputes**: List disputes; detail with comments and resolution (admin/disputes, admin/disputes/[id])
+- **Reviews**: List reviews; approve/flag (admin/reviews, admin/reviews/[id])
+- **Categories**: CRUD main and subcategories; skills per category (admin/categories, create, [id]/edit)
+- **Skills**: List skills; approve/reject user-requested skills (admin/skills)
+- **Keywords**: List and manage keywords; approve/reject requests (admin/keywords); **SEO page** (admin/seo) for keyword/SEO management
+- **Seller requests**: Become-seller applications; approve/reject (admin/seller-requests)
+- **Join requests**: Role agreement (join as client/freelancer) approve/reject (admin/join-requests)
+- **Support tickets**: List, assign agent, reply, resolve (admin/support-tickets, admin/support-tickets/[id])
+- **Admins**: Manage admin users (admin/admins)
+- **Settings**: Admin settings (admin/settings)
+- **Profile**: Admin profile (admin/profile)
+
+---
+
+## 📊 Seller (Freelancer) Dashboard
+
+### Implemented Seller Features
+- **Dashboard home**: Stats and overview (dashboard/freelancer)
+- **Services**: List, create, edit services (dashboard/freelancer/services, create, [id]/edit)
+- **Orders**: List orders; order detail with deliver/revision/complete (dashboard/freelancer/orders, orders/[id])
+- **Disputes**: List and view disputes (dashboard/freelancer/disputes)
+- **Messages**: Real-time chat (dashboard/freelancer/messages → shared messages experience)
+- **Earnings**: Earnings page (dashboard/freelancer/earnings)
+- **Availability**: Set availability (dashboard/freelancer/availability)
+- **Reviews**: Reviews received (dashboard/freelancer/reviews)
+- **Settings**: Seller settings (dashboard/freelancer/settings)
+
+---
+
+## 🟢 Public Presence (Online Status)
+
+### Overview
+Guests and logged-in users can see whether sellers (freelancers) are online, without exposing private presence data.
+
+### Implementation
+- **Socket.IO public namespace** (`/presence`): No auth; server broadcasts list of online freelancer IDs only
+- **Logged-in users**: Full presence (e.g. who is chatting with whom) via main socket namespace
+- **Guests**: `usePublicPresence` hook and store; only freelancer IDs; `UserStatus` component shows “Online” on service/profile when freelancer is online
+- **Privacy**: No client presence to guests; no private data on public namespace
+
+---
+
+## 👤 User Profiles
+
+### Public Seller Profile
+- **Page**: `/freelancer/[id]` — public profile with bio, portfolio, services, reviews, rating, review count
+- **API**: `GET /api/freelancer/[id]` for public profile data
+- **Profile fields**: Name, profile image, cover, bio, portfolio, languages, location, years of experience, availability, rating, review count
+
+### Profile Edit
+- **Edit profile**: Logged-in users edit own profile (profile/edit); update name, bio, portfolio, images, contact visibility, etc.
+- **API**: `GET/PATCH /api/user/profile`
+
+---
+
+## 📤 File Upload
+
+- **Upload signature**: `GET /api/upload/signature` for client-side upload (e.g. signed URL for S3 or similar); used for service images, attachments, etc.
 
 ---
 
@@ -384,27 +593,38 @@ Clients can apply to become sellers (service providers). Admins review requests 
 
 ---
 
+## 📄 UI-Only Pages (Placeholders)
+- **Favorites** (`/favorites`): Saved services UI with mock data; no backend persistence yet
+- **Payments** (`/payments`): Payments & invoices UI with mock data; no payment provider integration yet
+- **Requests** (`/requests`): Client project requests table with mock data; project/proposal flow not wired to backend
+
+---
+
 ## 🔄 Future Enhancements
-- Order dispute resolution workflow
+- Order dispute resolution workflow (admin resolve/close with outcome)
 - Advanced review filtering and sorting
 - Review helpfulness voting
 - Order templates for repeat clients
 - Bulk order management
+- Favorites backend (save/unsave services per user)
+- Payment provider integration (e.g. Moyasar, HyperPay) and real invoices
+- Client “requests” / project posting and proposals (Project/Proposal models exist in schema)
 
 ---
 
 ## 📝 Technical Notes
-- Built with Next.js 16
-- Prisma ORM for database management
-- Socket.IO for real-time features
-- PostgreSQL database
-- RESTful API architecture
+- **Framework**: Next.js 16 (App Router)
+- **ORM**: Prisma
+- **Database**: PostgreSQL
+- **Real-time**: Socket.IO (offers, orders, notifications, messaging, presence, real-time message notifications)
+- **API**: RESTful API routes under `/api/*`; auth via JWT (access + refresh)
+- **UI**: Tailwind CSS, Shadcn UI, Lucide icons
+- **Branding**: Quicklyway original logo and favicon (app-wide)
+- **Email**: Resend (e.g. password reset); reset password toaster feedback
+- **Upload**: Signature-based upload API for external storage (e.g. S3)
 
 ---
 
-**Version**: 1.2.0  
-**Release Date**: February 2026  
-**Status**: Production Ready  
 
 ### v1.2.0 (Feb 2026)
 - **Rebrand: Freelancer → Service Provider / Seller** — All client-facing text updated to reflect service provider marketplace:

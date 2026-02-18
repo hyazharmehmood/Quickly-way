@@ -77,7 +77,7 @@ export default function FreelancerOverview() {
                 <MetricCard title="Avg. Rating" value={s.avgRating ?? '0'} trend={s.reviewCount ? `${s.reviewCount} reviews` : 'No reviews yet'} icon={<Star />} />
             </div>
 
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card className="border-none h-80  flex flex-col ">
                     <CardHeader className="p-8 border-b border-border">
                         <CardTitle className="text-xl font-normal">Income Projection</CardTitle>
@@ -115,7 +115,7 @@ export default function FreelancerOverview() {
                         </div>
                     </CardContent>
                 </Card>
-            </div>
+            </div> */}
         </div>
     );
 }
