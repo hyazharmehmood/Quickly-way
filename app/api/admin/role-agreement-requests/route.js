@@ -12,7 +12,19 @@ export async function GET(request) {
       orderBy: { createdAt: 'desc' },
       include: {
         user: {
-          select: { id: true, name: true, email: true, role: true, isSeller: true, sellerStatus: true },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            isSeller: true,
+            sellerStatus: true,
+            location: true,
+            phoneNumber: true,
+            bio: true,
+            profileImage: true,
+            createdAt: true,
+          },
         },
       },
     });
