@@ -55,9 +55,9 @@ export const metadata = {
     creator: '@quicklyway',
   },
   icons: {
-    icon: '/favicon.ico',
-    shortcut: '/favicon-16x16.png',
-    apple: '/apple-touch-icon.png',
+    icon: '/images/fav-logo.png',
+    shortcut: '/images/fav-logo.png',
+    apple: '/images/fav-logo.png',
   },
 };
 

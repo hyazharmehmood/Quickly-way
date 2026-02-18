@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { Search, MessageSquare, Loader2, Bell } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -8,11 +9,12 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import moment from 'moment';
+import { toast } from 'sonner';
 import { cn } from "@/utils";
-// Removed API import - using Socket.IO only
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { UserStatus } from './UserStatus';
 import useAuthStore from '@/store/useAuthStore';
+import useChatUnreadStore from '@/store/useChatUnreadStore';
 // Removed useSocket - using useGlobalSocket only
 
 
@@ -23,6 +25,12 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
   const [filter, setFilter] = useState('all'); // 'all', 'unread', 'starred'
   const { socket, isConnected } = useGlobalSocket();
   const { user } = useAuthStore();
+  const { setConversationsUnread } = useChatUnreadStore();
+  const router = useRouter();
+  const pathname = usePathname();
+  const selectedConversationIdRef = useRef(selectedConversationId);
+  selectedConversationIdRef.current = selectedConversationId;
+  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
 
   useEffect(() => {
     if (socket && isConnected) {
@@ -30,20 +38,29 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
     }
   }, [socket, isConnected]);
 
+  // Keep global chat unread count in sync for header badge
+  useEffect(() => {
+    setConversationsUnread(conversations);
+  }, [conversations, setConversationsUnread]);
+
   useEffect(() => {
     if (!socket || !isConnected) return;
 
     // Listen for conversation updates (when lastMessage changes)
     const handleConversationUpdated = (data) => {
       const { conversation } = data;
-      console.log('conversation', conversation);
-      console.log('📬 Conversation updated received:', {
-        id: conversation.id,
-        lastMessageText: conversation.lastMessageText,
-        lastMessageAt: conversation.lastMessageAt,
-        hasLastMessage: !!conversation.lastMessage,
-      });
-      
+      const isSelected = selectedConversationIdRef.current === conversation.id;
+      const incomingUnread = conversation.unreadCount ?? 0;
+      if (incomingUnread > 0 && !isSelected) {
+        const name = conversation.otherParticipant?.name || 'Someone';
+        toast(`New message from ${name}`, {
+          duration: 5000,
+          action: {
+            label: 'Open',
+            onClick: () => router.push(`${messagesPath}?conversationId=${conversation.id}`),
+          },
+        });
+      }
       setConversations((prev) => {
         // Check if conversation exists
         const existingIndex = prev.findIndex((c) => c.id === conversation.id);
@@ -209,6 +226,7 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
     };
   };
 
+  const totalUnread = conversations.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
   const filteredConversations = conversations.filter((conv) => {
     // Apply search filter
     if (searchQuery) {
@@ -292,8 +310,7 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
       {/* Header with Inbox and Bell */}
       <div className="p-4 border-b border-border">
         <div className="flex items-center justify-between mb-4">
-          <h3 className="text-xl font-normal text-foreground">Inbox</h3>
-          {/* <Bell className="w-5 h-5 text-muted-foreground" /> */}
+          <h3 className="text-xl font-normal text-foreground">Inbox ({totalUnread})</h3>
         </div>
         
         {/* Search Bar */}

@@ -1,5 +1,6 @@
 'use client';
 
+import { useRouter, usePathname } from 'next/navigation';
 import { Bell, CheckCircle, ShoppingBag, Mail, Briefcase, User } from 'lucide-react';
 import { cn } from '@/utils';
 import {
@@ -27,17 +28,30 @@ function getNotificationIcon(type) {
   return NOTIFICATION_ICONS[key] || NOTIFICATION_ICONS.general;
 }
 
+const isChatNotification = (n) =>
+  n.type && (n.type === 'message' || n.type === 'chat');
+
 export function NotificationDropdown({ className }) {
-  const { notifications, unreadCount, markAsRead } = useNotifications();
+  const router = useRouter();
+  const pathname = usePathname();
+  const { notifications, markAsRead } = useNotifications();
+  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
+
+  // Bell = other notifications only (no chat); chat has its own dropdown on MessageSquare
+  const otherNotifications = notifications.filter((n) => !isChatNotification(n));
+  const unreadCount = otherNotifications.filter((n) => !n.read).length;
 
   const handleMarkOne = (notification) => {
     if (!notification.read) {
       markAsRead([notification.id]);
     }
+    if ((notification.type === 'message' || notification.type === 'chat') && notification.data?.conversationId) {
+      router.push(`${messagesPath}?conversationId=${notification.data.conversationId}`);
+    }
   };
 
   const handleMarkAll = () => {
-    const unreadIds = notifications.filter((n) => !n.read).map((n) => n.id);
+    const unreadIds = otherNotifications.filter((n) => !n.read).map((n) => n.id);
     if (unreadIds.length) markAsRead(unreadIds);
   };
 
@@ -54,7 +68,7 @@ export function NotificationDropdown({ className }) {
         >
           <Bell className="w-5 h-5" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center px-1">
+            <span className="absolute -top-1 right-0 min-w-[18px] h-[18px] rounded-full bg-primary text-[10px] text-primary-foreground flex items-center justify-center px-1">
               {unreadCount > 9 ? '9+' : unreadCount}
             </span>
           )}
@@ -69,10 +83,10 @@ export function NotificationDropdown({ className }) {
         </div>
             <ScrollArea className=" h-[20rem] ">
           <div className="py-1 mr-2">
-            {notifications.length === 0 ? (
+            {otherNotifications.length === 0 ? (
               <p className="text-center text-sm text-muted-foreground py-8">No notifications yet.</p>
             ) : (
-              notifications.map((notification) => {
+              otherNotifications.map((notification) => {
                 const { Icon, bg, color } = getNotificationIcon(notification.type);
                 const data = notification.data || {};
                 const imageUrl = data.imageUrl || data.thumbnailUrl;

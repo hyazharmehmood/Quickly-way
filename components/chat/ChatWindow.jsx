@@ -1,19 +1,14 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { Send, Loader2, ArrowLeft, Phone, Video, Star, MoreVertical, FileText } from 'lucide-react';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+import { Send, Loader2, ArrowLeft, Phone, Video, Star, FileText } from 'lucide-react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import moment from 'moment';
+import { toast } from 'sonner';
 import useAuthStore from '@/store/useAuthStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import { UserStatus } from './UserStatus';
@@ -276,7 +271,14 @@ export function ChatWindow({ conversation, onBack }) {
     if (!conversation || !socket || !isConnected) return;
 
     setLoading(true);
-    
+
+    const handleError = (data) => {
+      setLoading(false);
+      setMessages([]);
+      const message = typeof data === 'string' ? data : data?.message;
+      toast.error(message || 'Unable to load messages. Please check your connection and try again.');
+    };
+
     // Request messages via Socket.IO
     socket.emit('fetch_messages', {
       conversationId: conversation.id,
@@ -284,11 +286,8 @@ export function ChatWindow({ conversation, onBack }) {
       limit: 50,
     });
 
-    // Listen for response
     const handleMessagesFetched = (data) => {
       if (data.conversationId === conversation.id) {
-        console.log('data.messages', data.messages);
-        
         setMessages(data.messages || []);
         setLoading(false);
         scrollToBottom();
@@ -296,10 +295,11 @@ export function ChatWindow({ conversation, onBack }) {
     };
 
     socket.once('messages:fetched', handleMessagesFetched);
+    socket.once('error', handleError);
 
-    // Cleanup listener if component unmounts
     return () => {
       socket.off('messages:fetched', handleMessagesFetched);
+      socket.off('error', handleError);
     };
   };
 
@@ -652,25 +652,18 @@ export function ChatWindow({ conversation, onBack }) {
             {/* <Button variant="ghost" size="icon" className="h-9 w-9">
               <Star className="h-4 w-4" />
             </Button> */}
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="h-9 w-9">
-                  <MoreVertical className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-48">
-                {isFreelancer && (
-                  <DropdownMenuItem
-                    onClick={() => setShowCreateOfferModal(true)}
-                    className="cursor-pointer"
-                  >
-                    <FileText className="h-4 w-4 mr-2" />
-                    Send Offer
-                  </DropdownMenuItem>
-                )}
-                {/* Add more menu items here if needed */}
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
+            {isFreelancer && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowCreateOfferModal(true)}
+                className="cursor-pointer"
+              >
+                <FileText className="h-4 w-4" />
+                Send Offer
+              </Button>
+            )}
           </div>
         </div>
       </div>

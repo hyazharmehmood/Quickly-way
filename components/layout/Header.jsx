@@ -30,8 +30,11 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
+import { ChatNotificationDropdown } from '@/components/notifications/ChatNotificationDropdown';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
 import { useContactSupport } from '@/context/ContactSupportContext';
+import useChatUnreadStore from '@/store/useChatUnreadStore';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 
 export function Header() {
   const router = useRouter();
@@ -51,6 +54,24 @@ export function Header() {
   const switchToClient = () => router.push('/');
   const switchToSeller = () => router.push('/dashboard/freelancer');
   const { openContactSupport } = useContactSupport();
+  const { setConversationsUnread, applyConversationUpdated } = useChatUnreadStore();
+  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
+  const { socket, isConnected } = useGlobalSocket();
+
+  // Keep chat unread badge updated: fetch when not on messages page, and listen for real-time updates
+  useEffect(() => {
+    if (!socket || !isConnected || !isLoggedIn) return;
+    const onConversationUpdated = (data) => data?.conversation && applyConversationUpdated(data.conversation);
+    socket.on('conversation:updated', onConversationUpdated);
+    if (!pathname?.includes('/messages')) {
+      socket.emit('get_conversations');
+      const onFetched = (data) => setConversationsUnread(data.conversations || []);
+      socket.once('conversations:fetched', onFetched);
+    }
+    return () => {
+      socket.off('conversation:updated', onConversationUpdated);
+    };
+  }, [socket, isConnected, isLoggedIn, pathname, setConversationsUnread, applyConversationUpdated]);
 
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('All location');
@@ -395,7 +416,12 @@ export function Header() {
 
           {/* Utility Buttons: Notifications & Support */}
           <div className="flex items-center gap-1 sm:gap-3 md:gap-5 lg:gap-6 shrink-0">
-            {isLoggedIn && <NotificationDropdown />}
+            {isLoggedIn && (
+              <>
+                <ChatNotificationDropdown />
+                <NotificationDropdown />
+              </>
+            )}
             <Button
               variant="ghost"
               size="icon"

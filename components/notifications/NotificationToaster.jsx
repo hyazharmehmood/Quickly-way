@@ -59,7 +59,7 @@ function showBrowserNotification(notification) {
     if (stored === 'false') return;
     const n = new Notification(notification.title || 'Quicklyway', {
       body: notification.body || '',
-      icon: '/favicon.ico',
+      icon: '/images/fav-logo.png',
       tag: notification.id,
     });
     n.onclick = () => {
