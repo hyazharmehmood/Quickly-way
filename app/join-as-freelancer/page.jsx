@@ -12,10 +12,10 @@ import { Loader2, FileText, Store } from 'lucide-react';
 import Link from 'next/link';
 
 const SELLER_AGREEMENT = `
-SELLER (FREELANCER) AGREEMENT – QUICKLYWAY
+SELLER AGREEMENT – QUICKLYWAY
 
 1. Acceptance
-By joining as a Seller on Quicklyway, you agree to offer and deliver services to Clients in accordance with these terms and our general Terms of Service.
+By joining as a Seller on Quicklyway, you agree to offer and deliver services to Clients in accordance with these terms and our general Terms of Service. Quicklyway supports all professions and service types—including but not limited to skilled trades (e.g. plumber, electrician, carpenter), design, development, consulting, tutoring, home services, and more. You may list and provide any lawful service that fits our platform guidelines.
 
 2. Your responsibilities
 • You will provide accurate service descriptions, delivery times, and pricing.

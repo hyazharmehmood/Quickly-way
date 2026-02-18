@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -632,7 +633,11 @@ export function ChatWindow({ conversation, onBack }) {
               <p className="font-medium truncate">{otherUser?.name || 'Unknown User'}</p>
               {otherUser?.id && <UserStatus userId={otherUser.id} size="sm" />}
             </div>
-            <div className="flex items-center gap-2 text-xs text-muted-foreground">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5 flex-wrap">
+              <Badge variant={isFreelancer ? 'default' : 'secondary'} className="text-[10px] px-1.5 py-0 font-medium">
+                Chatting as {isFreelancer ? 'Seller' : 'Client'}
+              </Badge>
+              <span>•</span>
               <span>Online</span>
               <span>•</span>
               <span>Local time: {moment().format('HH:mm')}</span>

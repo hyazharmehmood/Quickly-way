@@ -15,7 +15,7 @@ const CLIENT_AGREEMENT = `
 CLIENT AGREEMENT – QUICKLYWAY
 
 1. Acceptance
-By joining as a Client on Quicklyway, you agree to use the platform to request, purchase, and receive services from Sellers in accordance with these terms and our general Terms of Service.
+By joining as a Client on Quicklyway, you agree to use the platform to request, purchase, and receive services from Sellers in accordance with these terms and our general Terms of Service. Clients may engage Sellers across all supported professions and service types offered on the platform.
 
 2. Your responsibilities
 • You will provide clear, accurate requirements and communicate in good faith with Sellers.
