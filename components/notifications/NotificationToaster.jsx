@@ -9,7 +9,7 @@ import useAuthStore from '@/store/useAuthStore';
 const BROWSER_NOTIFICATION_KEY = 'quicklyway-browser-notifications';
 const NOTIFICATION_SOUND_KEY = 'quicklyway-notification-sound';
 
-/** Play a short notification sound. Tries /sounds/notification.mp3 first, then Web Audio chime. */
+/** Play notification sound (mixkit-software-interface-start-2574.wav), fallback to Web Audio chime if needed. */
 function playNotificationSound() {
   if (typeof window === 'undefined') return;
   try {
@@ -39,7 +39,7 @@ function playNotificationSound() {
     }
   };
 
-  const audio = new Audio('/sounds/notification.mp3');
+  const audio = new Audio('/sounds/mixkit-software-interface-start-2574.wav');
   audio.volume = 0.6;
   audio.play().catch(() => playFallbackChime());
 }
