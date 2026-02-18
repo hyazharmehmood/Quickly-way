@@ -180,7 +180,7 @@ export default function SellerOrderDetailPage() {
 
     return (
         <div className="max-w-7xl mx-auto py-6 animate-in fade-in duration-500 space-y-6">
-            <div className="flex items-center gap-4">
+            {/* <div className="flex items-center gap-4">
                 <Button
                     variant="ghost"
                     size="icon"
@@ -197,7 +197,7 @@ export default function SellerOrderDetailPage() {
                         {order.orderNumber || order.id.slice(0, 8)}
                     </p>
                 </div>
-            </div>
+            </div> */}
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 {/* Main Content */}

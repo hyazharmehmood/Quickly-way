@@ -74,6 +74,7 @@ const jsonLd = {
 };
 
 import { AuthInitializer } from '@/components/auth/AuthInitializer';
+import { ContactSupportProvider } from '@/context/ContactSupportContext';
 import { GlobalHeader } from '@/components/layout/GlobalHeader';
 import { Toaster } from '@/components/ui/sonner';
 import { NotificationToaster } from '@/components/notifications/NotificationToaster';
@@ -87,10 +88,12 @@ export default function RootLayout({ children }) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <AuthInitializer>
-          <GlobalHeader />
-          {children}
-          <Toaster />
-          <NotificationToaster />
+          <ContactSupportProvider>
+            <GlobalHeader />
+            {children}
+            <Toaster />
+            <NotificationToaster />
+          </ContactSupportProvider>
         </AuthInitializer>
       </body>
     </html>

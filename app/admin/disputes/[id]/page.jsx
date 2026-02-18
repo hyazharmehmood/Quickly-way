@@ -2,47 +2,42 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { ArrowLeft, AlertCircle, User, Shield, CheckCircle2, XCircle, MessageSquare, FileText, Download, Calendar, DollarSign, Clock, Send, HelpCircle, CheckSquare, Info, Image as ImageIcon, File } from 'lucide-react';
+import { ArrowLeft, AlertCircle, User, Shield, CheckCircle2, FileText, Calendar, Clock, HelpCircle, CheckSquare, Info, Paperclip } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ChatInput } from '@/components/chat/ChatInput';
+import { cn } from '@/utils';
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { uploadToCloudinary } from '@/utils/cloudinary';
+import useAuthStore from '@/store/useAuthStore';
 
 const ROLE_CONFIG = {
-  CLIENT: {
-    label: 'Client',
-    color: 'bg-blue-100 text-blue-700 border-blue-200',
-    bgColor: 'bg-blue-50',
-    icon: <User className="w-4 h-4" />,
-  },
-  FREELANCER: {
-    label: 'Seller',
-    color: 'bg-green-100 text-green-700 border-green-200',
-    bgColor: 'bg-green-50',
-    icon: <User className="w-4 h-4" />,
-  },
-  ADMIN: {
-    label: 'Admin',
-    color: 'bg-purple-100 text-purple-700 border-purple-200',
-    bgColor: 'bg-purple-50',
-    icon: <Shield className="w-4 h-4" />,
-  },
+  CLIENT: { label: 'Client' },
+  FREELANCER: { label: 'Seller' },
+  ADMIN: { label: 'Admin' },
 };
+
+const IMAGE_EXT = /\.(jpe?g|png|gif|webp|bmp|avif)(\?|$)/i;
+const isImageAttachment = (att) =>
+  att.type === 'image' || (att.name && IMAGE_EXT.test(att.name)) || (att.url && /\.(jpe?g|png|gif|webp|bmp|avif)(\?|$)/i.test(att.url));
+const isVideoAttachment = (att) =>
+  att.type === 'video' || (att.name && /\.(mp4|webm|ogg|mov)(\?|$)/i.test(att.name));
 
 export default function AdminDisputeDetailPage() {
   const params = useParams();
   const router = useRouter();
+  const { user } = useAuthStore();
   const [dispute, setDispute] = useState(null);
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -100,58 +95,45 @@ export default function AdminDisputeDetailPage() {
     }
   };
 
-  const handleFilesChange = async (files) => {
-    if (files.length === 0) {
-      setAttachments([]);
-      return;
-    }
-
-    if (files.length > 5) {
-      toast.error('Maximum 5 attachments allowed');
-      return;
-    }
-
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    const oversizedFiles = files.filter(fileItem => fileItem.file && fileItem.file.size > maxSize);
-    if (oversizedFiles.length > 0) {
-      toast.error('Some files exceed 10MB limit');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const uploadPromises = files.map(async (fileItem) => {
-        const file = fileItem.file;
-        const url = await uploadToCloudinary(file);
-        return {
-          url,
-          name: file.name,
-          type: file.type.startsWith('image/') ? 'image' : file.type.startsWith('video/') ? 'video' : 'file',
-          size: file.size,
-        };
-      });
-
-      const uploadedFiles = await Promise.all(uploadPromises);
-      setAttachments(uploadedFiles);
-    } catch (error) {
-      console.error('Error uploading files:', error);
-      toast.error('Failed to upload files');
-      setAttachments([]);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleSendComment = async (e) => {
+  const handleSendComment = async (e, filesToUpload = null) => {
     e?.preventDefault();
 
-    if (uploading) {
-      while (uploading) {
-        await new Promise(resolve => setTimeout(resolve, 100));
+    let finalAttachments = [...attachments];
+    if (filesToUpload && filesToUpload.length > 0) {
+      setUploading(true);
+      try {
+        if (finalAttachments.length + filesToUpload.length > 5) {
+          toast.error('Maximum 5 attachments allowed');
+          return;
+        }
+        const maxSize = 10 * 1024 * 1024;
+        const oversized = filesToUpload.filter((item) => item.file && item.file.size > maxSize);
+        if (oversized.length > 0) {
+          toast.error('Some files exceed 10MB limit');
+          return;
+        }
+        const uploaded = await Promise.all(
+          filesToUpload.map(async (item) => {
+            const url = await uploadToCloudinary(item.file);
+            return {
+              url,
+              name: item.file.name,
+              type: item.file.type.startsWith('image/') ? 'image' : item.file.type.startsWith('video/') ? 'video' : 'file',
+              size: item.file.size,
+            };
+          })
+        );
+        finalAttachments = [...finalAttachments, ...uploaded];
+      } catch (err) {
+        toast.error('Failed to upload files');
+        setUploading(false);
+        return;
+      } finally {
+        setUploading(false);
       }
     }
 
-    if (!commentContent.trim() && attachments.length === 0) {
+    if (!commentContent.trim() && finalAttachments.length === 0) {
       toast.error('Please enter a comment or attach a file');
       return;
     }
@@ -165,7 +147,7 @@ export default function AdminDisputeDetailPage() {
       setSending(true);
       const response = await api.post(`/disputes/${dispute.id}/comments`, {
         content: commentContent.trim() || '(No text)',
-        attachments: attachments.length > 0 ? attachments : null,
+        attachments: finalAttachments.length > 0 ? finalAttachments : null,
       });
 
       if (response.data.success) {
@@ -267,12 +249,6 @@ export default function AdminDisputeDetailPage() {
     }
   };
 
-  const getFileIcon = (type) => {
-    if (type === 'image') return <ImageIcon className="w-4 h-4" />;
-    if (type === 'video') return <FileText className="w-4 h-4" />;
-    return <File className="w-4 h-4" />;
-  };
-
   const formatCurrency = (amount, currency = 'USD') => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -346,7 +322,7 @@ export default function AdminDisputeDetailPage() {
         {/* Main Content - Dispute Thread */}
         <div className="lg:col-span-2 space-y-6">
           {/* Order Summary */}
-          <Card className="rounded-[2rem] border-none">
+          <Card className="rounded-4xl border-none">
             <CardHeader>
               <CardTitle className="text-lg font-normal">Order Summary</CardTitle>
             </CardHeader>
@@ -400,16 +376,31 @@ export default function AdminDisputeDetailPage() {
                     {dispute.initialAttachments && Array.isArray(dispute.initialAttachments) && dispute.initialAttachments.length > 0 && (
                       <div className="mt-3 flex flex-wrap gap-2">
                         {dispute.initialAttachments.map((att, idx) => (
-                          <a
-                            key={idx}
-                            href={att.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-red-200 rounded-lg text-xs hover:bg-red-50"
-                          >
-                            {getFileIcon(att.type)}
-                            <span>{att.name}</span>
-                          </a>
+                          <div key={idx}>
+                            {isImageAttachment(att) ? (
+                              <a
+                                href={att.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="block rounded-lg overflow-hidden border border-red-200 max-w-[220px] max-h-48 focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                              >
+                                <img src={att.url} alt={att.name || 'Image'} className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity" loading="lazy" />
+                                {att.name && <p className="text-xs truncate px-1.5 py-1 bg-black/5">{att.name}</p>}
+                              </a>
+                            ) : isVideoAttachment(att) ? (
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-white border border-red-200 text-xs hover:bg-red-50">
+                                <Paperclip className="h-4 w-4 shrink-0" />
+                                <span className="underline truncate max-w-[140px]">{att.name || 'Video'}</span>
+                                <span className="opacity-80">Open</span>
+                              </a>
+                            ) : (
+                              <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-white border border-red-200 text-xs hover:bg-red-50">
+                                <FileText className="h-4 w-4 shrink-0" />
+                                <span className="underline truncate max-w-[140px]">{att.name || 'Document'}</span>
+                                <span className="opacity-80">Open</span>
+                              </a>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -417,58 +408,92 @@ export default function AdminDisputeDetailPage() {
 
                   <Separator />
 
-                  {/* Comments */}
+                  {/* Comments — ticket-style chat bubbles */}
                   {comments.length === 0 ? (
                     <div className="text-center py-8 text-muted-foreground">No comments yet</div>
                   ) : (
-                    comments.map((comment) => {
-                      const roleConfig = ROLE_CONFIG[comment.role] || ROLE_CONFIG.CLIENT;
-
-                      return (
-                        <div
-                          key={comment.id}
-                          className={`p-4 rounded-xl border ${roleConfig.bgColor} border-border`}
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <div className="flex items-center gap-2">
-                              <div className={`p-1.5 rounded-lg ${roleConfig.color}`}>
-                                {roleConfig.icon}
+                    <div className="space-y-3">
+                      {comments.map((comment) => {
+                        const isOwnMessage = comment.userId === user?.id;
+                        const roleLabel = (ROLE_CONFIG[comment.role] || ROLE_CONFIG.CLIENT).label;
+                        return (
+                          <div
+                            key={comment.id}
+                            className={cn('flex w-full gap-2', isOwnMessage ? 'justify-end' : 'justify-start')}
+                          >
+                            {!isOwnMessage && (
+                              <Avatar className="h-8 w-8 shrink-0 mt-1">
+                                <AvatarImage src={comment.user?.profileImage} alt={comment.user?.name} />
+                                <AvatarFallback className="bg-muted text-muted-foreground text-xs">
+                                  {(comment.user?.name || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
+                            <div className={cn('flex flex-col gap-1 max-w-[70%] min-w-0', isOwnMessage ? 'items-end' : 'items-start')}>
+                              {!isOwnMessage && (
+                                <p className="text-xs font-medium text-muted-foreground px-1">
+                                  {comment.user?.name || 'Unknown'} · {roleLabel}
+                                </p>
+                              )}
+                              <div
+                                className={cn(
+                                  'shadow-sm overflow-hidden px-4 py-2.5',
+                                  isOwnMessage
+                                    ? 'bg-primary rounded-r-lg rounded-tl-lg text-primary-foreground'
+                                    : 'bg-secondary rounded-l-lg rounded-tr-lg text-secondary-foreground'
+                                )}
+                              >
+                                {comment.content && comment.content.trim() && (
+                                  <p className="text-sm whitespace-pre-wrap break-words">{comment.content}</p>
+                                )}
+                                {comment.attachments && Array.isArray(comment.attachments) && comment.attachments.length > 0 && (
+                                  <div className={cn('flex flex-col gap-2', comment.content?.trim() && 'mt-2')}>
+                                    {comment.attachments.map((att, idx) => (
+                                      <div key={idx}>
+                                        {isImageAttachment(att) ? (
+                                          <a
+                                            href={att.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            className="block rounded-lg overflow-hidden border border-black/10 max-w-[220px] max-h-48 focus:ring-2 focus:ring-primary focus:ring-offset-1"
+                                          >
+                                            <img src={att.url} alt={att.name || 'Image'} className="w-full h-full object-cover cursor-pointer hover:opacity-95 transition-opacity" loading="lazy" />
+                                            {att.name && <p className="text-xs truncate px-1.5 py-1 bg-black/5">{att.name}</p>}
+                                          </a>
+                                        ) : isVideoAttachment(att) ? (
+                                          <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-black/10 hover:bg-black/15 transition-colors">
+                                            <Paperclip className="h-4 w-4 shrink-0" />
+                                            <span className="text-sm underline truncate flex-1">{att.name || 'Video'}</span>
+                                            <span className="text-xs opacity-80">Open</span>
+                                          </a>
+                                        ) : (
+                                          <a href={att.url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 p-2 rounded-lg bg-black/10 hover:bg-black/15 transition-colors">
+                                            <FileText className="h-4 w-4 shrink-0" />
+                                            <span className="text-sm underline truncate flex-1">{att.name || 'Document'}</span>
+                                            <span className="text-xs opacity-80">Open</span>
+                                          </a>
+                                        )}
+                                      </div>
+                                    ))}
+                                  </div>
+                                )}
                               </div>
-                              <div>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-sm font-medium text-foreground">
-                                    {comment.user?.name || 'Unknown'}
-                                  </span>
-                                  <Badge variant="outline" className={`text-xs ${roleConfig.color}`}>
-                                    {roleConfig.label}
-                                  </Badge>
-                                </div>
-                                <span className="text-xs text-muted-foreground">
-                                  {format(new Date(comment.createdAt), 'MMM d, yyyy h:mm a')}
-                                </span>
+                              <div className={cn('flex items-center gap-1 px-1', isOwnMessage ? 'justify-end' : 'justify-start')}>
+                                <p className="text-xs text-muted-foreground">{format(new Date(comment.createdAt), 'h:mm a')}</p>
                               </div>
                             </div>
+                            {isOwnMessage && (
+                              <Avatar className="h-8 w-8 shrink-0 mt-1">
+                                <AvatarImage src={user?.profileImage} alt={user?.name} />
+                                <AvatarFallback className="bg-primary/20 text-primary text-xs">
+                                  {(user?.name || 'U').charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                            )}
                           </div>
-                          <p className="text-sm text-foreground mt-2 whitespace-pre-wrap">{comment.content}</p>
-                          {comment.attachments && Array.isArray(comment.attachments) && comment.attachments.length > 0 && (
-                            <div className="mt-3 flex flex-wrap gap-2">
-                              {comment.attachments.map((att, idx) => (
-                                <a
-                                  key={idx}
-                                  href={att.url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-2 px-3 py-1.5 bg-white border border-border rounded-lg text-xs hover:bg-secondary"
-                                >
-                                  {getFileIcon(att.type)}
-                                  <span>{att.name}</span>
-                                </a>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               </ScrollArea>
@@ -479,25 +504,11 @@ export default function AdminDisputeDetailPage() {
                   <ChatInput
                     value={commentContent}
                     onChange={(value) => setCommentContent(value)}
-                    onSend={handleSendComment}
-                    onFilesChange={handleFilesChange}
+                    onSend={(e, files) => handleSendComment(e, files)}
                     placeholder="Add a comment or ask for clarification..."
                     disabled={sending || uploading}
                     sending={sending || uploading}
                   />
-                  {attachments.length > 0 && (
-                    <div className="mt-2 flex flex-wrap gap-2">
-                      {attachments.map((att, idx) => (
-                        <div
-                          key={idx}
-                          className="inline-flex items-center gap-2 px-3 py-1.5 bg-secondary border border-border rounded-lg text-xs"
-                        >
-                          {getFileIcon(att.type)}
-                          <span className="max-w-[150px] truncate">{att.name}</span>
-                        </div>
-                      ))}
-                    </div>
-                  )}
                 </div>
               )}
             </CardContent>
@@ -507,7 +518,7 @@ export default function AdminDisputeDetailPage() {
         {/* Sidebar - Actions */}
         <div className="space-y-6 min-w-0">
           {/* Dispute Info */}
-          <Card className="rounded-[2rem] border-none">
+          <Card className="rounded-4xl border-none">
             <CardHeader>
               <CardTitle className="text-lg font-normal">Dispute Info</CardTitle>
             </CardHeader>
@@ -533,7 +544,7 @@ export default function AdminDisputeDetailPage() {
 
           {/* Quick Actions */}
           {canComment && (
-            <Card className="rounded-[2rem] border-none">
+            <Card className="rounded-4xl border-none">
               <CardHeader>
                 <CardTitle className="text-lg font-normal">Quick Actions</CardTitle>
               </CardHeader>
@@ -543,7 +554,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('MORE_INFO', 'CLIENT')}
                 >
-                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <Info className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Request More Info from Client</span>
                 </Button>
                 <Button
@@ -551,7 +562,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('MORE_INFO', 'FREELANCER')}
                 >
-                  <Info className="w-4 h-4 flex-shrink-0" />
+                  <Info className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Request More Info from Seller</span>
                 </Button>
                 <Button
@@ -559,7 +570,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('APPROVAL', 'CLIENT')}
                 >
-                  <CheckSquare className="w-4 h-4 flex-shrink-0" />
+                  <CheckSquare className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Request Approval from Client</span>
                 </Button>
                 <Button
@@ -567,7 +578,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('APPROVAL', 'FREELANCER')}
                 >
-                  <CheckSquare className="w-4 h-4 flex-shrink-0" />
+                  <CheckSquare className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Request Approval from Seller</span>
                 </Button>
                 <Button
@@ -575,7 +586,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('CLARIFICATION', 'CLIENT')}
                 >
-                  <HelpCircle className="w-4 h-4 flex-shrink-0" />
+                  <HelpCircle className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Ask Client for Clarification</span>
                 </Button>
                 <Button
@@ -583,7 +594,7 @@ export default function AdminDisputeDetailPage() {
                   className="w-full justify-start text-left h-auto py-2.5 px-3"
                   onClick={() => handleRequestInfo('CLARIFICATION', 'FREELANCER')}
                 >
-                  <HelpCircle className="w-4 h-4 flex-shrink-0" />
+                  <HelpCircle className="w-4 h-4 shrink-0" />
                   <span className="text-xs leading-tight">Ask Seller for Clarification</span>
                 </Button>
               </CardContent>
@@ -591,7 +602,7 @@ export default function AdminDisputeDetailPage() {
           )}
 
           {/* User Info */}
-          <Card className="rounded-[2rem] border-none">
+          <Card className="rounded-4xl border-none">
             <CardHeader>
               <CardTitle className="text-lg font-normal">Parties</CardTitle>
             </CardHeader>
@@ -600,9 +611,9 @@ export default function AdminDisputeDetailPage() {
                 <Label className="text-xs text-muted-foreground uppercase">Client</Label>
                 <div className="flex items-center gap-2 mt-2">
                   {dispute.client?.profileImage ? (
-                    <img src={dispute.client.profileImage} alt={dispute.client.name} className="w-8 h-8 rounded-full flex-shrink-0" />
+                    <img src={dispute.client.profileImage} alt={dispute.client.name} className="w-8 h-8 rounded-full shrink-0" />
                   ) : (
-                    <User className="w-8 h-8 text-muted-foreground flex-shrink-0" />
+                    <User className="w-8 h-8 text-muted-foreground shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{dispute.client?.name || 'Unknown'}</p>
@@ -615,9 +626,9 @@ export default function AdminDisputeDetailPage() {
                 <Label className="text-xs text-muted-foreground uppercase">Seller</Label>
                 <div className="flex items-center gap-2 mt-2">
                   {dispute.freelancer?.profileImage ? (
-                    <img src={dispute.freelancer.profileImage} alt={dispute.freelancer.name} className="w-8 h-8 rounded-full flex-shrink-0" />
+                    <img src={dispute.freelancer.profileImage} alt={dispute.freelancer.name} className="w-8 h-8 rounded-full shrink-0" />
                   ) : (
-                    <User className="w-8 h-8 text-muted-foreground flex-shrink-0" />
+                    <User className="w-8 h-8 text-muted-foreground shrink-0" />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-medium truncate">{dispute.freelancer?.name || 'Unknown'}</p>

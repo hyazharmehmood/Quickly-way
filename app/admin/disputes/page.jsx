@@ -1,21 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { ShieldAlert, Calendar, AlertTriangle, ShieldCheck, Activity, Search, RefreshCw, Eye, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { ShieldAlert, Calendar, AlertTriangle, ShieldCheck, Activity, Search, RefreshCw, ChevronRight, Clock } from 'lucide-react';
 import { MetricCard } from '@/components/admin/MetricCard';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 const STATUS_CONFIG = {
     OPEN: { label: 'OPEN', color: 'bg-red-100 text-red-600 border-red-200', priority: 'High' },
@@ -36,11 +34,6 @@ export default function DisputesPage() {
     });
     const [statusFilter, setStatusFilter] = useState('all');
     const [searchQuery, setSearchQuery] = useState('');
-    const [selectedDispute, setSelectedDispute] = useState(null);
-    const [resolveDialogOpen, setResolveDialogOpen] = useState(false);
-    const [resolutionText, setResolutionText] = useState('');
-    const [orderAction, setOrderAction] = useState('NONE');
-    const [resolving, setResolving] = useState(false);
 
     useEffect(() => {
         fetchDisputes();
@@ -71,55 +64,11 @@ export default function DisputesPage() {
         }
     };
 
-    const handleViewDetails = async (dispute) => {
+    const handleUpdateStatus = async (e, disputeId, newStatus) => {
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
         try {
-            const response = await api.get(`/admin/disputes/${dispute.id}`);
-            if (response.data.success) {
-                setSelectedDispute(response.data.dispute);
-                setResolveDialogOpen(true);
-            }
-        } catch (error) {
-            console.error('Error fetching dispute details:', error);
-            toast.error('Failed to fetch dispute details');
-        }
-    };
-
-    const handleResolveDispute = async () => {
-        if (!resolutionText.trim()) {
-            toast.error('Please provide a resolution text');
-            return;
-        }
-
-        try {
-            setResolving(true);
-            const response = await api.patch(`/admin/disputes/${selectedDispute.id}`, {
-                status: 'RESOLVED',
-                adminResolution: resolutionText,
-                orderAction,
-            });
-
-            if (response.data.success) {
-                toast.success('Dispute resolved successfully');
-                setResolveDialogOpen(false);
-                setResolutionText('');
-                setOrderAction('NONE');
-                setSelectedDispute(null);
-                fetchDisputes();
-            }
-        } catch (error) {
-            console.error('Error resolving dispute:', error);
-            toast.error(error.response?.data?.error || 'Failed to resolve dispute');
-        } finally {
-            setResolving(false);
-        }
-    };
-
-    const handleUpdateStatus = async (disputeId, newStatus) => {
-        try {
-            const response = await api.patch(`/admin/disputes/${disputeId}`, {
-                status: newStatus,
-            });
-
+            const response = await api.patch(`/admin/disputes/${disputeId}`, { status: newStatus });
             if (response.data.success) {
                 toast.success(`Dispute status updated to ${newStatus}`);
                 fetchDisputes();
@@ -147,8 +96,8 @@ export default function DisputesPage() {
             Low: 'bg-gray-50/50 text-gray-600 border-gray-100',
         };
         return (
-            <Badge variant="outline" className={`px-5 py-1.5 rounded-full text-[9px] font-normal uppercase tracking-[0.2em] shadow-sm border-0 ${priorityColors[config.priority]}`}>
-                Priority: {config.priority}
+            <Badge variant="outline" className={`px-2 py-0.5 rounded-full text-[9px] font-normal uppercase tracking-wider border-0 ${priorityColors[config.priority]}`}>
+                {config.priority}
             </Badge>
         );
     };
@@ -195,195 +144,104 @@ export default function DisputesPage() {
                 />
                 <MetricCard 
                     title="Safe Ratio" 
-                    value={metrics.total > 0 ? `${Math.round(((metrics.resolved + metrics.closed) / metrics.total) * 100)}%` : '100%'} 
+                    value={(metrics.open + metrics.inReview + metrics.resolved + metrics.closed) > 0 
+                      ? `${Math.round(((metrics.resolved + metrics.closed) / (metrics.open + metrics.inReview + metrics.resolved + metrics.closed)) * 100)}%` 
+                      : '100%'} 
                     trend="Trusted score" 
                     icon={<Activity />} 
                 />
             </div>
 
-            <Card className="border-none shadow-none">
-                <CardHeader className="px-0 flex flex-row justify-between items-center ">
-                    <CardTitle className="text-xl font-normal text-foreground">Case Unit</CardTitle>
-                    <div className="flex gap-3">
-                        <div className="relative w-64">
-                            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-                            <Input 
-                                placeholder="Search disputes..." 
-                                className="pl-10 h-11 bg-card border-border rounded-xl"
-                                value={searchQuery}
-                                onChange={(e) => setSearchQuery(e.target.value)}
-                            />
-                        </div>
-                        <Select value={statusFilter} onValueChange={setStatusFilter}>
-                            <SelectTrigger className="h-11 w-40 rounded-xl border-border">
-                                <SelectValue placeholder="Filter" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All</SelectItem>
-                                <SelectItem value="OPEN">Open</SelectItem>
-                                <SelectItem value="IN_REVIEW">In Review</SelectItem>
-                                <SelectItem value="RESOLVED">Resolved</SelectItem>
-                                <SelectItem value="CLOSED">Closed</SelectItem>
-                            </SelectContent>
-                        </Select>
-                        <Button
-                            variant="outline"
-                            size="icon"
-                            onClick={fetchDisputes}
-                            className="h-11 w-11 rounded-xl"
-                            disabled={loading}
-                        >
-                            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-                    </Button>
+            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle className="text-xl font-normal text-foreground">Case Unit</CardTitle>
+                <div className="flex flex-wrap gap-3">
+                    <div className="relative w-full sm:w-64">
+                        <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+                        <Input
+                            placeholder="Search disputes..."
+                            className="pl-10 h-11 bg-card border-border rounded-xl"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                        />
                     </div>
-                </CardHeader>
-                <CardContent className="p-0 divide-y divide-border">
-                    {loading ? (
-                        <div className="p-10 space-y-4">
-                            {[...Array(3)].map((_, i) => (
-                                <div key={i} className="space-y-2">
-                                    <Skeleton className="h-6 w-48" />
-                                    <Skeleton className="h-4 w-full" />
-                                </div>
-                            ))}
-                        </div>
-                    ) : filteredDisputes.length === 0 ? (
-                        <div className="p-10 text-center text-muted-foreground">
-                            {disputes.length === 0 ? 'No disputes found' : 'No disputes match your filters'}
-                        </div>
-                    ) : (
-                        filteredDisputes.map((dispute) => (
-                        <div key={dispute.id} className="p-10 hover:bg-secondary/20 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8">
-                            <div className="flex-1">
-                                <div className="flex items-center gap-4 mb-4">
+                    <Select value={statusFilter} onValueChange={setStatusFilter}>
+                        <SelectTrigger className="h-11 w-40 rounded-xl border-border">
+                            <SelectValue placeholder="Filter" />
+                        </SelectTrigger>
+                        <SelectContent>
+                            <SelectItem value="all">All</SelectItem>
+                            <SelectItem value="OPEN">Open</SelectItem>
+                            <SelectItem value="IN_REVIEW">In Review</SelectItem>
+                            <SelectItem value="RESOLVED">Resolved</SelectItem>
+                            <SelectItem value="CLOSED">Closed</SelectItem>
+                        </SelectContent>
+                    </Select>
+                    <Button variant="outline" size="icon" onClick={fetchDisputes} className="h-11 w-11 rounded-xl" disabled={loading}>
+                        <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+                    </Button>
+                </div>
+            </div>
+
+            {loading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {[1, 2, 3, 4, 5, 6].map((i) => (
+                        <Skeleton key={i} className="h-56 rounded-xl" />
+                    ))}
+                </div>
+            ) : filteredDisputes.length === 0 ? (
+                <Card className="border-dashed">
+                    <CardContent className="py-16 text-center text-muted-foreground">
+                        {disputes.length === 0 ? 'No disputes found' : 'No disputes match your filters'}
+                    </CardContent>
+                </Card>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {filteredDisputes.map((dispute) => (
+                        <Card key={dispute.id} className="overflow-hidden border-border hover:border-primary/40 hover:shadow-lg transition-all duration-200 flex flex-col">
+                            <Link href={`/admin/disputes/${dispute.id}`} className="flex-1 flex flex-col group">
+                                <CardContent className="p-4 flex flex-col flex-1">
+                                    <div className="flex items-center justify-between gap-2 mb-2 flex-wrap">
                                         {getPriorityBadge(dispute.status)}
-                                    <span className="text-sm text-muted-foreground font-normal flex items-center gap-1.5 uppercase tracking-widest">
-                                            <Calendar className="w-4 h-4" /> Filed {format(new Date(dispute.createdAt), 'MMM d')}
-                                    </span>
                                         {getStatusBadge(dispute.status)}
-                                </div>
-                                <h4 className="text-xl font-normal text-foreground mb-2">{dispute.reason} Complaint</h4>
-                                    <p className="text-base text-muted-foreground font-normal leading-relaxed max-w-4xl mb-2">{dispute.description}</p>
-                                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                                        <span>Order: {dispute.order?.orderNumber || dispute.orderId?.slice(0, 8)}</span>
-                                        <span>•</span>
-                                        <span>Client: {dispute.client?.name || 'Unknown'}</span>
-                                        <span>•</span>
-                                        <span>Seller: {dispute.freelancer?.name || 'Unknown'}</span>
-                                        {dispute.order?.price && (
-                                            <>
-                                                <span>•</span>
-                                                <span>Amount: {formatCurrency(dispute.order.price, dispute.order.currency)}</span>
-                                            </>
+                                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                                            <Calendar className="w-3.5 h-3.5" /> {format(new Date(dispute.createdAt), 'dd MMM yyyy')}
+                                        </span>
+                                    </div>
+                                    <h4 className="font-semibold text-foreground line-clamp-1">{dispute.reason}</h4>
+                                    <p className="text-sm text-muted-foreground line-clamp-2 flex-1 min-h-10 mt-1">{dispute.description}</p>
+                                    <div className="text-xs text-muted-foreground mt-2 space-y-0.5">
+                                        <p>Order: {dispute.order?.orderNumber || dispute.orderId?.slice(0, 8)}</p>
+                                        <p>Client: {dispute.client?.name || 'Unknown'} · Seller: {dispute.freelancer?.name || 'Unknown'}</p>
+                                        {dispute.order?.price != null && (
+                                            <p>Amount: {formatCurrency(dispute.order.price, dispute.order?.currency)}</p>
                                         )}
                                     </div>
                                     {dispute.adminResolution && (
-                                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-xl">
-                                            <p className="text-sm font-medium text-green-800 mb-1">Admin Resolution:</p>
-                                            <p className="text-sm text-green-700">{dispute.adminResolution}</p>
-                                            {dispute.resolvedAt && (
-                                                <p className="text-xs text-green-600 mt-2">
-                                                    Resolved on {format(new Date(dispute.resolvedAt), 'MMM d, yyyy')} by {dispute.resolvedByUser?.name || 'Admin'}
-                                                </p>
-                                            )}
-                                        </div>
+                                        <p className="text-xs text-green-600 dark:text-green-400 mt-2 line-clamp-1">Resolution added</p>
                                     )}
-                            </div>
-                            <div className="flex flex-col gap-3 min-w-[180px]">
-                                    {dispute.status === 'OPEN' || dispute.status === 'IN_REVIEW' ? (
-                                        <>
-                                            <Button 
-                                                className="w-full h-12 bg-primary text-primary-foreground rounded-[1.2rem] font-normal text-sm shadow-md transition-all hover:bg-primary/90"
-                                                onClick={() => router.push(`/admin/disputes/${dispute.id}`)}
-                                            >
-                                    Resolve Case
-                                </Button>
-                                            <Button 
-                                                variant="outline" 
-                                                className="w-full h-12 bg-background border-border text-foreground rounded-[1.2rem] font-normal text-sm hover:bg-secondary transition-all"
-                                                onClick={() => router.push(`/admin/disputes/${dispute.id}`)}
-                                            >
-                                                <Eye className="w-4 h-4 mr-2" /> View Details
-                                            </Button>
-                                            {dispute.status === 'OPEN' && (
-                                                <Button 
-                                                    variant="outline" 
-                                                    className="w-full h-12 bg-background border-border text-foreground rounded-[1.2rem] font-normal text-sm hover:bg-secondary transition-all"
-                                                    onClick={() => handleUpdateStatus(dispute.id, 'IN_REVIEW')}
-                                                >
-                                                    <Clock className="w-4 h-4 mr-2" /> Mark In Review
-                                                </Button>
-                                            )}
-                                        </>
-                                    ) : (
-                                        <Button 
-                                            variant="outline" 
-                                            className="w-full h-12 bg-background border-border text-foreground rounded-[1.2rem] font-normal text-sm hover:bg-secondary transition-all"
-                                            onClick={() => handleViewDetails(dispute)}
-                                        >
-                                            <Eye className="w-4 h-4 mr-2" /> View Details
-                                </Button>
-                                    )}
+                                    <div className="flex items-center justify-end mt-3 pt-3 border-t border-border">
+                                        <span className="text-sm font-medium text-primary flex items-center gap-1">
+                                            Open case <ChevronRight className="h-4 w-4 group-hover:translate-x-0.5 transition-transform" />
+                                        </span>
+                                    </div>
+                                </CardContent>
+                            </Link>
+                            {dispute.status === 'OPEN' && (
+                                <div className="px-4 pb-4 pt-0">
+                                    <Button
+                                        variant="outline"
+                                        size="sm"
+                                        className="w-full rounded-xl"
+                                        onClick={(e) => handleUpdateStatus(e, dispute.id, 'IN_REVIEW')}
+                                    >
+                                        <Clock className="w-4 h-4 mr-2" /> Mark In Review
+                                    </Button>
                                 </div>
-                            </div>
-                        ))
-                    )}
-                </CardContent>
-            </Card>
-
-            {/* Resolve Dispute Dialog */}
-            <Dialog open={resolveDialogOpen} onOpenChange={setResolveDialogOpen}>
-                <DialogContent className="max-w-2xl">
-                    <DialogHeader>
-                        <DialogTitle>Resolve Dispute</DialogTitle>
-                        <DialogDescription>
-                            Provide a resolution for this dispute. This action will be recorded.
-                        </DialogDescription>
-                    </DialogHeader>
-                    {selectedDispute && (
-                        <div className="space-y-4">
-                            <div className="p-4 bg-secondary/50 rounded-lg">
-                                <p className="text-sm font-medium mb-2">Dispute Details:</p>
-                                <p className="text-sm text-muted-foreground mb-1"><strong>Reason:</strong> {selectedDispute.reason}</p>
-                                <p className="text-sm text-muted-foreground mb-1"><strong>Description:</strong> {selectedDispute.description}</p>
-                                <p className="text-sm text-muted-foreground"><strong>Order:</strong> {selectedDispute.order?.orderNumber || selectedDispute.orderId}</p>
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="resolution">Resolution Text *</Label>
-                                <Textarea
-                                    id="resolution"
-                                    placeholder="Enter your resolution for this dispute..."
-                                    value={resolutionText}
-                                    onChange={(e) => setResolutionText(e.target.value)}
-                                    rows={5}
-                                />
-                            </div>
-                            <div className="space-y-2">
-                                <Label htmlFor="orderAction">Order Action</Label>
-                                <Select value={orderAction} onValueChange={setOrderAction}>
-                                    <SelectTrigger id="orderAction">
-                                        <SelectValue placeholder="Select action" />
-                                    </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="NONE">No Action</SelectItem>
-                                        <SelectItem value="REFUND_CLIENT">Refund Client</SelectItem>
-                                        <SelectItem value="PAY_FREELANCER">Pay Seller</SelectItem>
-                                        <SelectItem value="SPLIT">Split Payment</SelectItem>
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </div>
-                    )}
-                    <DialogFooter>
-                        <Button variant="outline" onClick={() => setResolveDialogOpen(false)}>
-                            Cancel
-                        </Button>
-                        <Button onClick={handleResolveDispute} disabled={resolving || !resolutionText.trim()}>
-                            {resolving ? 'Resolving...' : 'Resolve Dispute'}
-                        </Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+                            )}
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
     );
 }

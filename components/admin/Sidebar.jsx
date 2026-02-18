@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import {
     LayoutDashboard, Users as UsersIcon, ShieldCheck, Briefcase,
     ShoppingCart, AlertCircle, Star, Search, Settings as SettingsIcon,
-    LogOut, ChevronLeft, ChevronRight, FolderTree, Tag
+    LogOut, ChevronLeft, ChevronRight, FolderTree, Tag, Headphones
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,7 +34,8 @@ export const Sidebar = ({ onLogout }) => {
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
         { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
-        { icon: <AlertCircle />, label: "Support Tickets", href: "/admin/disputes" },
+        { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
+        { icon: <Headphones />, label: "Support Tickets", href: "/admin/support-tickets" },
         { icon: <Star />, label: "Reviews", href: "/admin/reviews" },
         { icon: <FolderTree />, label: "Categories", href: "/admin/categories" },
         { icon: <Tag />, label: "Skills", href: "/admin/skills" },

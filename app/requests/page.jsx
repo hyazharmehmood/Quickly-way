@@ -57,13 +57,13 @@ export default function ClientRequestsPage() {
         <div className="max-w-7xl mx-auto py-8 px-4 animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
-                    <h2 className="text-2xl font-normal text-foreground tracking-tight">My Requests</h2>
-                    <p className="text-muted-foreground font-normal mt-1 text-sm">Manage public requests and service inquiries.</p>
+                    <h3 className="heading-3 ">
+                  
+                        My Requests
+                    </h3>
+                    <p className="caption">Manage public requests and service inquiries.</p>
                 </div>
-                <Button size="lg" className=" bg-primary text-primary-foreground   hover:bg-primary/90 ">
-                    <Plus className="w-5 h-5" />
-                    <span>Create New Request</span>
-                </Button>
+                
             </div>
 
             <Card className="rounded-[2rem] border-none overflow-hidden ">

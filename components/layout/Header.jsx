@@ -31,6 +31,7 @@ import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, Me
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { GlobalSearch } from '@/components/search/GlobalSearch';
+import { useContactSupport } from '@/context/ContactSupportContext';
 
 export function Header() {
   const router = useRouter();
@@ -48,6 +49,7 @@ export function Header() {
   const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
   const switchToClient = () => router.push('/');
   const switchToSeller = () => router.push('/dashboard/freelancer');
+  const { openContactSupport } = useContactSupport();
 
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
   const [currentLocation, setCurrentLocation] = useState('All location');
@@ -397,7 +399,7 @@ export function Header() {
               variant="ghost"
               size="icon"
               className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 sm:gap-2 md:h-10 md:px-4"
-              onClick={() => handleNavigate('support')}
+              onClick={openContactSupport}
               aria-label="Support"
             >
               <Headphones className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -519,7 +521,14 @@ export function Header() {
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <AlertCircle className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">Support Tickets</span>
+                            <span className="text-sm font-medium">Disputes</span>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                            <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                              <Headphones className="w-4 h-4" />
+                            </div>
+                            <span className="text-sm font-medium">My support tickets</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
@@ -536,7 +545,7 @@ export function Header() {
                             <span className="text-sm font-medium">Language</span>
                           </DropdownMenuItem> */}
 
-                          <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                          <DropdownMenuItem onClick={openContactSupport} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <HelpCircle className="w-4 h-4" />
                             </div>
@@ -563,12 +572,20 @@ export function Header() {
                           </DropdownMenuItem>
 
                           {!isAdmin && (
-                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/disputes')} className="cursor-pointer">
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
-                                <AlertCircle className="w-4 h-4" />
-                              </div>
-                              <span className="text-sm font-medium">Support Tickets</span>
-                            </DropdownMenuItem>
+                            <>
+                              <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/disputes')} className="cursor-pointer">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                  <AlertCircle className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium">Disputes</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                  <Headphones className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium">My support tickets</span>
+                              </DropdownMenuItem>
+                            </>
                           )}
 
                           <DropdownMenuItem
@@ -584,7 +601,7 @@ export function Header() {
                             <span className="text-sm font-medium">Profile</span>
                           </DropdownMenuItem>
 
-                          <DropdownMenuItem onClick={() => router.push('/support')} className="cursor-pointer">
+                          <DropdownMenuItem onClick={openContactSupport} className="cursor-pointer">
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <HelpCircle className="w-4 h-4" />
                             </div>
