@@ -35,8 +35,8 @@ CREATE INDEX "RoleAgreementRequest_requestedRole_idx" ON "RoleAgreementRequest"(
 -- CreateIndex
 CREATE UNIQUE INDEX "RoleAgreementRequest_userId_requestedRole_key" ON "RoleAgreementRequest"("userId", "requestedRole");
 
--- CreateIndex
-CREATE UNIQUE INDEX "Review_orderId_reviewerId_isClientReview_key" ON "Review"("orderId", "reviewerId", "isClientReview");
+-- CreateIndex (IF NOT EXISTS: index may already exist from 20260129000003_fix_review_constraint)
+CREATE UNIQUE INDEX IF NOT EXISTS "Review_orderId_reviewerId_isClientReview_key" ON "Review"("orderId", "reviewerId", "isClientReview");
 
 -- AddForeignKey
 ALTER TABLE "RoleAgreementRequest" ADD CONSTRAINT "RoleAgreementRequest_userId_fkey" FOREIGN KEY ("userId") REFERENCES "User"("id") ON DELETE CASCADE ON UPDATE CASCADE;
