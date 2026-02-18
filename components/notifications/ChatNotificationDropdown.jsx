@@ -1,7 +1,8 @@
 'use client';
 
 import { useRouter, usePathname } from 'next/navigation';
-import { MessageSquare, Mail } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { MessageSquare, Mail, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '@/utils';
 import {
   DropdownMenu,
@@ -10,8 +11,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Switch } from '@/components/ui/switch';
 import { formatDistanceToNow } from 'date-fns';
 import useChatUnreadStore from '@/store/useChatUnreadStore';
+
+const NOTIFICATION_SOUND_KEY = 'quicklyway-notification-sound';
 
 export function ChatNotificationDropdown({ className }) {
   const router = useRouter();
@@ -20,6 +24,20 @@ export function ChatNotificationDropdown({ className }) {
   const messagesPath = pathname?.startsWith('/dashboard/freelancer')
     ? '/dashboard/freelancer/messages'
     : '/messages';
+
+  const [soundOn, setSoundOn] = useState(true);
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const stored = localStorage.getItem(NOTIFICATION_SOUND_KEY);
+    setSoundOn(stored !== 'false');
+  }, []);
+
+  const handleSoundToggle = (checked) => {
+    setSoundOn(checked);
+    try {
+      localStorage.setItem(NOTIFICATION_SOUND_KEY, checked ? 'true' : 'false');
+    } catch (_) {}
+  };
 
   const handleOpenChat = (conversationId) => {
     router.push(`${messagesPath}?conversationId=${conversationId}`);
@@ -51,6 +69,13 @@ export function ChatNotificationDropdown({ className }) {
       >
         <div className="flex items-center justify-between px-4 py-3 border-b border-border">
           <p className="text-sm font-semibold text-foreground">Chat notifications</p>
+          <div className="flex items-center justify-between gap-3">
+            <span onClick={() => handleSoundToggle(!soundOn)} className="text-xs  flex items-center gap-2">
+              {soundOn ? <Volume2 className="w-4 h-4 cursor-pointer text-primary   " /> : <VolumeX className="w-4 h-4 cursor-pointer  text-muted-foreground" />}
+
+            </span>
+            
+          </div>
         </div>
         <ScrollArea className="h-80">
           <div className="py-1 mr-2">
@@ -108,8 +133,9 @@ export function ChatNotificationDropdown({ className }) {
             )}
           </div>
         </ScrollArea>
-        {conversationsWithUnread.length > 0 && (
-          <div className="p-2 border-t border-border">
+        <div className="p-3 border-t border-border space-y-2">
+        
+          {conversationsWithUnread.length > 0 && (
             <Button
               variant="ghost"
               size="sm"
@@ -118,8 +144,8 @@ export function ChatNotificationDropdown({ className }) {
             >
               Open Inbox
             </Button>
-          </div>
-        )}
+          )}
+        </div>
       </DropdownMenuContent>
     </DropdownMenu>
   );
