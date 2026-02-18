@@ -18,7 +18,7 @@ export function proxy(request) {
             return NextResponse.redirect(new URL('/login', request.url));
         }
 
-        // Freelancer dashboard: allow ADMIN, FREELANCER, or CLIENT with approved seller (isSeller)
+        // Seller dashboard: allow ADMIN, FREELANCER (seller), or CLIENT with approved seller (isSeller)
         if (pathname.startsWith('/dashboard/freelancer')) {
             const normalizedRole = role ? role.toUpperCase() : '';
             const isSeller = request.cookies.get('isSeller')?.value === 'true';
@@ -46,8 +46,8 @@ export function proxy(request) {
         }
     }
 
-    // 5. Become seller page: login required
-    if (pathname === '/become-seller' && !token) {
+    // 5. Join as Client / Join as Seller: login required
+    if ((pathname === '/become-seller' || pathname === '/join-as-client' || pathname === '/join-as-freelancer') && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
     }
 
@@ -56,6 +56,6 @@ export function proxy(request) {
 
 // Config to match only relevant paths
 export const config = {
-    matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup', '/become-seller'],
+    matcher: ['/dashboard/:path*', '/admin/:path*', '/messages/:path*', '/login', '/signup', '/become-seller', '/join-as-client', '/join-as-freelancer'],
 };
 

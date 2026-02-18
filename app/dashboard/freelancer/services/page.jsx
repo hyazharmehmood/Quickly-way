@@ -32,20 +32,28 @@ export default function FreelancerServicesPage() {
                     const transformed = data.map(service => ({
                         id: service.id,
                         title: service.title,
-                        description: service.description || '', // Ensure not null
+                        description: service.description || '',
                         price: service.price,
-                        rating: 0, // Default for now
-                        reviews: 0, // Default for now
-                        status: 'Published', // Basic assumption or add status to model later
+                        currency: service.currency,
+                        rating: 0,
+                        reviews: 0,
+                        status: 'Published',
                         image: service.coverImage || (service.images && service.images[0]) || 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=250&fit=crop',
                         coverType: service.coverType,
                         coverText: service.coverText,
                         coverColor: service.coverColor,
                         coverImage: service.coverImage,
+                        freelancerId: service.freelancerId || service.freelancer?.id,
 
                         profileImage: service.freelancer?.profileImage,
-                        name: service.freelancer?.name || 'Freelancer',
-                        location: 'Remote' // Default
+                        name: service.freelancer?.name || 'Seller',
+                        location: service.freelancer?.location || 'Remote',
+
+                        provider: {
+                            avatarUrl: service.freelancer?.profileImage,
+                            name: service.freelancer?.name || 'Seller',
+                            location: service.freelancer?.location || 'Remote'
+                        }
                     }));
 
                     setMyServices(transformed);

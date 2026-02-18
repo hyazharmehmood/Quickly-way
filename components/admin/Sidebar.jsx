@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import {
-    LayoutDashboard, Users as UsersIcon, ShieldCheck, Briefcase,
+    LayoutDashboard, Users as UsersIcon, UserCheck, ShieldCheck, Briefcase,
     ShoppingCart, AlertCircle, Star, Search, Settings as SettingsIcon,
     LogOut, ChevronLeft, ChevronRight, FolderTree, Tag, Headphones
 } from 'lucide-react';
@@ -32,6 +32,7 @@ export const Sidebar = ({ onLogout }) => {
     const menuItems = [
         { icon: <LayoutDashboard />, label: "Dashboard", href: "/admin" },
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
+        { icon: <UserCheck />, label: "Join Requests", href: "/admin/join-requests" },
         { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
         { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },

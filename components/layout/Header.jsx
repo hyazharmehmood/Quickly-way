@@ -42,10 +42,11 @@ export function Header() {
   const isAdmin = normalizedRole === 'ADMIN';
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : (user?.email ? user.email.charAt(0).toUpperCase() : 'A');
-  const userRoleDisplay = normalizedRole === 'ADMIN' ? 'Super User' : (isSeller && sellerStatus === 'APPROVED' ? 'Client & Seller' : 'Client');
+  const userRoleDisplay = normalizedRole === 'ADMIN' ? 'Super User' : (normalizedRole === 'FREELANCER' ? 'Seller' : (isSeller && sellerStatus === 'APPROVED' ? 'Client & Seller' : 'Client'));
   const displayName = user?.name || 'User';
   const canAccessFreelancerDashboard = isSeller && sellerStatus === 'APPROVED';
-  const showRoleToggle = canAccessFreelancerDashboard || normalizedRole === 'FREELANCER';
+  // Only show role switcher when user has BOTH client and seller (e.g. CLIENT with approved seller)
+  const showRoleToggle = normalizedRole === 'CLIENT' && canAccessFreelancerDashboard;
   const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
   const switchToClient = () => router.push('/');
   const switchToSeller = () => router.push('/dashboard/freelancer');
@@ -434,26 +435,39 @@ export function Header() {
           <div className="col-start-2 row-start-1 flex items-center gap-2 sm:gap-3 md:gap-4 lg:gap-6 justify-end md:min-w-[200px] lg:min-w-[240px] shrink-0 self-center md:order-3">
             {isLoggedIn ? (
               <div className="flex items-center gap-2 sm:gap-3 md:gap-4 flex-wrap justify-end">
-                {/* Become seller: show for clients who are not approved sellers */}
+                {/* Join as Seller: show for clients who are not approved sellers */}
                 {!isAdmin && normalizedRole === 'CLIENT' && !canAccessFreelancerDashboard && sellerStatus !== 'PENDING' && (
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={() => router.push('/become-seller')}
+                    onClick={() => router.push('/join-as-freelancer')}
                     className="rounded-full text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 h-auto"
                   >
-                    <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-1.5 shrink-0" />
-                    <span className="hidden sm:inline">Become seller</span>
-                    <span className="sm:hidden">Seller</span>
+                    <Store className="w-3.5 h-3.5 sm:w-4 sm:h-4  shrink-0" />
+                    <span className="hidden sm:inline">Become a Seller</span>
+                    <span className="sm:hidden">Become a Seller</span>
                   </Button>
                 )}
-                {!isAdmin && normalizedRole === 'CLIENT' && sellerStatus === 'PENDING' && (
+                {/* Join as Client: show for seller-only users (role FREELANCER) */}
+                {!isAdmin && normalizedRole === 'FREELANCER' && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => router.push('/join-as-client')}
+                    className="rounded-full text-xs sm:text-sm font-medium px-2.5 sm:px-3 py-1.5 sm:py-2 h-auto"
+                  >
+                    <UserCheck className="w-3.5 h-3.5 sm:w-4 sm:h-4  shrink-0" />
+                    <span className="hidden sm:inline">Become a Client</span>
+                    <span className="sm:hidden">Become a Client</span>
+                  </Button>
+                )}
+                {!isAdmin && normalizedRole === 'CLIENT' && (sellerStatus === 'PENDING' || sellerStatus === 'pending') && (
                   <span className="text-xs text-muted-foreground px-2.5 sm:px-3 py-1.5 rounded-full bg-muted whitespace-nowrap">Request pending</span>
                 )}
                 {/* Client | Seller toggle when user has both accesses */}
                 {showRoleToggle && (
                   <RoleSwitcher
-                    currentRole={isFreelancerView ? 'freelancer' : 'client'}
+                    currentRole={isFreelancerView ? 'seller' : 'client'}
                     onSwitch={isFreelancerView ? switchToClient : switchToSeller}
                     isOpen={true}
                     className="mb-0 w-auto min-w-0 sm:min-w-[140px] lg:min-w-[160px]"
@@ -555,7 +569,7 @@ export function Header() {
                         </>
                       )}
 
-                      {/* FREELANCER & ADMIN MENU */}
+                      {/* SELLER-ONLY (FREELANCER) & ADMIN MENU */}
                       {(normalizedRole === 'FREELANCER' || isAdmin) && (
                         <>
                           <DropdownMenuItem
@@ -568,11 +582,17 @@ export function Header() {
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <LayoutDashboard className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">Dashboard</span>
+                            <span className="text-sm font-medium">{isAdmin ? 'Dashboard' : 'Seller Dashboard'}</span>
                           </DropdownMenuItem>
 
                           {!isAdmin && (
                             <>
+                              <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/messages')} className="cursor-pointer">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                  <MessageSquare className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium">Messages</span>
+                              </DropdownMenuItem>
                               <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/disputes')} className="cursor-pointer">
                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                                   <AlertCircle className="w-4 h-4" />
@@ -584,6 +604,12 @@ export function Header() {
                                   <Headphones className="w-4 h-4" />
                                 </div>
                                 <span className="text-sm font-medium">My support tickets</span>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem onClick={() => router.push('/join-as-client')} className="cursor-pointer">
+                                <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
+                                  <UserCheck className="w-4 h-4" />
+                                </div>
+                                <span className="text-sm font-medium">Join as Client</span>
                               </DropdownMenuItem>
                             </>
                           )}

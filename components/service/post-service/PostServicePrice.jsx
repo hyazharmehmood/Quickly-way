@@ -23,22 +23,44 @@ const PostServicePrice = (props) => {
     const regionMethods = getPaymentMethodsByRegion(paymentRegion || 'SAUDI_ARABIA');
     const selectedSet = new Set(paymentMethods || []);
 
+    // Build payment description from base text + selected methods
+    const buildPaymentDescription = (selected) => {
+        const base = 'I accept payments via quicklyway';
+        if (!selected?.length) return base;
+        return `${base}, ${selected.join(', ')}`;
+    };
+
     const togglePaymentMethod = (label) => {
         setPaymentMethods(prev => {
             const next = new Set(prev || []);
             if (next.has(label)) next.delete(label);
             else next.add(label);
-            return Array.from(next);
+            const newList = Array.from(next);
+            setPaymentMethodsText(buildPaymentDescription(newList));
+            return newList;
         });
     };
 
     const selectAllPaymentMethods = () => {
-        setPaymentMethods(regionMethods.map(m => m.label));
+        const allLabels = regionMethods.map(m => m.label);
+        setPaymentMethods(allLabels);
+        setPaymentMethodsText(buildPaymentDescription(allLabels));
     };
 
     const [expandedBreakdowns, setExpandedBreakdowns] = useState({});
     const [isManualPriceEdit, setIsManualPriceEdit] = useState(false);
     const [isPriceGroupFocused, setIsPriceGroupFocused] = useState(false);
+
+    // When payment methods are selected and description is empty, set description from selection
+    useEffect(() => {
+        const selected = paymentMethods || [];
+        const currentText = (paymentMethodsText || '').trim();
+        const built = buildPaymentDescription(selected);
+        if (selected.length > 0 && (currentText === '' || currentText === 'I accept payments via quicklyway')) {
+            setPaymentMethodsText(built);
+        }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
 
     // Auto-calculate total price from breakdowns (deferred to avoid setState-during-render)
     useEffect(() => {
@@ -100,18 +122,18 @@ const PostServicePrice = (props) => {
                 <div className="space-y-6">
                     <div className="space-y-1.5">
                         <label className="block text-base font-medium text-gray-900">Price <span className="text-red-500">*</span></label>
-                        <div className="flex">
-                            <div className="relative">
+                        <div className="flex ">
+                            <div className="relative ">
                                 <select
                                     value={selectedCurrency}
                                     onChange={(e) => setSelectedCurrency(e.target.value)}
-                                    className="appearance-none bg-gray-50 border border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-6 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-11"
+                                    className="appearance-none   border  bg-gray-50 border-gray-200 border-r-0 rounded-l-lg py-3 pl-4 pr-8 text-base text-gray-700 focus:outline-none focus:ring-1 focus:ring-green-500/20 focus:border-green-500 h-11"
                                 >
                                     {CURRENCIES.map(c => (
                                         <option key={c.code} value={c.code}>{c.code}</option>
                                     ))}
                                 </select>
-                                <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
+                                <div className="pointer-events-none absolute inset-y-0 right-0  flex items-center px-2 text-gray-500">
                                     <svg className="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" /></svg>
                                 </div>
                             </div>
@@ -120,7 +142,7 @@ const PostServicePrice = (props) => {
                                 value={priceStr}
                                 onChange={handlePriceChange}
                                 placeholder="0.00"
-                                className="flex-1 w-full rounded-l-none border-l-0"
+                                className="flex-1 w-full rounded-l-none border-l-0  "
                             />
                         </div>
                     </div>

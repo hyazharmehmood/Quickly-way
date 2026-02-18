@@ -7,6 +7,7 @@ import * as yup from 'yup';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
@@ -34,42 +35,63 @@ function formatNameValue(val) {
 
 const Signup = ({ onSignInClick, onPostServiceClick }) => {
   const [showPassword, setShowPassword] = useState(false);
+  const [signupAs, setSignupAs] = useState('client');
   const { signup } = useAuthStore();
   const router = useRouter();
 
   const formik = useFormik({
     initialValues: { firstName: '', lastName: '', email: '', password: '' },
     validationSchema: signupSchema,
-    onSubmit: async (values) => {
+    onSubmit: async (_, { setSubmitting }) => {
       try {
-        await signup({
-          name: `${values.firstName} ${values.lastName}`,
-          email: values.email,
-          password: values.password,
-          role: 'CLIENT',
-          isSeller: false,
-          sellerStatus: 'NONE',
-        });
-        toast.success('Account created successfully!');
-        router.push('/');
-      } catch (error) {
-        toast.error(error.response?.data?.message || 'Something went wrong.');
+        await handleSubmitAs(signupAs);
+      } finally {
+        setSubmitting(false);
       }
     },
   });
 
   const { values, errors, touched, handleChange, handleBlur, handleSubmit, isSubmitting, setFieldValue } = formik;
 
+  const handleSubmitAs = async (signupAs) => {
+    const errs = await formik.validateForm();
+    if (Object.keys(errs).length > 0) {
+      formik.setErrors(errs);
+      formik.setTouched({ firstName: true, lastName: true, email: true, password: true });
+      return;
+    }
+    try {
+      await signup({
+        name: `${values.firstName} ${values.lastName}`,
+        email: values.email,
+        password: values.password,
+        signupAs,
+      });
+      toast.success('Account created! Complete the next step.');
+      if (signupAs === 'client') router.push('/join-as-client');
+      else router.push('/join-as-freelancer');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Something went wrong.');
+    }
+  };
+
   const handleFirstNameChange = (e) => setFieldValue('firstName', formatNameValue(e.target.value));
   const handleLastNameChange = (e) => setFieldValue('lastName', formatNameValue(e.target.value));
 
   return (
     <>
-      <h1 className="heading-2  text-center">Create your account</h1>
+      <h3 className="heading-3 text-center">Create your account</h3>
       <div className="space-y-4">
-        <p className="small text-muted-foreground  text-center">
-          Create a client account. You can apply to become a seller later from your account.
+        <p className="text-sm text-muted-foreground pb-2 text-center">
+          Choose how you want to join. You can request the other role later from your account.
         </p>
+
+        <Tabs value={signupAs} onValueChange={(v) => setSignupAs(v)} className="w-full ">
+          <TabsList className="grid w-full grid-cols-2 p-0">
+            <TabsTrigger value="client" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-6 py-2 h-auto">Join as Client</TabsTrigger>
+            <TabsTrigger value="seller" className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground rounded-lg px-6 py-2 h-auto">Join as Seller</TabsTrigger>
+          </TabsList>
+        </Tabs>
 
         {/* <div className="space-y-4">
           <Button type="button" variant="outline" className="w-full ">
@@ -171,11 +193,9 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
           </div>
      
         
-        <div className="flex items-center justify-center pt-4">
-          <Button type="submit" disabled={isSubmitting} className="w-full ">
-            {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create an account'}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isSubmitting} className="w-full mt-4">
+          {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : 'Create an account'}
+        </Button>
         </form>
 
         <div className=" text-center">

@@ -18,7 +18,7 @@ import { uploadToCloudinary } from '@/utils/cloudinary';
 
 const ROLE_CONFIG = {
   CLIENT: { label: 'Client' },
-  FREELANCER: { label: 'Service Provider' },
+  FREELANCER: { label: 'Seller' },
   ADMIN: { label: 'Admin' },
 };
 

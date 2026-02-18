@@ -4,14 +4,14 @@ import React from 'react';
 import { ArrowLeftRight } from 'lucide-react';
 
 export const RoleSwitcher = ({ currentRole, onSwitch, isOpen, className = "px-4 mb-6" }) => {
-    const isFreelancer = currentRole === 'freelancer';
+    const isSellerView = currentRole === 'freelancer' || currentRole === 'seller';
 
     if (!isOpen) return (
         <div className="px-3 mb-4">
             <button
                 onClick={onSwitch}
                 className="w-10 h-10 bg-primary/10 text-primary rounded-xl flex items-center justify-center hover:bg-primary/20 transition-all shadow-sm"
-                title={`Switch to ${isFreelancer ? 'Client' : 'Seller'}`}
+                title={`Switch to ${isSellerView ? 'Client' : 'Seller'}`}
             >
                 <ArrowLeftRight className="w-5 h-5" />
             </button>
@@ -29,16 +29,16 @@ export const RoleSwitcher = ({ currentRole, onSwitch, isOpen, className = "px-4 
 
                 {/* Client Option */}
                 <button
-                    onClick={() => isFreelancer && onSwitch()}
-                    className={` w-full px-2 py-1.5 rounded-full text-[13px]  transition-colors duration-300 z-10 ${!isFreelancer ? 'text-primary  bg-white' : 'text-white '}`}
+                    onClick={() => isSellerView && onSwitch()}
+                    className={` w-full px-2 py-1.5 rounded-full text-[13px]  transition-colors duration-300 z-10 ${!isSellerView ? 'text-primary  bg-white' : 'text-white '}`}
                 >
                     Client
                 </button>
 
                 {/* Seller Option */}
                 <button
-                    onClick={() => !isFreelancer && onSwitch()}
-                    className={` w-full px-2 py-1.5 rounded-full text-[13px]   transition-colors duration-300 z-10 ${isFreelancer ? 'text-primary  bg-white' : 'text-white '}`}
+                    onClick={() => !isSellerView && onSwitch()}
+                    className={` w-full px-2 py-1.5 rounded-full text-[13px]   transition-colors duration-300 z-10 ${isSellerView ? 'text-primary  bg-white' : 'text-white '}`}
                 >
                     Seller
                 </button>

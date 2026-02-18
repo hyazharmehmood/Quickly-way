@@ -6,8 +6,10 @@ import api from '@/utils/api';
 import PostServiceTitle from './PostServiceTitle';
 import PostServiceSkills from './PostServiceSkills';
 import PostServicePrice from './PostServicePrice';
+import PostServiceProfile from './PostServiceProfile';
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
+import { COUNTRY_CODES } from '@/utils/constants';
 
 const DEFAULT_PRICE_BREAKDOWNS = [
     "Logo design $50 - $500",
@@ -127,7 +129,17 @@ const generateTextImage = (text, bgClass) => {
 };
 
 const PostService = ({ onCancel, onSave, initialData }) => {
-    const [step, setStep] = useState(1);
+    const [step, setStep] = useState(0); // Start at step 0 (profile)
+
+    // --- Step 0 State (Profile) ---
+    const [profileImage, setProfileImage] = useState(null);
+    const [profileName, setProfileName] = useState("");
+    const [phoneCountryCode, setPhoneCountryCode] = useState("+1");
+    const [phoneNumber, setPhoneNumber] = useState("");
+    const [showEmail, setShowEmail] = useState(false);
+    const [showMobile, setShowMobile] = useState(false);
+    const [yearsOfExperience, setYearsOfExperience] = useState(0);
+    const [profileLocation, setProfileLocation] = useState("");
 
     // --- Step 1 State (Title) ---
     const [serviceTitle, setServiceTitle] = useState("");
@@ -161,7 +173,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     const [availableForJob, setAvailableForJob] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
 
-    // Fetch User Data on Mount
+    // Fetch User Data on Mount and Prefill Profile
     React.useEffect(() => {
         const fetchUserData = async () => {
             try {
@@ -169,6 +181,39 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 const response = await api.get('/auth/me');
                 const userData = response.data.user;
                 setUser(userData);
+                
+                // Prefill profile fields from user data
+                if (userData) {
+                    setProfileImage(userData.profileImage || null);
+                    setProfileName(userData.name || "");
+                    setShowEmail(userData.showEmail || false);
+                    setShowMobile(userData.showMobile || false);
+                    setProfileLocation(userData.location || "");
+                    setYearsOfExperience(userData.yearsOfExperience || 0);
+                    
+                    // Parse phone number if it exists
+                    if (userData.phoneNumber) {
+                        const phone = userData.phoneNumber;
+                        if (phone.startsWith('+')) {
+                            const match = phone.match(/^(\+\d{1,4})\s*(.+)$/);
+                            if (match) {
+                                setPhoneCountryCode(match[1]);
+                                setPhoneNumber(match[2]);
+                            } else {
+                                // Try to find country code
+                                const country = COUNTRY_CODES.find(c => phone.startsWith(c.dial_code));
+                                if (country) {
+                                    setPhoneCountryCode(country.dial_code);
+                                    setPhoneNumber(phone.replace(country.dial_code, '').trim());
+                                } else {
+                                    setPhoneNumber(phone);
+                                }
+                            }
+                        } else {
+                            setPhoneNumber(phone);
+                        }
+                    }
+                }
             } catch (error) {
                 console.error("Failed to fetch user data", error);
             }
@@ -288,8 +333,8 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 paymentMethodsText: paymentMethodsText?.trim() || null,
                 paymentMethodsTextAr: paymentMethodsTextAr?.trim() || null,
 
-                showEmail: user?.showEmail || false,
-                showMobile: user?.showMobile || false,
+                showEmail: showEmail,
+                showMobile: showMobile,
             };
             console.log("payload", payload);
             // 3. Send to API (POST or PUT)
@@ -304,11 +349,34 @@ const PostService = ({ onCancel, onSave, initialData }) => {
 
             const data = response.data;
 
-            // 4. Update user profile with employment status (stored on user, not service)
-            const employmentStatus = availableForJob ? "I am ready for full-time employment" : null;
-            await api.put('/auth/profile', { employmentStatus }).catch(() => {});
+            // 4. Upload profile image if it's a new image (base64 data URL)
+            let uploadedProfileImage = profileImage;
+            if (profileImage && profileImage.startsWith('data:')) {
+                uploadedProfileImage = await uploadToCloudinary(profileImage);
+            }
 
-            // 5. Cleanup / Redirect
+            // 5. Update user profile with all profile data
+            const phoneFull = phoneCountryCode && phoneNumber 
+                ? `${phoneCountryCode} ${phoneNumber}`.trim() 
+                : phoneNumber || null;
+
+            const profilePayload = {
+                name: profileName,
+                profileImage: uploadedProfileImage,
+                phoneNumber: phoneFull,
+                location: profileLocation,
+                showEmail,
+                showMobile,
+                yearsOfExperience: yearsOfExperience != null && yearsOfExperience !== '' ? Number(yearsOfExperience) : null,
+                employmentStatus: availableForJob ? "I am ready for full-time employment" : null,
+            };
+
+            // Update profile (don't fail service creation if profile update fails)
+            await api.put('/auth/profile', profilePayload).catch((err) => {
+                console.error("Profile update error (non-blocking):", err);
+            });
+
+            // 6. Cleanup / Redirect
             if (onSave) onSave(data);
 
         } catch (error) {
@@ -322,11 +390,37 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     return (
         <Card className="border-none shadow-none">
             <CardContent className="">
+                {step === 0 && (
+                    <PostServiceProfile
+                        user={user}
+                        profileImage={profileImage}
+                        setProfileImage={setProfileImage}
+                        name={profileName}
+                        setName={setProfileName}
+                        email={user?.email || ''}
+                        phoneCountryCode={phoneCountryCode}
+                        setPhoneCountryCode={setPhoneCountryCode}
+                        phoneNumber={phoneNumber}
+                        setPhoneNumber={setPhoneNumber}
+                        showEmail={showEmail}
+                        setShowEmail={setShowEmail}
+                        showMobile={showMobile}
+                        setShowMobile={setShowMobile}
+                        yearsOfExperience={yearsOfExperience}
+                        setYearsOfExperience={setYearsOfExperience}
+                        location={profileLocation}
+                        setLocation={setProfileLocation}
+                        onNext={() => setStep(1)}
+                        onCancel={onCancel}
+                    />
+                )}
+
                 {step === 1 && (
                     <PostServiceTitle
                         serviceTitle={serviceTitle} setServiceTitle={setServiceTitle}
                         aboutText={aboutText} setAboutText={setAboutText}
                         onNext={() => setStep(2)}
+                        onBack={() => setStep(0)}
                     />
                 )}
 

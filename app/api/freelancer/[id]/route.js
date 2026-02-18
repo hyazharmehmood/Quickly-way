@@ -11,7 +11,7 @@ export async function GET(request, { params }) {
 
         if (!freelancerId) {
             return NextResponse.json(
-                { error: 'Freelancer ID is required' },
+                { error: 'Seller ID is required' },
                 { status: HTTP_STATUS.BAD_REQUEST }
             );
         }
@@ -36,7 +36,7 @@ export async function GET(request, { params }) {
 
         if (!freelancer) {
             return NextResponse.json(
-                { success: false, error: 'Freelancer not found' },
+                { success: false, error: 'Seller not found' },
                 { status: HTTP_STATUS.NOT_FOUND }
             );
         }
@@ -45,7 +45,7 @@ export async function GET(request, { params }) {
         const isFreelancer = freelancer.role === 'FREELANCER' || freelancer.role === 'ADMIN' || (freelancer.role === 'CLIENT' && freelancer.isSeller);
         if (!isFreelancer) {
             return NextResponse.json(
-                { success: false, error: 'User is not a freelancer' },
+                { success: false, error: 'User is not a seller' },
                 { status: HTTP_STATUS.NOT_FOUND }
             );
         }

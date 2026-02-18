@@ -42,7 +42,7 @@ export async function POST(request) {
     // Allow both CLIENT and FREELANCER to create orders
     if (user.role !== 'CLIENT' && user.role !== 'FREELANCER') {
       return NextResponse.json(
-        { error: 'Only clients and freelancers can create orders' },
+        { error: 'Only clients and sellers can create orders' },
         { status: 403 }
       );
     }
@@ -70,7 +70,7 @@ export async function POST(request) {
     // Only clients can create orders directly
     if (user.role !== 'CLIENT' && user.role !== 'ADMIN') {
       return NextResponse.json(
-        { error: 'Only clients can create orders. Freelancers should use offers instead.' },
+        { error: 'Only clients can create orders. Sellers should use offers instead.' },
         { status: 403 }
       );
     }

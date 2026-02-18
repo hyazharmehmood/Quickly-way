@@ -198,7 +198,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                         </div>
                                         <Button type="button" variant="outline" className="">
                                             <Heart className="w-4 h-4" />
-                                            Favorite
+                                            
                                         </Button>
                                     </div>
 
@@ -233,7 +233,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                             <div className="w-8 h-8 bg-green-50 rounded-full flex items-center justify-center text-green-600 shrink-0">
                                                 <CheckCircle className="w-4 h-4" />
                                             </div>
-                                            <span>Years of experience : {service.yearsExperience} </span>
+                                            <span>Years of experience : {service.provider?.yearsOfExperience != null ? service.provider.yearsOfExperience : '—'}</span>
                                         </div>
                                     </div>
 
@@ -260,6 +260,11 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                         </Card>
 
                         <div className="space-y-4">
+                       <Card className="border-none shadow-sm">
+                        <CardContent className="p-4 md:p-6 ">
+                        <h3 className="heading-3">{service.title}</h3>
+                        </CardContent>
+                       </Card>
                             {service.galleryUrls && service.galleryUrls.length > 0 && (
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 ">

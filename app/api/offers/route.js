@@ -39,11 +39,11 @@ export async function POST(request) {
       );
     }
 
-    // Freelancers or approved sellers (CLIENT + isSeller) can create offers
+    // Sellers (FREELANCER) or approved sellers (CLIENT + isSeller) can create offers
     const canCreateOffers = user.role === 'FREELANCER' || (user.role === 'CLIENT' && user.isSeller);
     if (!canCreateOffers) {
       return NextResponse.json(
-        { error: 'Only freelancers can create offers' },
+        { error: 'Only sellers can create offers' },
         { status: 403 }
       );
     }

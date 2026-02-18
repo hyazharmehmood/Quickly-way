@@ -96,9 +96,9 @@ export function ServiceCard({ service }) {
               >
                 {provider.name}
               </Link>
-              <div className="flex items-center gap-0.5 text-sm text-gray-500  hover:text-gray-900 active:text-gray-900 transition-colors">
-                <MapPin className="w-3 h-3 flex-shrink-0" />
-                <span className="truncate line-clamp-0.5">{provider.location || 'Remote'}</span>
+              <div className="flex items-center gap-1 text-sm text-gray-500 hover:text-gray-900 active:text-gray-900 transition-colors min-h-[1.25rem]">
+                <MapPin className="w-3.5 h-3.5 flex-shrink-0" />
+                <span className="truncate">{provider.location || 'Remote'}</span>
               </div>
             </div>
           </div>

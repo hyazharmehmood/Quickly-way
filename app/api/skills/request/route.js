@@ -23,7 +23,7 @@ async function getUserId(request) {
 }
 
 /**
- * POST /api/skills/request - Freelancer requests a new skill (creates as PENDING; only creator sees until admin approves/rejects)
+ * POST /api/skills/request - Seller requests a new skill (creates as PENDING; only creator sees until admin approves/rejects)
  */
 export async function POST(request) {
   try {

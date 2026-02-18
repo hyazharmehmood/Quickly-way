@@ -31,7 +31,7 @@ export const DashboardHeader = () => {
     const getSectionName = () => {
         const parts = pathname.split('/');
         const lastPart = parts[parts.length - 1];
-        if (lastPart === 'client' || lastPart === 'freelancer') return 'Dashboard';
+        if (lastPart === 'client' || lastPart === 'freelancer' || lastPart === 'seller') return 'Dashboard';
         return lastPart.replace(/-/g, ' ').replace(/_/g, ' ');
     };
 
@@ -59,7 +59,7 @@ export const DashboardHeader = () => {
             <div className="flex items-center gap-5">
                 {canAccessBoth && (
                     <RoleSwitcher
-                        currentRole={isFreelancerView ? 'freelancer' : 'client'}
+                        currentRole={isFreelancerView ? 'seller' : 'client'}
                         onSwitch={handleSwitch}
                         isOpen={true}
                         className="w-38 mb-0"

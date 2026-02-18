@@ -93,13 +93,13 @@ export default function ServiceDetailsPage() {
                         const status = ss.skill?.approvalStatus;
                         return (status === 'APPROVED' || status == null) && ss.skill?.name;
                     }).map(ss => ss.skill?.name || '').filter(Boolean) || [],
-                    yearsExperience: 1,
                     provider: {
-                        name: data.freelancer?.name || "Freelancer",
+                        name: data.freelancer?.name || "Seller",
                         avatarUrl: data.freelancer?.profileImage || "",
                         location: data.freelancer?.location || "Remote",
                         languages: data.freelancer?.languages || ["English"],
-                        memberSince: new Date(data.freelancer?.createdAt).getFullYear().toString(),
+                        memberSince: data.freelancer?.createdAt ? new Date(data.freelancer.createdAt).getFullYear().toString() : "—",
+                        yearsOfExperience: data.freelancer?.yearsOfExperience ?? null,
                         isOnline: false,
                         availability: data.freelancer?.availability || [],
                         employmentStatus: data.freelancer?.employmentStatus || null,

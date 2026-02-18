@@ -444,7 +444,7 @@ export default function SellerOrderDetailPage() {
                                                                     )}
                                                                     {!isClientReview && (
                                                                         <Badge variant="outline" className="text-xs">
-                                                                            Service Provider
+                                                                            Seller
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -691,7 +691,7 @@ export default function SellerOrderDetailPage() {
                     isClientReview={false}
                     existingReview={getSellerReview()}
                     onReviewSubmitted={handleReviewSubmitted}
-                    allowEdit={false} // Service Providers also cannot edit reviews for now
+                    allowEdit={false} // Sellers also cannot edit reviews for now
                 />
             )}
 

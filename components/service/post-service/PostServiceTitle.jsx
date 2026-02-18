@@ -181,18 +181,24 @@ const PostServiceTitle = (props) => {
       </div>
 
       {/* Actions */}
-      <div className="flex items-center justify-end gap-3 pt-4">
-<div className="w-full">
-
-</div>
-
-      <div className="w-full">  <Button
+      <div className="flex items-center justify-between gap-3 pt-4">
+        {onBack && (
+          <Button
+            type="button"
+            variant="outline"
+            onClick={onBack}
+            className="flex-1"
+          >
+            Back
+          </Button>
+        )}
+        <Button
           type="button"
           onClick={handleNextClick}
-          className=" w-full  "
+          className={onBack ? "flex-1" : "w-full"}
         >
           Next
-        </Button></div>
+        </Button>
       </div>
     </div>
   );

@@ -11,6 +11,7 @@ import api from '@/utils/api';
 
 export default function AdminPage() {
     const [pendingSellers, setPendingSellers] = useState(0);
+    const [pendingJoinRequests, setPendingJoinRequests] = useState(0);
     const [stats, setStats] = useState(null);
     const [statsLoading, setStatsLoading] = useState(true);
 
@@ -25,6 +26,19 @@ export default function AdminPage() {
             }
         };
         fetchSellerRequests();
+    }, []);
+
+    useEffect(() => {
+        const fetchJoinRequests = async () => {
+            try {
+                const res = await api.get('/admin/role-agreement-requests');
+                const pending = (res.data?.requests || []).filter((r) => r.status === 'PENDING').length;
+                setPendingJoinRequests(pending);
+            } catch {
+                // ignore
+            }
+        };
+        fetchJoinRequests();
     }, []);
 
     useEffect(() => {
@@ -105,15 +119,15 @@ export default function AdminPage() {
                 )}
             </div>
 
-            {/* Seller Requests - View & Approve */}
+            {/* Join requests (Client / Seller agreement) - primary flow */}
             <Card className="border shadow-none">
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                     <CardTitle className="text-lg font-normal flex items-center gap-2">
                         <UserCheck className="w-5 h-5 text-primary" />
-                        Become-seller requests
+                        Join requests
                     </CardTitle>
                     <Button asChild variant="default" size="sm" className="rounded-lg">
-                        <Link href="/admin/seller-requests" className="flex items-center gap-1.5">
+                        <Link href="/admin/join-requests" className="flex items-center gap-1.5">
                             View & approve
                             <ArrowRight className="w-4 h-4" />
                         </Link>
@@ -121,11 +135,30 @@ export default function AdminPage() {
                 </CardHeader>
                 <CardContent>
                     <p className="text-sm text-muted-foreground">
-                        <span className="font-semibold text-foreground">{pendingSellers}</span> application{pendingSellers !== 1 ? 's' : ''} pending review.
-                        Open seller requests to view details and approve or reject.
+                        <span className="font-semibold text-foreground">{pendingJoinRequests}</span> request{pendingJoinRequests !== 1 ? 's' : ''} pending (Join as Client / Join as Seller). Approve to grant access.
                     </p>
                 </CardContent>
             </Card>
+
+            {/* Legacy Seller Applications (skills/bio form) - optional */}
+            {(pendingSellers > 0) && (
+                <Card className="border shadow-none">
+                    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                        <CardTitle className="text-lg font-normal">Legacy seller applications</CardTitle>
+                        <Button asChild variant="outline" size="sm" className="rounded-lg">
+                            <Link href="/admin/seller-requests" className="flex items-center gap-1.5">
+                                View
+                                <ArrowRight className="w-4 h-4" />
+                            </Link>
+                        </Button>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-sm text-muted-foreground">
+                            <span className="font-semibold text-foreground">{pendingSellers}</span> old-format application{pendingSellers !== 1 ? 's' : ''} pending.
+                        </p>
+                    </CardContent>
+                </Card>
+            )}
 
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <Card className="border shadow-none">

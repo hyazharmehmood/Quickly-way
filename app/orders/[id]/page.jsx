@@ -581,7 +581,7 @@ export default function OrderDetailPage() {
                                                                     )}
                                                                     {!isClientReview && (
                                                                         <Badge variant="outline" className="text-xs">
-                                                                            Service Provider
+                                                                            Seller
                                                                         </Badge>
                                                                     )}
                                                                 </div>
@@ -744,12 +744,12 @@ export default function OrderDetailPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Service Provider Info */}
+                    {/* Seller Info */}
                     <Card className="border shadow-none">
                         <CardHeader>
                             <CardTitle className="text-lg font-normal flex items-center gap-2">
                                 <User className="w-5 h-5" />
-                                Service Provider
+                                Seller
                             </CardTitle>
                         </CardHeader>
                         <CardContent className="space-y-4">

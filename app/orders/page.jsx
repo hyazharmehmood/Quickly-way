@@ -198,7 +198,7 @@ export default function ClientOrdersPage() {
                                                     {order.service?.title || 'Service'}
                                                 </h3>
                                                 <p className="text-sm text-muted-foreground mt-1 font-normal">
-                                                    Order #{order.orderNumber} • Service Provider <span className="text-foreground font-normal">{order.freelancer?.name || 'Unknown'}</span>
+                                                    Order #{order.orderNumber} • Seller <span className="text-foreground font-normal">{order.freelancer?.name || 'Unknown'}</span>
                                                 </p>
                                             </div>
                                         </div>
