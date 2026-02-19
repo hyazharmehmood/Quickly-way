@@ -72,7 +72,7 @@ export function HomeBanner() {
         <div
           key={banner.id}
           className={cn(
-            'block w-full overflow-hidden rounded-xl bg-muted shadow-sm ring-1 ring-border/50',
+            'block w-full overflow-hidden rounded-xl bg-muted ',
             isTwoOrMore && 'min-w-0'
           )}
         >

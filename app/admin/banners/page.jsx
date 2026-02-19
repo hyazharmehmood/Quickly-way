@@ -345,11 +345,12 @@ export default function AdminBannersPage() {
                       alt="Mobile"
                       className="w-full h-full object-cover"
                     />
+                    
                   </div>
                 )}
               </div>
-              <CardContent className="p-4">
-                <div className="flex flex-wrap gap-2 mb-3">
+              <CardContent className="p-4 space-y-10">
+                <div className="flex flex-wrap gap-2">
                   <Badge variant={banner.isActive ? 'default' : 'secondary'}>
                     {banner.isActive ? 'Active' : 'Inactive'}
                   </Badge>
@@ -361,15 +362,16 @@ export default function AdminBannersPage() {
                   ))}
                 </div>
                 <div className="flex items-center justify-between gap-2">
-                  <div className="flex gap-2">
+                  <div className="flex gap-2.5 items-center">
                     <Button
-                      variant="outline"
+                      className="rounded-lg px-4 py-1 h-9"
                       size="sm"
                       onClick={() => handleToggleActive(banner)}
                     >
                       {banner.isActive ? 'Deactivate' : 'Activate'}
+
                     </Button>
-                    <Button variant="ghost" size="sm" onClick={() => openEdit(banner)}>
+                    <Button  className="rounded-lg px-4 py-1 h-9" size="sm" onClick={() => openEdit(banner)}>
                       Edit
                     </Button>
                   </div>
