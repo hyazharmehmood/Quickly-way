@@ -38,6 +38,7 @@ import {
   CommandList,
 } from '@/components/ui/command';
 import { COUNTRIES_FOR_LOCATION } from '@/utils/constants';
+import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
@@ -91,7 +92,6 @@ export function Header() {
   const [manualCountry, setManualCountry] = useState('');
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  const [isResolvingManual, setIsResolvingManual] = useState(false);
   // Header display: when area/city/zip selected show city only (e.g. Lahore); else show full
   const displayLocation = currentLocation.includes(',')
     ? currentLocation.split(',')[0].trim()
@@ -134,22 +134,6 @@ export function Header() {
     setCurrentLocation(location);
     setIsLocationPickerOpen(false);
     saveLocationToProfile(location);
-  };
-
-  /** Forward geocode: address text → country (and optionally city, country). Returns { country, display } or null. */
-  const forwardGeocode = async (addressText) => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return null;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(addressText)}&key=${apiKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.status !== 'OK' || !data.results?.[0]) return null;
-    const comp = data.results[0].address_components || [];
-    const country = comp.find((c) => c.types?.includes('country'))?.long_name;
-    const city = comp.find((c) => c.types?.includes('locality'))?.long_name;
-    if (!country) return data.results[0].formatted_address ? { country: data.results[0].formatted_address, display: data.results[0].formatted_address } : null;
-    const display = city ? `${city}, ${country}` : country;
-    return { country, display };
   };
 
   const handleDetectLocation = () => {
@@ -212,31 +196,17 @@ export function Header() {
     // toast.success('Country set. Search limited to ' + countryName);
   };
 
-  const handleSetManualLocation = async () => {
-    const raw = manualLocation.trim();
-    if (!raw) {
-      toast.error('Please enter area, city, or zip');
+  const handleSetManualLocation = () => {
+    const loc = manualLocation.trim();
+    if (!loc) {
+      toast.error('Search and select a location, then click Set');
       return;
     }
-    setIsResolvingManual(true);
-    try {
-      const resolved = await forwardGeocode(raw);
-      const loc = resolved ? resolved.display : raw;
-      setCurrentLocation(loc);
-      setManualLocation('');
-      setIsLocationPickerOpen(false);
-      await saveLocationToProfile(loc);
-      toast.success(resolved ? 'Location resolved and saved' : 'Location saved');
-    } catch (err) {
-      console.error('Geocode manual error:', err);
-      setCurrentLocation(raw);
-      setManualLocation('');
-      setIsLocationPickerOpen(false);
-      await saveLocationToProfile(raw);
-      toast.success('Location saved');
-    } finally {
-      setIsResolvingManual(false);
-    }
+    setCurrentLocation(loc);
+    setManualLocation('');
+    setIsLocationPickerOpen(false);
+    saveLocationToProfile(loc);
+    toast.success('Location set');
   };
 
   const handleBack = () => {
@@ -296,12 +266,12 @@ export function Header() {
                 </span>
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent className=" p-0 shadow-lg  mx-4 rounded-xl" align="center" sideOffset={4}>
+            <DropdownMenuContent className=" p-0 shadow-lg  min-w-[400px] max-w-[450px] mx-4 rounded-xl" align="center" sideOffset={4}>
               <div className="p-4 space-y-3">
                 {/* Header */}
                 <div>
-                  <h3 className="text-lg font-semibold text-foreground">Set your location</h3>
-                  <p className="text-xs text-muted-foreground">Detect my location or enter manually</p>
+                  <h3 className="heading-3">Set your location</h3>
+                  <p className="text-sm text-muted-foreground">Detect my location or enter manually</p>
                 </div>
 
                 {/* All location Option */}
@@ -389,26 +359,23 @@ export function Header() {
                   </Popover>
                 </div>
 
-                {/* Area, City, Zip - search in specific location (e.g. Lahore only) */}
+                {/* Area, City, Zip – same as PostServiceProfile: search, select from dropdown, then Set */}
                 <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                  <Input
-                    type="text"
-                    placeholder="Area, City, Zip"
-                    value={manualLocation}
-                    onChange={(e) => setManualLocation(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSetManualLocation(); }}
-                    size="lg"
-                    disabled={isResolvingManual}
-                    onClick={(e) => e.stopPropagation()}
-                  />
+                  <div className="flex-1 min-w-0" onClick={(e) => e.stopPropagation()}>
+                    <LocationAutocomplete
+                      value={manualLocation}
+                      onChange={setManualLocation}
+                      placeholder="Area, City, Zip"
+                      className="[&_button]:rounded-lg"
+                    />
+                  </div>
                   <Button
                     onClick={(e) => { e.stopPropagation(); handleSetManualLocation(); }}
                     size="lg"
-                    className="rounded-full shrink-0"
+                    className="rounded-full shrink-0 h-11"
                     variant="default"
-                    disabled={isResolvingManual}
                   >
-                    {isResolvingManual ? 'Resolving...' : 'Set'}
+                    Set
                   </Button>
                 </div>
               </div>
