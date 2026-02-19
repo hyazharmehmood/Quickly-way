@@ -17,6 +17,15 @@ export const COUNTRY_CODES = [
     // Add more as needed
 ];
 
+/** Country names for location dropdown (select only – no free text). Sorted A–Z. */
+export const COUNTRIES_FOR_LOCATION = [
+    'Australia', 'Bangladesh', 'Brazil', 'Canada', 'China', 'Egypt', 'France', 'Germany',
+    'India', 'Indonesia', 'Iran', 'Iraq', 'Italy', 'Japan', 'Jordan', 'Kuwait', 'Malaysia',
+    'Mexico', 'Nepal', 'Nigeria', 'Oman', 'Pakistan', 'Philippines', 'Qatar', 'Russia',
+    'Saudi Arabia', 'South Africa', 'Spain', 'Sri Lanka', 'Turkey', 'United Arab Emirates',
+    'United Kingdom', 'United States', 'Vietnam', 'Yemen',
+].sort((a, b) => a.localeCompare(b));
+
 // Fiverr-style: region-based payment methods (short labels, no long descriptions)
 export const PAYMENT_REGIONS = [
     { value: 'SAUDI_ARABIA', label: 'Saudi Arabia (Main)' },

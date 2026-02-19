@@ -14,6 +14,8 @@ import {
   Headphones,
   ArrowLeft,
   Navigation,
+  ChevronDown,
+  Check,
 } from 'lucide-react';
 import { cn } from '@/utils';
 import useAuthStore from '@/store/useAuthStore';
@@ -26,6 +28,16 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/components/ui/command';
+import { COUNTRIES_FOR_LOCATION } from '@/utils/constants';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
@@ -77,9 +89,9 @@ export function Header() {
   const [currentLocation, setCurrentLocation] = useState('All location');
   const [manualLocation, setManualLocation] = useState('');
   const [manualCountry, setManualCountry] = useState('');
+  const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
   const [isResolvingManual, setIsResolvingManual] = useState(false);
-  const [isResolvingCountry, setIsResolvingCountry] = useState(false);
   // Header display: when area/city/zip selected show city only (e.g. Lahore); else show full
   const displayLocation = currentLocation.includes(',')
     ? currentLocation.split(',')[0].trim()
@@ -124,23 +136,6 @@ export function Header() {
     saveLocationToProfile(location);
   };
 
-  // Returns "City, Country" when available (e.g. Lahore detected → Lahore, Pakistan)
-  const reverseGeocode = async (lat, lng) => {
-    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return null;
-    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-    const res = await fetch(url);
-    const data = await res.json();
-    if (data.status !== 'OK' || !data.results?.[0]) return null;
-    const comp = data.results[0].address_components || [];
-    const country = comp.find((c) => c.types?.includes('country'))?.long_name;
-    const city = comp.find((c) => c.types?.includes('locality'))?.long_name ||
-      comp.find((c) => c.types?.includes('administrative_area_level_1'))?.long_name;
-    if (country && city) return `${city}, ${country}`;
-    if (country) return country;
-    return data.results[0].formatted_address || null;
-  };
-
   /** Forward geocode: address text → country (and optionally city, country). Returns { country, display } or null. */
   const forwardGeocode = async (addressText) => {
     const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
@@ -168,22 +163,21 @@ export function Header() {
       async (position) => {
         const { latitude, longitude } = position.coords;
         try {
-          const address = await reverseGeocode(latitude, longitude);
-          if (address) {
-            setCurrentLocation(address);
+          const res = await fetch(
+            `/api/geocode/reverse?lat=${encodeURIComponent(latitude)}&lng=${encodeURIComponent(longitude)}`
+          );
+          const data = await res.json();
+          if (data.success && data.location) {
+            setCurrentLocation(data.location);
             setIsLocationPickerOpen(false);
-            await saveLocationToProfile(address);
+            await saveLocationToProfile(data.location);
             toast.success('Location detected and saved to profile');
           } else {
             const fallback = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
             setCurrentLocation(fallback);
             setIsLocationPickerOpen(false);
             await saveLocationToProfile(fallback);
-            if (!process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY) {
-              toast.info('Add NEXT_PUBLIC_GOOGLE_MAPS_API_KEY for address names');
-            } else {
-              toast.success('Location detected and saved to profile');
-            }
+            toast.success('Location detected and saved to profile');
           }
         } catch (err) {
           console.error('Geocoding error:', err);
@@ -208,31 +202,14 @@ export function Header() {
     );
   };
 
-  const handleSetCountry = async () => {
-    const raw = manualCountry.trim();
-    if (!raw) {
-      toast.error('Please enter a country');
-      return;
-    }
-    setIsResolvingCountry(true);
-    try {
-      const resolved = await forwardGeocode(raw);
-      const loc = resolved ? (resolved.country || resolved.display) : raw;
-      setCurrentLocation(loc);
-      setManualCountry('');
-      setIsLocationPickerOpen(false);
-      await saveLocationToProfile(loc);
-      toast.success('Country set. Search limited to ' + loc);
-    } catch (err) {
-      console.error('Geocode country error:', err);
-      setCurrentLocation(raw);
-      setManualCountry('');
-      setIsLocationPickerOpen(false);
-      await saveLocationToProfile(raw);
-      toast.success('Country saved');
-    } finally {
-      setIsResolvingCountry(false);
-    }
+  const handleCountrySelect = (countryName) => {
+    if (!countryName) return;
+    setCurrentLocation(countryName);
+    setManualCountry('');
+    setCountryPopoverOpen(false);
+    setIsLocationPickerOpen(false);
+    saveLocationToProfile(countryName);
+    // toast.success('Country set. Search limited to ' + countryName);
   };
 
   const handleSetManualLocation = async () => {
@@ -362,27 +339,54 @@ export function Header() {
                   </div>
                 </div>
 
-                {/* Country only - search limited to one country (e.g. Pakistan) */}
-                <div className="flex flex-col sm:flex-row gap-2 items-stretch sm:items-center">
-                  <Input
-                    type="text"
-                    placeholder="Country"
-                    value={manualCountry}
-                    onChange={(e) => setManualCountry(e.target.value)}
-                    onKeyDown={(e) => { if (e.key === 'Enter') handleSetCountry(); }}
-                    size="lg"
-                    disabled={isResolvingCountry}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                  <Button
-                    onClick={(e) => { e.stopPropagation(); handleSetCountry(); }}
-                    size="lg"
-                    className="rounded-full shrink-0"
-                    variant="default"
-                    disabled={isResolvingCountry}
-                  >
-                    {isResolvingCountry ? 'Resolving...' : 'Set'}
-                  </Button>
+                {/* Country – searchable combobox (shadcn Popover + Command) */}
+                <div className="space-y-2">
+                  <label className="text-sm font-medium text-foreground">Country</label>
+                  <Popover open={countryPopoverOpen} onOpenChange={setCountryPopoverOpen}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        role="combobox"
+                        aria-expanded={countryPopoverOpen}
+                        className="w-full h-11 justify-between font-normal"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <span className={cn(!manualCountry && 'text-muted-foreground')}>
+                          {manualCountry || 'Select country'}
+                        </span>
+                        <ChevronDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent
+                      className="w-[var(--radix-popover-trigger-width)] p-0"
+                      align="start"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Command shouldFilter={true}>
+                        <CommandInput placeholder="Search country..." />
+                        <CommandList>
+                          <CommandEmpty>No country found.</CommandEmpty>
+                          <CommandGroup>
+                            {COUNTRIES_FOR_LOCATION.map((country) => (
+                              <CommandItem
+                                key={country}
+                                value={country}
+                                onSelect={() => handleCountrySelect(country)}
+                              >
+                                <Check
+                                  className={cn(
+                                    'mr-2 h-4 w-4',
+                                    manualCountry === country ? 'opacity-100' : 'opacity-0'
+                                  )}
+                                />
+                                {country}
+                              </CommandItem>
+                            ))}
+                          </CommandGroup>
+                        </CommandList>
+                      </Command>
+                    </PopoverContent>
+                  </Popover>
                 </div>
 
                 {/* Area, City, Zip - search in specific location (e.g. Lahore only) */}
