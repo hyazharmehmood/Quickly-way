@@ -19,7 +19,7 @@ export function proxy(request) {
         }
 
         // Seller dashboard: allow ADMIN, FREELANCER (seller), or CLIENT with approved seller (isSeller)
-        if (pathname.startsWith('/dashboard/freelancer')) {
+        if (pathname.startsWith('/dashboard/seller')) {
             const normalizedRole = role ? role.toUpperCase() : '';
             const isSeller = request.cookies.get('isSeller')?.value === 'true';
             const allowed = normalizedRole === 'ADMIN' || normalizedRole === 'FREELANCER' || (normalizedRole === 'CLIENT' && isSeller);
@@ -55,7 +55,7 @@ export function proxy(request) {
         const normalizedRole = role ? role.toUpperCase() : '';
         // Already approved: redirect away
         if (pathname === '/join-as-freelancer' && isSeller) {
-            return NextResponse.redirect(new URL('/dashboard/freelancer', request.url));
+            return NextResponse.redirect(new URL('/dashboard/seller', request.url));
         }
         if (pathname === '/join-as-client' && normalizedRole === 'CLIENT') {
             return NextResponse.redirect(new URL('/', request.url));
@@ -68,7 +68,7 @@ export function proxy(request) {
     }
     if (pathname === '/become-seller' && token) {
         const isSeller = request.cookies.get('isSeller')?.value === 'true';
-        if (isSeller) return NextResponse.redirect(new URL('/dashboard/freelancer', request.url));
+        if (isSeller) return NextResponse.redirect(new URL('/dashboard/seller', request.url));
     }
 
     return NextResponse.next();

@@ -3,7 +3,7 @@ import { verifyToken } from '@/lib/utils/jwt';
 import prisma from '@/lib/prisma';
 
 /**
- * GET /api/dashboard/freelancer/stats
+ * GET /api/dashboard/seller/stats
  * Returns real metrics for the logged-in freelancer: earnings, orders, offers, rating.
  */
 export async function GET(request) {

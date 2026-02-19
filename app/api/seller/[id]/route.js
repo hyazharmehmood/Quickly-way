@@ -3,7 +3,7 @@ import prisma from '@/lib/prisma';
 import { HTTP_STATUS } from '@/lib/shared/constants';
 
 /**
- * GET /api/freelancer/[id] - Get freelancer profile with services and reviews
+ * GET /api/seller/[id] - Get freelancer profile with services and reviews
  */
 export async function GET(request, { params }) {
     try {

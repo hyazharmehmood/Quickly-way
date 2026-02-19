@@ -45,8 +45,8 @@ export function NotificationDropdown({ className }) {
   const isAdmin = normalizedRole === 'ADMIN';
   const { notifications, markAsRead } = useNotifications();
   const [viewOfferModal, setViewOfferModal] = useState({ open: false, offer: null });
-  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
-  const isFreelancerView = pathname?.startsWith('/dashboard/freelancer');
+  const messagesPath = pathname?.startsWith('/dashboard/seller') ? '/dashboard/seller/messages' : '/messages';
+  const isFreelancerView = pathname?.startsWith('/dashboard/seller');
 
   // Bell = other notifications only (no chat); chat has its own dropdown on MessageSquare
   const otherNotifications = notifications.filter((n) => !isChatNotification(n));
@@ -56,7 +56,7 @@ export function NotificationDropdown({ className }) {
     if (!orderId) return null;
     // Freelancer/seller sees orders in dashboard, client in /orders
     const useFreelancerPath = isFreelancerView || (normalizedRole === 'FREELANCER') || (normalizedRole === 'CLIENT' && isSeller);
-    return useFreelancerPath ? `/dashboard/freelancer/orders/${orderId}` : `/orders/${orderId}`;
+    return useFreelancerPath ? `/dashboard/seller/orders/${orderId}` : `/orders/${orderId}`;
   };
 
   const handleMarkOne = async (notification) => {

@@ -130,7 +130,7 @@ export default function FreelancerServicesPage() {
                     <h3 className="heading-3">My Services</h3>
                     <p className="text-muted-foreground font-normal text-sm">Create and manage your professional offerings.</p>
                 </div>
-                <Link href="/dashboard/freelancer/services/create">
+                <Link href="/dashboard/seller/services/create">
                         <Button variant="default" className="">
                         <Plus className="w-5 h-5" />
                         <span>Create New Service</span>
@@ -149,7 +149,7 @@ export default function FreelancerServicesPage() {
                                     </Button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
-                                    <Link href={`/dashboard/freelancer/services/${service.id}/edit`}>
+                                    <Link href={`/dashboard/seller/services/${service.id}/edit`}>
                                         <DropdownMenuItem className="cursor-pointer">
                                             <Pencil className=" h-4 w-4" />
                                             <span className="text-primary">Edit</span>   

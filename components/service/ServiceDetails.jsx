@@ -180,7 +180,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                     <div className="flex items-start justify-between gap-2 ">
                                         <div>
                                             <Link 
-                                                href={`/freelancer/${service.freelancerId}`}
+                                                href={`/seller/${service.freelancerId}`}
                                                 className="text-xl font-bold text-gray-900 hover:text-primary transition-colors cursor-pointer inline-block"
                                             >
                                                 {service.provider.name}

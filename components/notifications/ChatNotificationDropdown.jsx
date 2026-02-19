@@ -21,8 +21,8 @@ export function ChatNotificationDropdown({ className }) {
   const router = useRouter();
   const pathname = usePathname();
   const { totalUnread: chatUnreadCount, conversationsWithUnread } = useChatUnreadStore();
-  const messagesPath = pathname?.startsWith('/dashboard/freelancer')
-    ? '/dashboard/freelancer/messages'
+  const messagesPath = pathname?.startsWith('/dashboard/seller')
+    ? '/dashboard/seller/messages'
     : '/messages';
 
   const [soundOn, setSoundOn] = useState(true);

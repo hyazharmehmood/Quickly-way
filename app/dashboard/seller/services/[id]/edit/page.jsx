@@ -63,7 +63,7 @@ export default function EditServicePage() {
 
     const handleSave = () => {
         toast.success("Service updated successfully!");
-        router.push('/dashboard/freelancer/services');
+        router.push('/dashboard/seller/services');
     };
 
     const handleCancel = () => {

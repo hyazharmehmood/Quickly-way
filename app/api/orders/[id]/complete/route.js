@@ -81,7 +81,7 @@ export async function POST(request, { params }) {
         title: 'Order completed',
         body: `${clientName} accepted delivery. Order ${order.orderNumber} is now completed.`,
         type: 'order',
-        data: { orderId: order.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+        data: { orderId: order.id, linkUrl: `/dashboard/seller/orders/${order.id}` },
       });
     } catch (notifError) {
       console.error('Failed to create order notification:', notifError);

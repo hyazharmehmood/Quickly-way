@@ -62,7 +62,7 @@ export function ServiceCard({ service }) {
           {/* Provider Header */}
           <div className="flex items-start gap-2 mb-3">
             <Link 
-              href={`/freelancer/${service.freelancerId || service.freelancer?.id}`}
+              href={`/seller/${service.freelancerId || service.freelancer?.id}`}
               onClick={(e) => e.stopPropagation()}
               className="relative flex-shrink-0"
             >
@@ -90,7 +90,7 @@ export function ServiceCard({ service }) {
             </Link>
             <div className="flex flex-col gap-0.5">
               <Link 
-                href={`/freelancer/${service.freelancerId || service.freelancer?.id}`}
+                href={`/seller/${service.freelancerId || service.freelancer?.id}`}
                 onClick={(e) => e.stopPropagation()}
                 className="text-base  font-semibold text-gray-900 leading-tight hover:text-primary transition-colors cursor-pointer"
               >

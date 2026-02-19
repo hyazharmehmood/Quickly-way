@@ -369,7 +369,7 @@ console.log("order, conversationId, onOrderUpdate",order, conversationId, onOrde
         size="sm"
         onClick={() => {
           if (isFreelancer) {
-            router.push(`/dashboard/freelancer/orders`);
+            router.push(`/dashboard/seller/orders`);
           } else {
             router.push(`/orders/${order.id}`);
           }

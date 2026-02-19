@@ -15,7 +15,7 @@ export default function FreelancerOverview() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await api.get('/dashboard/freelancer/stats');
+                const res = await api.get('/dashboard/seller/stats');
                 if (res.data?.success && res.data?.stats) {
                     setStats(res.data.stats);
                 }

@@ -80,7 +80,7 @@ export async function POST(request, { params }) {
         title: 'Revision requested',
         body: `${clientName} requested a revision for order ${order.orderNumber}.`,
         type: 'order',
-        data: { orderId: order.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+        data: { orderId: order.id, linkUrl: `/dashboard/seller/orders/${order.id}` },
       });
     } catch (notifError) {
       console.error('Failed to create order notification:', notifError);

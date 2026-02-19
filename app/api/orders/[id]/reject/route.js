@@ -80,7 +80,7 @@ export async function POST(request, { params }) {
         title: 'Order rejected',
         body: `Order ${order.orderNumber} was rejected by the client.`,
         type: 'order',
-        data: { orderId: order.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+        data: { orderId: order.id, linkUrl: `/dashboard/seller/orders/${order.id}` },
       });
     } catch (notifError) {
       console.error('Failed to create order notification:', notifError);

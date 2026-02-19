@@ -30,7 +30,7 @@ export function ChatList({ onSelectConversation, selectedConversationId }) {
   const pathname = usePathname();
   const selectedConversationIdRef = useRef(selectedConversationId);
   selectedConversationIdRef.current = selectedConversationId;
-  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
+  const messagesPath = pathname?.startsWith('/dashboard/seller') ? '/dashboard/seller/messages' : '/messages';
 
   useEffect(() => {
     if (socket && isConnected) {

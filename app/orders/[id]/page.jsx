@@ -293,12 +293,12 @@ export default function OrderDetailPage() {
 
     const handleChat = () => {
         if (order?.conversationId) {
-            const basePath = isClient ? '/messages' : '/dashboard/freelancer/messages';
+            const basePath = isClient ? '/messages' : '/dashboard/seller/messages';
             router.push(`${basePath}?conversationId=${order.conversationId}`);
         } else if (isClient && order?.freelancerId) {
             router.push(`/messages?otherUserId=${order.freelancerId}`);
         } else if (isFreelancer && order?.clientId) {
-            router.push(`/dashboard/freelancer/messages?otherUserId=${order.clientId}`);
+            router.push(`/dashboard/seller/messages?otherUserId=${order.clientId}`);
         }
     };
 

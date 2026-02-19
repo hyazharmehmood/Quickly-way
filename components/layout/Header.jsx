@@ -63,12 +63,12 @@ export function Header() {
   const canAccessFreelancerDashboard = isSeller && sellerStatus === 'APPROVED';
   // Only show role switcher when user has BOTH client and seller (e.g. CLIENT with approved seller)
   const showRoleToggle = normalizedRole === 'CLIENT' && canAccessFreelancerDashboard;
-  const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
+  const isFreelancerView = pathname.startsWith('/dashboard/seller');
   const switchToClient = () => router.push('/');
-  const switchToSeller = () => router.push('/dashboard/freelancer');
+  const switchToSeller = () => router.push('/dashboard/seller');
   const { openContactSupport } = useContactSupport();
   const { setConversationsUnread, applyConversationUpdated } = useChatUnreadStore();
-  const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
+  const messagesPath = pathname?.startsWith('/dashboard/seller') ? '/dashboard/seller/messages' : '/messages';
   const { socket, isConnected } = useGlobalSocket();
 
   // Keep chat unread badge updated: fetch when not on messages page, and listen for real-time updates
@@ -120,11 +120,11 @@ export function Header() {
   };
   
   // Check if we can go back (not on home page)
-  const canGoBack = pathname !== '/' && pathname !== '/dashboard/freelancer' && !pathname.startsWith('/dashboard/freelancer') && pathname !== '/admin';
+  const canGoBack = pathname !== '/' && pathname !== '/dashboard/seller' && !pathname.startsWith('/dashboard/seller') && pathname !== '/admin';
 
   const handleNavigate = (path) => {
     if (path === '' && normalizedRole === 'FREELANCER') {
-      router.push('/dashboard/freelancer');
+      router.push('/dashboard/seller');
     } else {
       router.push(`/${path}`);
     }
@@ -500,7 +500,7 @@ export function Header() {
                       {(normalizedRole === 'CLIENT' || normalizedRole === '' || !role) && !isAdmin && (
                         <>
                          {canAccessFreelancerDashboard && (
-                            <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer')} className="cursor-pointer">
+                            <DropdownMenuItem onClick={() => router.push('/dashboard/seller')} className="cursor-pointer">
                               <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                                 <LayoutDashboard className="w-4 h-4" />
                               </div>
@@ -572,7 +572,7 @@ export function Header() {
                           <DropdownMenuItem
                             onClick={() => {
                               if (isAdmin) router.push('/admin');
-                              else router.push('/dashboard/freelancer');
+                              else router.push('/dashboard/seller');
                             }}
                             className="cursor-pointer"
                           >
@@ -584,13 +584,13 @@ export function Header() {
 
                           {!isAdmin && (
                             <>
-                              <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/messages')} className="cursor-pointer">
+                              <DropdownMenuItem onClick={() => router.push('/dashboard/seller/messages')} className="cursor-pointer">
                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                                   <MessageSquare className="w-4 h-4" />
                                 </div>
                                 <span className="text-sm font-medium">Messages</span>
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => router.push('/dashboard/freelancer/disputes')} className="cursor-pointer">
+                              <DropdownMenuItem onClick={() => router.push('/dashboard/seller/disputes')} className="cursor-pointer">
                                 <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                                   <AlertCircle className="w-4 h-4" />
                                 </div>
@@ -614,7 +614,7 @@ export function Header() {
                           <DropdownMenuItem
                             onClick={() => {
                               if (isAdmin) router.push('/admin/settings');
-                              else router.push('/dashboard/freelancer/settings');
+                              else router.push('/dashboard/seller/settings');
                             }}
                             className="cursor-pointer"
                           >
@@ -659,7 +659,7 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleNavigate('login')}
-                  className="text-xs sm:text-sm font-medium text-foreground hover:text-muted-foreground hover:bg-muted px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-full h-auto"
+                  className="text-xs sm:text-sm font-medium bg-muted  text-foreground hover:text-muted-foreground hover:bg-muted px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-full h-auto"
                 >
                   Log in
                 </Button>
@@ -668,7 +668,7 @@ export function Header() {
                   onClick={() => router.push('/signup')}
                   className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm font-medium px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-full shadow-sm h-auto transition-colors"
                 >
-                  <span className="hidden sm:inline">Join as Client</span>
+                  <span className="hidden sm:inline">Sign up</span>
                   <span className="sm:hidden">Join</span>
                 </Button>
               </>

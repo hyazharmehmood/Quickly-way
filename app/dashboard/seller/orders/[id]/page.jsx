@@ -110,7 +110,7 @@ export default function SellerOrderDetailPage() {
         } catch (error) {
             console.error('Error fetching order:', error);
             toast.error(error.response?.data?.error || 'Failed to fetch order');
-            router.push('/dashboard/freelancer/orders');
+            router.push('/dashboard/seller/orders');
         } finally {
             setLoading(false);
         }
@@ -148,9 +148,9 @@ export default function SellerOrderDetailPage() {
 
     const handleChat = () => {
         if (order?.conversationId) {
-            router.push(`/dashboard/freelancer/messages?conversationId=${order.conversationId}`);
+            router.push(`/dashboard/seller/messages?conversationId=${order.conversationId}`);
         } else if (order?.clientId) {
-            router.push(`/dashboard/freelancer/messages?otherUserId=${order.clientId}`);
+            router.push(`/dashboard/seller/messages?otherUserId=${order.clientId}`);
         }
     };
 
@@ -169,7 +169,7 @@ export default function SellerOrderDetailPage() {
                 <Card className="rounded-[2rem] border-none">
                     <CardContent className="p-8 text-center">
                         <p className="text-muted-foreground">Order not found</p>
-                        <Button onClick={() => router.push('/dashboard/freelancer/orders')} className="mt-4">
+                        <Button onClick={() => router.push('/dashboard/seller/orders')} className="mt-4">
                             <ArrowLeft className="w-4 h-4 mr-2" /> Back to Orders
                         </Button>
                     </CardContent>
@@ -184,7 +184,7 @@ export default function SellerOrderDetailPage() {
                 <Button
                     variant="ghost"
                     size="icon"
-                    onClick={() => router.push('/dashboard/freelancer/orders')}
+                    onClick={() => router.push('/dashboard/seller/orders')}
                     className="rounded-xl"
                 >
                     <ArrowLeft className="w-5 h-5" />

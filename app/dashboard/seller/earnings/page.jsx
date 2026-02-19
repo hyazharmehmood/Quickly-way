@@ -27,7 +27,7 @@ export default function FreelancerEarningsPage() {
         const fetchData = async () => {
             try {
                 const [statsRes, ordersRes] = await Promise.all([
-                    api.get('/dashboard/freelancer/stats'),
+                    api.get('/dashboard/seller/stats'),
                     api.get('/orders', { params: { status: 'COMPLETED', limit: 50 } }),
                 ]);
                 if (statsRes.data?.success && statsRes.data?.stats) {

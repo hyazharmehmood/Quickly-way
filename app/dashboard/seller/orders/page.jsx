@@ -93,15 +93,15 @@ export default function FreelancerOrdersPage() {
     };
 
     const handleViewOrder = (order) => {
-        router.push(`/dashboard/freelancer/orders/${order.id}`);
+        router.push(`/dashboard/seller/orders/${order.id}`);
     };
 
 
     const handleChat = (order) => {
         if (order.conversationId) {
-            router.push(`/dashboard/freelancer/messages?conversationId=${order.conversationId}`);
+            router.push(`/dashboard/seller/messages?conversationId=${order.conversationId}`);
         } else {
-            router.push(`/dashboard/freelancer/messages?otherUserId=${order.clientId}`);
+            router.push(`/dashboard/seller/messages?otherUserId=${order.clientId}`);
         }
     };
 

@@ -76,7 +76,7 @@ export async function POST(request, { params }) {
         title: 'Offer accepted',
         body: `${clientName} accepted your offer. An order has been created.`,
         type: 'order',
-        data: { orderId: order.id, offerId: offer.id, linkUrl: `/dashboard/freelancer/orders/${order.id}` },
+        data: { orderId: order.id, offerId: offer.id, linkUrl: `/dashboard/seller/orders/${order.id}` },
       });
     } catch (notifError) {
       console.error('Failed to create accept-offer notification:', notifError);

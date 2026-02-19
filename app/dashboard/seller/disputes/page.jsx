@@ -122,7 +122,7 @@ export default function FreelancerDisputesPage() {
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredDisputes.map((dispute) => (
-            <Link key={dispute.id} href={`/dashboard/freelancer/orders/${dispute.orderId}`} className="group block h-full">
+            <Link key={dispute.id} href={`/dashboard/seller/orders/${dispute.orderId}`} className="group block h-full">
               <Card className="h-full overflow-hidden border-border hover:border-primary/40 hover:shadow-lg transition-all duration-200">
                 <CardContent className="p-4 flex flex-col h-full">
                   <div className="flex items-center justify-between gap-2 mb-2">

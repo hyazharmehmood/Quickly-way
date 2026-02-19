@@ -37,7 +37,7 @@ export default function FreelancerProfilePage() {
         const fetchFreelancerProfile = async () => {
             try {
                 setLoading(true);
-                const response = await fetch(`/api/freelancer/${freelancerId}`);
+                const response = await fetch(`/api/seller/${freelancerId}`);
                 if (!response.ok) {
                     if (response.status === 404) throw new Error("Seller not found");
                     throw new Error("Failed to load profile");

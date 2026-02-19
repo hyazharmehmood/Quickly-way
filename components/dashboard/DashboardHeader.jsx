@@ -24,9 +24,9 @@ export const DashboardHeader = () => {
     const normalizedRole = role ? role.toUpperCase() : '';
     const canAccessBoth = (isSeller && sellerStatus === 'APPROVED') || normalizedRole === 'CLIENT & SELLER';
 
-    const isFreelancerView = pathname.startsWith('/dashboard/freelancer');
-    const dashboardPath = isFreelancerView ? '/dashboard/freelancer' : '/orders';
-    const otherDashboardPath = isFreelancerView ? '/' : '/dashboard/freelancer';
+    const isFreelancerView = pathname.startsWith('/dashboard/seller');
+    const dashboardPath = isFreelancerView ? '/dashboard/seller' : '/orders';
+    const otherDashboardPath = isFreelancerView ? '/' : '/dashboard/seller';
 
     const getSectionName = () => {
         const parts = pathname.split('/');

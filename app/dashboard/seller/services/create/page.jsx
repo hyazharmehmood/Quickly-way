@@ -10,7 +10,7 @@ export default function CreateServicePage() {
 
     const handleCancel = () => {
         // Navigate back to services list or dashboard
-        router.push('/dashboard/freelancer/services');
+        router.push('/dashboard/seller/services');
     };
 
     const handleSave = (service) => {
@@ -19,7 +19,7 @@ export default function CreateServicePage() {
         toast.success("Service created successfully!");
 
         // Redirect after save
-        router.push('/dashboard/freelancer/services');
+        router.push('/dashboard/seller/services');
     };
 
     return (

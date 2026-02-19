@@ -64,7 +64,7 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
                         key={item.href}
                         {...item}
                         active={
-                            item.href === '/dashboard/freelancer' || item.href === '/dashboard'
+                            item.href === '/dashboard/seller' || item.href === '/dashboard'
                                 ? pathname === item.href
                                 : pathname.startsWith(item.href)
                         }

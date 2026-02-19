@@ -52,7 +52,7 @@ export default function JoinAsFreelancerPage() {
     }
     // Approved check also handled in proxy.js
     if (isSeller && sellerStatus === 'APPROVED') {
-      router.replace('/dashboard/freelancer');
+      router.replace('/dashboard/seller');
       return;
     }
     checkMyRequests();
@@ -65,7 +65,7 @@ export default function JoinAsFreelancerPage() {
         const sellerReq = res.data.requests.find((r) => r.requestedRole === 'FREELANCER');
         if (sellerReq?.status === 'PENDING') setPendingRequest(true);
         if (sellerReq?.status === 'APPROVED') {
-          router.replace('/dashboard/freelancer');
+          router.replace('/dashboard/seller');
           return;
         }
       }
