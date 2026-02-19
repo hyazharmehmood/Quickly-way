@@ -49,7 +49,7 @@ export function HomeBanner() {
     return (
       <div className="w-full mb-6">
         <Skeleton
-          className="w-full rounded-xl overflow-hidden"
+          className="w-full rounded-xl overflow-hidden bg-primary/10"
           style={{ aspectRatio: DESKTOP_ASPECT }}
         />
       </div>
