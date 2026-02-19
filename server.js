@@ -41,7 +41,8 @@ app.prepare().then(() => {
           const page = parsedUrl.query.page;
           const pageSize = parsedUrl.query.pageSize;
           const q = parsedUrl.query.q && String(parsedUrl.query.q).trim() ? String(parsedUrl.query.q).trim() : null;
-          const services = await getPublicServices(skillSlug, status, page, pageSize, q);
+          const location = parsedUrl.query.location && String(parsedUrl.query.location).trim() ? String(parsedUrl.query.location).trim() : null;
+          const services = await getPublicServices(skillSlug, status, page, pageSize, q, location);
           res.writeHead(200, { 'Content-Type': 'application/json' });
           res.end(JSON.stringify(services));
           return;

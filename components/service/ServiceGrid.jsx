@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 import { HomeBanner } from '../banner/HomeBanner';
+import useAuthStore from '@/store/useAuthStore';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -20,6 +21,7 @@ export function ServiceGrid({
   onServiceClick,
   onClearFilters,
 }) {
+  const { user } = useAuthStore();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -27,6 +29,10 @@ export function ServiceGrid({
   const [pageSize] = useState(DEFAULT_PAGE_SIZE);
   const [total, setTotal] = useState(0);
   const [skillName, setSkillName] = useState(null);
+
+  // User's set location (from Header) – when this changes, services refetch so list reflects location
+  const userLocation = user?.location?.trim();
+  const locationParam = !userLocation || userLocation === 'All location' || userLocation === 'All World' ? '' : userLocation;
 
   useEffect(() => {
     // Fetch skill name if skillSlug is provided (for display purposes only)
@@ -90,10 +96,11 @@ export function ServiceGrid({
         if (offlineSelected && !onlineSelected) statusParam = 'offline';
         if (!onlineSelected && !offlineSelected) statusParam = null;
         if (statusParam) params.set('status', statusParam);
+        if (locationParam) params.set('location', locationParam);
         params.set('page', targetPage.toString());
         params.set('pageSize', pageSize.toString());
         const url = `/api/services/public?${params.toString()}`;
-        const res = await fetch(url);
+        const res = await fetch(url, { cache: 'no-store' });
 
         if (!res.ok) {
           console.error("Failed to fetch services");
@@ -128,7 +135,7 @@ export function ServiceGrid({
         }
       }
     },
-    [skillSlug, sellerFilter, searchQuery, pageSize]
+    [skillSlug, sellerFilter, searchQuery, pageSize, locationParam]
   );
 
   useEffect(() => {
@@ -137,10 +144,10 @@ export function ServiceGrid({
   }, [fetchServices]);
 
   useEffect(() => {
-    // Reset list when filters change before fetch re-runs
+    // Reset list when filters or location change so refetch shows correct results
     setServices([]);
     setTotal(0);
-  }, [skillSlug, sellerFilter, searchQuery]);
+  }, [skillSlug, sellerFilter, searchQuery, locationParam]);
 
   const handleLoadMore = () => {
     if (loadingMore) return;
