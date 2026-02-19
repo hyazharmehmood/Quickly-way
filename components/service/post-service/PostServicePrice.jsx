@@ -236,23 +236,33 @@ const PostServicePrice = (props) => {
                         </div>
 
                         {/* Add New Button - max 5 price breakdowns */}
-                        {priceBreakdowns.length < 5 && (
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    if (priceBreakdowns.length >= 5) return;
-                                    setPriceBreakdowns([
-                                        ...priceBreakdowns,
-                                        { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
-                                    ]);
-                                    setIsManualPriceEdit(false); // Allow auto-calculation after adding new breakdown
-                                }}
-                                className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
-                            >
-                                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
-                                Add another price option
-                            </button>
-                        )}
+                        <div className="space-y-1">
+                            {priceBreakdowns.length < 5 && (
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        if (priceBreakdowns.length >= 5) return;
+                                        setPriceBreakdowns([
+                                            ...priceBreakdowns,
+                                            { id: `pb-${Date.now()}`, text: "", price: "", included: "" }
+                                        ]);
+                                        setIsManualPriceEdit(false); // Allow auto-calculation after adding new breakdown
+                                    }}
+                                    className="w-full py-3 border-2 border-dashed border-gray-300 rounded-lg text-gray-500 font-medium hover:border-green-500 hover:text-green-600 hover:bg-green-50 transition-all flex items-center justify-center gap-2"
+                                >
+                                 <span className="flex items-center flex-col gap-2">        
+                                     <span className="text-sm font-medium flex items-center gap-2"> <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 4v16m8-8H4"></path></svg>
+                                 Add another price option</span>
+                                    <p className="text-xs text-gray-500 text-center">
+                                Limit to 5 maximum
+                                {priceBreakdowns.length > 0 && (
+                                    <span> • {5 - priceBreakdowns.length} {5 - priceBreakdowns.length === 1 ? 'slot' : 'slots'} remaining</span>
+                                )}
+                            </p></span>
+                                </button>
+                            )}
+                          
+                        </div>
                     </div>
                 </div>
 
