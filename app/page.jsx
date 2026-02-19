@@ -4,6 +4,7 @@ import { useState, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/category/CategoryFilter';
 import { ServiceGrid } from '@/components/service/ServiceGrid';
+import { HomeBanner } from '@/components/banner/HomeBanner';
 
 function HomeContent() {
   const router = useRouter();
@@ -30,10 +31,12 @@ function HomeContent() {
   return (
     <main className="min-h-screen bg-background">
       <h1 className="heading-1 sr-only">Find Top Freelance Services</h1>
+      
       <CategoryFilter
         selectedCategory={selectedSkill || 'All'}
         onSelectCategory={handleCategorySelect}
       />
+    
       <ServiceGrid
         skillSlug={selectedSkill}
         sellerFilter={sellerFilter}

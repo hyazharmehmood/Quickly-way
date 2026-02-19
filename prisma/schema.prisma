@@ -674,3 +674,19 @@ model Review {
   @@index([isOrderReview])
   @@index([createdAt])
 }
+
+// Banner for homepage ads - admin only. Two image slots: mobile + desktop.
+// Upload one or both. Desktop shows on desktop, mobile on mobile.
+model Banner {
+  id               String   @id @default(uuid())
+  title            String?  // Optional label for admin
+  mobileImageUrl   String?  // Mobile banner (768×140px recommended) - GIF/PNG/JPG
+  desktopImageUrl  String?  // Desktop banner (1200×200px recommended) - GIF/PNG/JPG
+  isActive         Boolean  @default(false)
+  sortOrder        Int      @default(0)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([sortOrder])
+}

@@ -6,6 +6,7 @@ import { OnlineSellerFilter } from './OnlineSellerFilter';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
+import { HomeBanner } from '../banner/HomeBanner';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -201,7 +202,9 @@ export function ServiceGrid({
           </Button>
         )}
       </div>
-
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+        <HomeBanner />
+      </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-5 gap-x-4 gap-y-8">
         {loading && services.length === 0 ? (
           [...Array(10)].map((_, i) => (
