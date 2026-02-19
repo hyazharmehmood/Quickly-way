@@ -91,34 +91,18 @@ const PostServiceProfile = ({
         navigator.geolocation.getCurrentPosition(
             async (position) => {
                 try {
-                    const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
-                    if (!apiKey) {
-                        toast.error('Location service not configured');
-                        setIsDetectingLocation(false);
-                        return;
-                    }
-
-                    const { lat, lng } = position.coords;
-                    const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${apiKey}`;
-                    const res = await fetch(url);
+                    const { latitude, longitude } = position.coords;
+                    const res = await fetch(
+                        `/api/geocode/reverse?lat=${encodeURIComponent(latitude)}&lng=${encodeURIComponent(longitude)}`
+                    );
                     const data = await res.json();
 
-                    if (data.status === 'OK' && data.results?.[0]) {
-                        const comp = data.results[0].address_components || [];
-                        const country = comp.find((c) => c.types?.includes('country'))?.long_name;
-                        const city = comp.find((c) => c.types?.includes('locality'))?.long_name ||
-                            comp.find((c) => c.types?.includes('administrative_area_level_1'))?.long_name;
-                        
-                        if (city && country) {
-                            setLocation(`${city}, ${country}`);
-                        } else if (country) {
-                            setLocation(country);
-                        } else {
-                            setLocation(data.results[0].formatted_address);
-                        }
+                    if (data.success && data.location) {
+                        setLocation(data.location);
                         toast.success('Location detected');
                     } else {
-                        toast.error('Could not detect location');
+                        const message = data.error || 'Could not detect location';
+                        toast.error(message);
                     }
                 } catch (error) {
                     console.error('Geocode error:', error);
@@ -129,10 +113,13 @@ const PostServiceProfile = ({
             },
             (error) => {
                 console.error('Geolocation error:', error);
-                toast.error('Could not detect your location');
+                const message = error.code === 1
+                    ? 'Location permission denied. Allow access or enter manually.'
+                    : 'Could not detect your location. Try again or enter manually.';
+                toast.error(message);
                 setIsDetectingLocation(false);
             },
-            { enableHighAccuracy: true, timeout: 10000 }
+            { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
         );
     };
 
