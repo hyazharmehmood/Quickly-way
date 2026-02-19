@@ -14,11 +14,11 @@ export default function CreateServicePage() {
     };
 
     const handleSave = (service) => {
-        // In a real app, you would send this 'service' object to your API
         console.log("Service Saved:", service);
-        toast.success("Service created successfully!");
+        toast.success('Service submitted for review', {
+            description: 'Your service is under review. You will get a notification once it is approved and goes live.',
+        });
 
-        // Redirect after save
         router.push('/dashboard/seller/services');
     };
 

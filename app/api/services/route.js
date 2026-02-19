@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import { verifyToken } from '@/lib/utils/jwt';
 import { createService, getServicesByFreelancer } from '@/lib/controllers/serviceController';
+import prisma from '@/lib/prisma';
+import { createNotification } from '@/lib/services/notificationService';
 
 // Helper to get user ID from token
 async function getUserId() {
@@ -24,9 +26,36 @@ export async function POST(req) {
         }
 
         const body = await req.json();
-console.log("body", body);
-        // Delegate business logic to controller
         const result = await createService(userId, body);
+
+        // Notify all admins (real-time)
+        try {
+            const creator = await prisma.user.findUnique({
+                where: { id: userId },
+                select: { name: true },
+            });
+            const admins = await prisma.user.findMany({
+                where: { role: 'ADMIN' },
+                select: { id: true },
+            });
+            const creatorName = creator?.name || 'A seller';
+            const title = 'New service submitted for review';
+            const bodyText = `${creatorName} submitted a new service: "${result.title}". Please review and approve or reject.`;
+            await Promise.all(
+                admins.map((admin) =>
+                    createNotification({
+                        userId: admin.id,
+                        title,
+                        body: bodyText,
+                        type: 'service_submitted',
+                        priority: 'normal',
+                        data: { serviceId: result.id, title: result.title },
+                    })
+                )
+            );
+        } catch (notifErr) {
+            console.error('Failed to send admin notifications for new service:', notifErr);
+        }
 
         return NextResponse.json(result, { status: 201 });
 

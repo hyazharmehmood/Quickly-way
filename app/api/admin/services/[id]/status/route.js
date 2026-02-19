@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { verifyAdminAuth } from '@/lib/utils/adminAuth';
+import { createNotification } from '@/lib/services/notificationService';
 
 /**
  * PATCH /api/admin/services/[id]/status - Approve or reject a service (admin only)
@@ -59,6 +60,30 @@ export async function PATCH(request, { params }) {
         },
       },
     });
+
+    // Notify the seller (creator) in real time
+    try {
+      const sellerId = updated.freelancerId || updated.freelancer?.id;
+      if (sellerId) {
+        const isApproved = statusValue === 'APPROVED';
+        await createNotification({
+          userId: sellerId,
+          title: isApproved ? 'Your service is now live' : 'Your service was not approved',
+          body: isApproved
+            ? `Your service "${updated.title}" has been approved and is now visible to buyers.`
+            : `Your service "${updated.title}" was not approved.${updated.rejectionReason ? ` Reason: ${updated.rejectionReason}` : ''}`,
+          type: 'service_review',
+          priority: isApproved ? 'normal' : 'high',
+          data: {
+            serviceId: updated.id,
+            approvalStatus: statusValue,
+            rejectionReason: updated.rejectionReason || null,
+          },
+        });
+      }
+    } catch (notifErr) {
+      console.error('Failed to notify seller of service review:', notifErr);
+    }
 
     return NextResponse.json({ success: true, service: updated });
   } catch (err) {
