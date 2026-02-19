@@ -38,19 +38,20 @@ By checking "I agree" and submitting, you confirm that you have read, understood
 
 export default function JoinAsClientPage() {
   const router = useRouter();
-  const { user, isLoggedIn, refreshProfile } = useAuthStore();
+  const { user, isLoggedIn, isLoading, refreshProfile } = useAuthStore();
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [pendingRequest, setPendingRequest] = useState(false);
 
   useEffect(() => {
+    if (isLoading) return; // Wait for auth store hydration (prevents wrong redirect on hard refresh)
     if (!isLoggedIn) {
       router.replace('/login');
       return;
     }
     checkMyRequests();
-  }, [isLoggedIn, router]);
+  }, [isLoading, isLoggedIn, router]);
 
   const checkMyRequests = async () => {
     try {
@@ -88,7 +89,7 @@ export default function JoinAsClientPage() {
     }
   };
 
-  if (pageLoading) {
+  if (isLoading || pageLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

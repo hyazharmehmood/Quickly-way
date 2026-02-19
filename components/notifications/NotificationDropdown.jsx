@@ -1,7 +1,8 @@
 'use client';
 
+import { useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
-import { Bell, CheckCircle, ShoppingBag, Mail, Briefcase, User } from 'lucide-react';
+import { Bell, CheckCircle, ShoppingBag, Mail, Briefcase, User, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils';
 import {
   DropdownMenu,
@@ -12,9 +13,14 @@ import { Button } from '@/components/ui/button';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { formatDistanceToNow } from 'date-fns';
 import { useNotifications } from '@/hooks/useNotifications';
+import useAuthStore from '@/store/useAuthStore';
+import api from '@/utils/api';
+import { toast } from 'sonner';
+import { ViewOfferModal } from '@/components/chat/ViewOfferModal';
 
 const NOTIFICATION_ICONS = {
   order: { Icon: ShoppingBag, bg: 'bg-primary/10', color: 'text-primary' },
+  dispute: { Icon: AlertCircle, bg: 'bg-red-500/15', color: 'text-red-600 dark:text-red-400' },
   'seller.application': { Icon: CheckCircle, bg: 'bg-emerald-500/15', color: 'text-emerald-600 dark:text-emerald-400' },
   message: { Icon: Mail, bg: 'bg-sky-500/15', color: 'text-sky-600 dark:text-sky-400' },
   gig: { Icon: Briefcase, bg: 'bg-amber-500/15', color: 'text-amber-600 dark:text-amber-400' },
@@ -34,19 +40,76 @@ const isChatNotification = (n) =>
 export function NotificationDropdown({ className }) {
   const router = useRouter();
   const pathname = usePathname();
+  const { role, isSeller } = useAuthStore();
+  const normalizedRole = role ? String(role).toUpperCase() : '';
+  const isAdmin = normalizedRole === 'ADMIN';
   const { notifications, markAsRead } = useNotifications();
+  const [viewOfferModal, setViewOfferModal] = useState({ open: false, offer: null });
   const messagesPath = pathname?.startsWith('/dashboard/freelancer') ? '/dashboard/freelancer/messages' : '/messages';
+  const isFreelancerView = pathname?.startsWith('/dashboard/freelancer');
 
   // Bell = other notifications only (no chat); chat has its own dropdown on MessageSquare
   const otherNotifications = notifications.filter((n) => !isChatNotification(n));
   const unreadCount = otherNotifications.filter((n) => !n.read).length;
 
-  const handleMarkOne = (notification) => {
+  const getOrderPath = (orderId) => {
+    if (!orderId) return null;
+    // Freelancer/seller sees orders in dashboard, client in /orders
+    const useFreelancerPath = isFreelancerView || (normalizedRole === 'FREELANCER') || (normalizedRole === 'CLIENT' && isSeller);
+    return useFreelancerPath ? `/dashboard/freelancer/orders/${orderId}` : `/orders/${orderId}`;
+  };
+
+  const handleMarkOne = async (notification) => {
     if (!notification.read) {
       markAsRead([notification.id]);
     }
-    if ((notification.type === 'message' || notification.type === 'chat') && notification.data?.conversationId) {
-      router.push(`${messagesPath}?conversationId=${notification.data.conversationId}`);
+    const data = notification.data || {};
+    const type = (notification.type || '').toLowerCase();
+
+    // Message / Chat → messages page
+    if (type === 'message' || type === 'chat') {
+      if (data.conversationId) {
+        router.push(`${messagesPath}?conversationId=${data.conversationId}`);
+      }
+      return;
+    }
+
+    // Order (including offer accepted) → order page
+    if (type === 'order' && data.orderId) {
+      const path = getOrderPath(data.orderId) || data.linkUrl;
+      if (path) router.push(path);
+      return;
+    }
+
+    // Offer rejected (order type but no orderId, has offerId) → show ViewOfferModal
+    if (type === 'order' && data.offerId && !data.orderId) {
+      try {
+        const res = await api.get(`/offers/${data.offerId}`);
+        if (res.data?.success && res.data.offer) {
+          setViewOfferModal({ open: true, offer: res.data.offer });
+        } else {
+          router.push(data.linkUrl || (data.conversationId ? `${messagesPath}?conversationId=${data.conversationId}` : '/messages'));
+        }
+      } catch {
+        toast.error('Failed to load offer');
+        if (data.conversationId) router.push(`${messagesPath}?conversationId=${data.conversationId}`);
+      }
+      return;
+    }
+
+    // Dispute → order page (dispute detail shown within order) or admin dispute page
+    if (type === 'dispute' && (data.orderId || data.disputeId)) {
+      const orderId = data.orderId;
+      const path = (isAdmin && data.linkUrl?.startsWith('/admin/') ? data.linkUrl : null)
+        || (orderId ? getOrderPath(orderId) : null)
+        || data.linkUrl;
+      if (path) router.push(path);
+      return;
+    }
+
+    // Fallback: use linkUrl if present
+    if (data.linkUrl) {
+      router.push(data.linkUrl);
     }
   };
 
@@ -132,6 +195,11 @@ export function NotificationDropdown({ className }) {
           </div>
         </ScrollArea>
       </DropdownMenuContent>
+      <ViewOfferModal
+        offer={viewOfferModal.offer}
+        open={viewOfferModal.open}
+        onOpenChange={(open) => setViewOfferModal((p) => ({ ...p, open }))}
+      />
     </DropdownMenu>
   );
 }

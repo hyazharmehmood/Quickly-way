@@ -38,23 +38,25 @@ By checking "I agree" and submitting, you confirm that you have read, understood
 
 export default function JoinAsFreelancerPage() {
   const router = useRouter();
-  const { user, isLoggedIn, isSeller, sellerStatus, refreshProfile } = useAuthStore();
+  const { user, isLoggedIn, isLoading, isSeller, sellerStatus, refreshProfile } = useAuthStore();
   const [agreed, setAgreed] = useState(false);
   const [loading, setLoading] = useState(false);
   const [pageLoading, setPageLoading] = useState(true);
   const [pendingRequest, setPendingRequest] = useState(false);
 
   useEffect(() => {
+    if (isLoading) return; // Wait for auth store hydration (prevents wrong redirect on hard refresh)
     if (!isLoggedIn) {
       router.replace('/login');
       return;
     }
+    // Approved check also handled in proxy.js
     if (isSeller && sellerStatus === 'APPROVED') {
       router.replace('/dashboard/freelancer');
       return;
     }
     checkMyRequests();
-  }, [isLoggedIn, isSeller, sellerStatus, router]);
+  }, [isLoading, isLoggedIn, isSeller, sellerStatus, router]);
 
   const checkMyRequests = async () => {
     try {
@@ -93,7 +95,7 @@ export default function JoinAsFreelancerPage() {
     }
   };
 
-  if (pageLoading) {
+  if (isLoading || pageLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />

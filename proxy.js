@@ -46,9 +46,29 @@ export function proxy(request) {
         }
     }
 
-    // 5. Join as Client / Join as Seller: login required
-    if ((pathname === '/become-seller' || pathname === '/join-as-client' || pathname === '/join-as-freelancer') && !token) {
+    // 5. Join as Client / Join as Seller: login required + agreement status checks
+    if (pathname === '/join-as-freelancer' || pathname === '/join-as-client') {
+        if (!token) {
+            return NextResponse.redirect(new URL('/login', request.url));
+        }
+        const isSeller = request.cookies.get('isSeller')?.value === 'true';
+        const normalizedRole = role ? role.toUpperCase() : '';
+        // Already approved: redirect away
+        if (pathname === '/join-as-freelancer' && isSeller) {
+            return NextResponse.redirect(new URL('/dashboard/freelancer', request.url));
+        }
+        if (pathname === '/join-as-client' && normalizedRole === 'CLIENT') {
+            return NextResponse.redirect(new URL('/', request.url));
+        }
+    }
+
+    // Legacy path
+    if (pathname === '/become-seller' && !token) {
         return NextResponse.redirect(new URL('/login', request.url));
+    }
+    if (pathname === '/become-seller' && token) {
+        const isSeller = request.cookies.get('isSeller')?.value === 'true';
+        if (isSeller) return NextResponse.redirect(new URL('/dashboard/freelancer', request.url));
     }
 
     return NextResponse.next();
