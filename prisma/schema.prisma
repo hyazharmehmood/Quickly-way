@@ -205,35 +205,47 @@ model Notification {
   @@index([createdAt])
 }
 
+enum ServiceApprovalStatus {
+  PENDING_APPROVAL  // Seller created; waiting for admin
+  APPROVED          // Admin approved; visible on homepage
+  REJECTED          // Admin rejected; seller sees reason
+}
+
 model Service {
-  id              String        @id @default(uuid())
-  title           String
-  description     String
-  category        String?
-  subCategory     String?
-  price           Float?
-  currency        String        @default("USD")
-  priceBreakdowns Json?
-  images          String[]
-  showEmail       Boolean       @default(false)
-  showMobile      Boolean       @default(false)
-  freelancerId    String
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  coverColor      String?
-  coverImage      String?
-  coverText       String?
-  coverType       String        @default("IMAGE")
-  searchTags      String[]
-  paymentRegion   String?       // e.g. "SAUDI_ARABIA", "GLOBAL" - default SAUDI_ARABIA (backend only)
-  paymentMethods  String[]      // Selected method labels, e.g. ["Mada (HyperPay)", "Moyasar"]
-  paymentMethodsText   String?  // Custom text e.g. "I accept payments via quicklyway"
-  paymentMethodsTextAr String?  // Arabic version of payment methods text
-  freelancer      User          @relation(fields: [freelancerId], references: [id])
-  skills          ServiceSkill[]
-  orders          Order[]
-  offers          Offer[]
-  reviews         Review[]      @relation("ServiceReviews")
+  id                String                  @id @default(uuid())
+  title             String
+  description       String
+  category          String?
+  subCategory       String?
+  price             Float?
+  currency          String                  @default("USD")
+  priceBreakdowns   Json?
+  images            String[]
+  showEmail         Boolean                 @default(false)
+  showMobile        Boolean                 @default(false)
+  freelancerId      String
+  approvalStatus    ServiceApprovalStatus   @default(PENDING_APPROVAL)
+  rejectionReason   String?                 // Admin reason when REJECTED
+  reviewedAt        DateTime?
+  reviewedById      String?                // Admin user ID who approved/rejected
+  createdAt         DateTime                @default(now())
+  updatedAt         DateTime                @updatedAt
+  coverColor        String?
+  coverImage        String?
+  coverText         String?
+  coverType         String                  @default("IMAGE")
+  searchTags        String[]
+  paymentRegion     String?                 // e.g. "SAUDI_ARABIA", "GLOBAL" - default SAUDI_ARABIA (backend only)
+  paymentMethods    String[]                // Selected method labels, e.g. ["Mada (HyperPay)", "Moyasar"]
+  paymentMethodsText   String?              // Custom text e.g. "I accept payments via quicklyway"
+  paymentMethodsTextAr String?              // Arabic version of payment methods text
+  freelancer        User                    @relation(fields: [freelancerId], references: [id])
+  skills            ServiceSkill[]
+  orders            Order[]
+  offers            Offer[]
+  reviews           Review[]                @relation("ServiceReviews")
+
+  @@index([approvalStatus])
 }
 
 model Conversation {

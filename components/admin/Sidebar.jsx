@@ -4,7 +4,8 @@ import React, { useState } from 'react';
 import {
     LayoutDashboard, Users as UsersIcon, UserCheck, ShieldCheck, Briefcase,
     ShoppingCart, AlertCircle, Star, Search, Settings as SettingsIcon,
-    LogOut, ChevronLeft, ChevronRight, FolderTree, Tag, Headphones, Image as ImageIcon
+    LogOut, ChevronLeft, ChevronRight, FolderTree, Tag, Headphones, Image as ImageIcon,
+    ClipboardList
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -34,6 +35,7 @@ export const Sidebar = ({ onLogout }) => {
         { icon: <UsersIcon />, label: "Users", href: "/admin/users" },
         { icon: <UserCheck />, label: "Join Requests", href: "/admin/join-requests" },
         { icon: <Briefcase />, label: "Seller Requests", href: "/admin/seller-requests" },
+        { icon: <ClipboardList />, label: "Service Requests", href: "/admin/services" },
         { icon: <ShoppingCart />, label: "Orders", href: "/admin/orders" },
         { icon: <AlertCircle />, label: "Disputes", href: "/admin/disputes" },
         { icon: <Headphones />, label: "Support Tickets", href: "/admin/support-tickets" },

@@ -37,7 +37,9 @@ export default function FreelancerServicesPage() {
                         currency: service.currency,
                         rating: 0,
                         reviews: 0,
-                        status: 'Published',
+                        approvalStatus: service.approvalStatus || 'PENDING_APPROVAL',
+                        rejectionReason: service.rejectionReason || '',
+                        status: service.approvalStatus === 'APPROVED' ? 'Approved' : service.approvalStatus === 'REJECTED' ? 'Rejected' : 'Requested',
                         image: service.coverImage || (service.images && service.images[0]) || 'https://images.unsplash.com/photo-1626785774573-4b799315345d?w=400&h=250&fit=crop',
                         coverType: service.coverType,
                         coverText: service.coverText,
@@ -116,8 +118,8 @@ export default function FreelancerServicesPage() {
 
     const getStatusBadge = (status) => {
         switch (status) {
-            case 'Published': return <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20">Published</Badge>;
-            case 'Draft': return <Badge variant="secondary" className="bg-secondary/80 text-muted-foreground border-border">Draft</Badge>;
+            case 'Approved': return <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">Approved</Badge>;
+            case 'Requested': return <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 border-amber-500/20">Requested</Badge>;
             case 'Rejected': return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
             default: return <Badge>{status}</Badge>;
         }
@@ -128,7 +130,7 @@ export default function FreelancerServicesPage() {
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <div>
                     <h3 className="heading-3">My Services</h3>
-                    <p className="text-muted-foreground font-normal text-sm">Create and manage your professional offerings.</p>
+                    <p className="text-muted-foreground font-normal text-sm">Create and manage your professional offerings. New services go to admin for approval.</p>
                 </div>
                 <Link href="/dashboard/seller/services/create">
                         <Button variant="default" className="">
@@ -141,6 +143,9 @@ export default function FreelancerServicesPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                 {myServices.map((service) => (
                     <div key={service.id} className="relative group">
+                        <div className="absolute top-1.5 left-1.5 z-10">
+                            {getStatusBadge(service.status)}
+                        </div>
                         <div className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
                             <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
@@ -155,15 +160,12 @@ export default function FreelancerServicesPage() {
                                             <span className="text-primary">Edit</span>   
                                         </DropdownMenuItem>
                                     </Link>
-                                    {/* <DropdownMenuItem className="text-red-600 cursor-pointer">
-                                        <Trash2 className="m h-4 w-4" />
-                                        <span className="text-red-600">Delete</span> 
-                                    </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                             </DropdownMenu>
                         </div>
 
                         <ServiceCard service={service} />
+                      
                     </div>
                 ))}
             </div>

@@ -29,7 +29,10 @@ const getTimezoneFromLocation = (location) => {
 const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNavigateToService, onContact }) => {
     console.log('service', service);
     const router = useRouter();
-    const { isLoggedIn } = useAuthStore();
+    const { isLoggedIn, user } = useAuthStore();
+    const isOwner = isLoggedIn && user?.id && (service.freelancerId === user.id || service.rawData?.freelancerId === user.id);
+    const isRejected = service.rawData?.approvalStatus === 'REJECTED' || service.approvalStatus === 'REJECTED';
+    const rejectionReason = service.rawData?.rejectionReason || service.rejectionReason;
     const [currentImageIndex, setCurrentImageIndex] = useState(0);
     const [currentTime, setCurrentTime] = useState("");
     const [timeZoneDisplay, setTimeZoneDisplay] = useState("");
@@ -144,6 +147,15 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                 onClose={() => setShowReviewModal(false)}
                 onSubmit={handleSubmitReview}
             />
+
+            {isOwner && isRejected && (
+                <div className="px-4 pt-4 max-w-7xl mx-auto">
+                    <div className="rounded-lg bg-destructive/10 border border-destructive/30 p-4">
+                        <p className="text-sm font-semibold text-destructive mb-1">Admin&apos;s reason for rejection</p>
+                        <p className="text-sm text-foreground">{rejectionReason?.trim() || 'No reason provided.'}</p>
+                    </div>
+                </div>
+            )}
 
             <div className="px-4 py-4 max-w-7xl mx-auto ">
 
