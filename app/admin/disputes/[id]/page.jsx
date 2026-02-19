@@ -154,7 +154,7 @@ export default function AdminDisputeDetailPage() {
         setCommentContent('');
         setAttachments([]);
         await fetchComments();
-        toast.success('Comment added');
+        // toast.success('Comment added');
       }
     } catch (error) {
       console.error('Error sending comment:', error);

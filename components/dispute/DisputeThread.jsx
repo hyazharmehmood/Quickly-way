@@ -46,20 +46,20 @@ export default function DisputeThread({ dispute, order, onCommentAdded }) {
     }
   }, [dispute?.id]);
 
-  // Real-time: subscribe to dispute room when viewing
+  // Real-time: subscribe to dispute room when viewing (like chat)
   useEffect(() => {
     if (!socket || !dispute?.id) return;
-    socket.emit('dispute:subscribe', { disputeId: dispute.id });
-    return () => {
-      socket.emit('dispute:unsubscribe', { disputeId: dispute.id });
-    };
+    const disputeId = String(dispute.id);
+    socket.emit('dispute:subscribe', { disputeId });
+    return () => socket.emit('dispute:unsubscribe', { disputeId });
   }, [socket, dispute?.id]);
 
-  // Real-time: listen for new comments from other users (or self from another tab)
+  // Real-time: listen for new comments (chat-like - from other users or self from another tab)
   useEffect(() => {
     if (!socket || !dispute?.id) return;
+    const disputeIdStr = String(dispute.id);
     const handleNewComment = (data) => {
-      if (data?.disputeId !== dispute.id || !data?.comment) return;
+      if (String(data?.disputeId) !== disputeIdStr || !data?.comment) return;
       const comment = data.comment;
       setComments((prev) => {
         if (prev.some((c) => c.id === comment.id)) return prev;
@@ -215,13 +215,12 @@ export default function DisputeThread({ dispute, order, onCommentAdded }) {
       });
 
       if (response.data.success) {
+        const newComment = response.data.comment;
+        setComments((prev) => (prev.some((c) => c.id === newComment.id) ? prev : [...prev, newComment]));
         setCommentContent('');
         setAttachments([]);
         setSelectedFiles([]);
-        await fetchComments();
-        if (onCommentAdded) {
-          onCommentAdded();
-        }
+        if (onCommentAdded) onCommentAdded();
         toast.success('Comment added');
       }
     } catch (error) {

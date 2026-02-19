@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import prisma from '@/lib/prisma';
 import { getOptionalUser } from '@/lib/utils/supportAuth';
 import { verifyAdminAuth } from '@/lib/utils/adminAuth';
+const { emitSupportTicketMessageEvent } = require('@/lib/socket');
 
 function getMessageRole(user, ticket) {
   if (!user) return null;
@@ -76,9 +77,18 @@ export async function POST(request, { params }) {
         attachments: attachments.length > 0 ? attachments : undefined,
       },
       include: {
-        sender: { select: { id: true, name: true, email: true } },
+        sender: { select: { id: true, name: true, email: true, profileImage: true } },
       },
     });
+
+    try {
+      emitSupportTicketMessageEvent(id, message, {
+        createdById: ticket.createdById,
+        assignedAgentId: ticket.assignedAgentId,
+      });
+    } catch (socketError) {
+      console.error('Failed to emit support ticket message socket event:', socketError);
+    }
 
     return NextResponse.json({ success: true, message });
   } catch (error) {

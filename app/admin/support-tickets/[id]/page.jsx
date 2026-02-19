@@ -16,6 +16,7 @@ import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { uploadToCloudinary } from '@/utils/cloudinary';
 import useAuthStore from '@/store/useAuthStore';
+import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import Link from 'next/link';
 
 const STATUS_STEPS = [
@@ -44,6 +45,7 @@ export default function AdminSupportTicketDetailPage() {
   const [uploading, setUploading] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const lastMessageRef = useRef(null);
+  const { socket } = useGlobalSocket();
 
   useEffect(() => {
     if (params.id) {
@@ -55,6 +57,30 @@ export default function AdminSupportTicketDetailPage() {
   useEffect(() => {
     lastMessageRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [ticket?.messages]);
+
+  // Real-time: subscribe to support ticket room
+  useEffect(() => {
+    if (!socket || !params.id || !ticket?.id) return;
+    const ticketId = String(ticket.id);
+    socket.emit('supportTicket:subscribe', { ticketId });
+    return () => socket.emit('supportTicket:unsubscribe', { ticketId });
+  }, [socket, params.id, ticket?.id]);
+
+  // Real-time: listen for new messages
+  useEffect(() => {
+    if (!socket || !ticket?.id) return;
+    const ticketIdStr = String(ticket.id);
+    const handleNewMessage = (data) => {
+      if (String(data?.ticketId) !== ticketIdStr || !data?.message) return;
+      const msg = data.message;
+      setTicket((prev) => {
+        if (!prev || prev.messages?.some((m) => m.id === msg.id)) return prev;
+        return { ...prev, messages: [...(prev.messages || []), msg] };
+      });
+    };
+    socket.on('supportTicket:new_message', handleNewMessage);
+    return () => socket.off('supportTicket:new_message', handleNewMessage);
+  }, [socket, ticket?.id]);
 
   const fetchTicket = async () => {
     try {
