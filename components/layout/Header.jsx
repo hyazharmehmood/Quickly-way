@@ -659,14 +659,15 @@ export function Header() {
                   variant="ghost"
                   size="sm"
                   onClick={() => handleNavigate('login')}
-                  className="text-xs sm:text-sm font-medium bg-muted  text-foreground hover:text-muted-foreground hover:bg-muted px-3 sm:px-4 md:px-5 py-2 sm:py-2.5 rounded-full h-auto"
+                  className="  bg-muted "
                 >
                   Log in
                 </Button>
                 <Button
                   size="sm"
+                  variant="default"
                   onClick={() => router.push('/signup')}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs sm:text-sm font-medium px-4 sm:px-5 md:px-6 py-2 sm:py-2.5 rounded-full shadow-sm h-auto transition-colors"
+                  className=""
                 >
                   <span className="hidden sm:inline">Sign up</span>
                   <span className="sm:hidden">Join</span>
