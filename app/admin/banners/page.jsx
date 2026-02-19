@@ -144,10 +144,6 @@ export default function AdminBannersPage() {
   }, []);
 
   const handleUpload = async (file, slot) => {
-    if (!file.type.startsWith('image/')) {
-      toast.error('Only images (GIF, PNG, JPG) are supported');
-      return;
-    }
     setUploadingSlot(slot);
     try {
       const url = await uploadToCloudinary(file, 'image');
@@ -158,6 +154,33 @@ export default function AdminBannersPage() {
     } finally {
       setUploadingSlot(null);
     }
+  };
+
+  // Validate image dimensions before upload; show toast with actual size if wrong
+  const handleFileSelect = (file, slot) => {
+    if (!file.type.startsWith('image/')) {
+      toast.error('Only images (GIF, PNG, JPG) are supported');
+      return;
+    }
+    const required = slot === 'desktopImageUrl' ? DESKTOP_DIMENSIONS : MOBILE_DIMENSIONS;
+    const label = slot === 'desktopImageUrl' ? 'Desktop' : 'Mobile';
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(img.src);
+      const w = img.naturalWidth || img.width;
+      const h = img.naturalHeight || img.height;
+      if (w !== required.width || h !== required.height) {
+        toast.error(`${label} banner must be ${required.width}×${required.height} px. Current: ${w}×${h} px`);
+        return;
+      }
+      toast.success('Correct dimensions');
+      handleUpload(file, slot);
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(img.src);
+      toast.error('Invalid image file');
+    };
+    img.src = URL.createObjectURL(file);
   };
 
   const handleCreate = async () => {
@@ -380,7 +403,7 @@ export default function AdminBannersPage() {
               icon={Monitor}
               dimensions={DESKTOP_DIMENSIONS}
               value={form.desktopImageUrl}
-              onUpload={(file) => handleUpload(file, 'desktopImageUrl')}
+              onUpload={(file) => handleFileSelect(file, 'desktopImageUrl')}
               loading={uploadingSlot === 'desktopImageUrl'}
             />
             <ImageUploadSlot
@@ -388,7 +411,7 @@ export default function AdminBannersPage() {
               icon={Smartphone}
               dimensions={MOBILE_DIMENSIONS}
               value={form.mobileImageUrl}
-              onUpload={(file) => handleUpload(file, 'mobileImageUrl')}
+              onUpload={(file) => handleFileSelect(file, 'mobileImageUrl')}
               loading={uploadingSlot === 'mobileImageUrl'}
             />
             <p className="text-xs text-muted-foreground">

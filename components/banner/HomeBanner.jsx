@@ -77,13 +77,13 @@ export function HomeBanner() {
           )}
         >
           <div
-            className="relative w-full overflow-hidden"
+            className="relative w-full overflow-hidden flex items-center justify-center bg-muted/30"
             style={{ aspectRatio: aspect }}
           >
             <img
               src={banner.imageUrl || ''}
               alt={banner.title || 'Promotional banner'}
-              className="absolute inset-0 w-full h-full object-cover object-center"
+              className="w-full h-full object-contain object-center"
               loading="eager"
               decoding="async"
               sizes={isMobile ? '100vw' : isTwoOrMore ? '50vw' : '1280px'}
