@@ -1,4 +1,5 @@
--- Run this in your database (e.g. Neon SQL Editor) if migrate dev fails.
+-- Run this in your PRODUCTION database (e.g. Neon SQL Editor, psql) if the table is missing.
+-- Use when: "The table public.RoleAgreementRequest does not exist in the current database."
 -- Creates only the RoleAgreementRequest table and enum (no Review/Service changes).
 
 -- CreateEnum (skip if already exists)
@@ -8,7 +9,7 @@ EXCEPTION
   WHEN duplicate_object THEN NULL;
 END $$;
 
--- CreateTable
+-- CreateTable (skip if already exists)
 CREATE TABLE IF NOT EXISTS "RoleAgreementRequest" (
   "id" TEXT NOT NULL,
   "userId" TEXT NOT NULL,
@@ -19,7 +20,7 @@ CREATE TABLE IF NOT EXISTS "RoleAgreementRequest" (
   "reviewedAt" TIMESTAMP(3),
   "reviewedById" TEXT,
   "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  "updatedAt" TIMESTAMP(3) NOT NULL,
+  "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
 
   CONSTRAINT "RoleAgreementRequest_pkey" PRIMARY KEY ("id")
 );
