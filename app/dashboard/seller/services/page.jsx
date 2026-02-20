@@ -166,7 +166,7 @@ export default function FreelancerServicesPage() {
                                                 <span className="text-primary">Edit</span>
                                             </DropdownMenuItem>
                                         </Link>
-                                        <Link href={`/admin/services/${service.id}`} className="block">
+                                        <Link href={`/services/${service.id}`} className="block">
                                             <DropdownMenuItem className="cursor-pointer">
                                                 <EyeIcon className="h-4 w-4" />
                                                 <span className="text-primary">View</span>
