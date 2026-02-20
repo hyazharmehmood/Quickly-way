@@ -450,9 +450,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                 <Card className="border-none shadow-sm">
                                     <CardContent className="p-4 md:p-6 ">
                                         <div className="flex justify-between items-center mb-4">
-                                            <h3 className="heading-3  ">Working hours</h3>
-                                            <span className='flex gap-2'>{service.freelancerId ?<><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-green-600">Online</span></> : <><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-gray-500">Offline</span></>}</span>
-                                        </div>
+                                            <h3 className="heading-3  ">Working hours</h3><UserStatus userId={service.freelancerId} showLabel={true} size="sm" /> </div>
                                         <div className="text-base text-gray-500 font-medium mb-6">
                                             Typical Response Time: <span className="text-gray-900 text-base font-semibold">1 Hour</span>
                                         </div>
@@ -585,7 +583,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                 ) : (
                                                     
                                                         <div className="w-14 h-14 rounded-full flex items-center justify-center border border-gray-200 bg-gradient-to-br from-primary/20 to-primary/5 flex-shrink-0">
-                  <User className="w-5 h-5 text-primary/60" />
+                                         <User className="w-5 h-5 text-primary/60" />
                                                     </div>
                                                 )}
                                                 <div className="flex-1 min-w-0">
@@ -599,9 +597,9 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                         ))}
                                                     </div>
                                                     <p className="text-gray-700 leading-relaxed">"{review.comment}"</p>
-                                                    {review.details && (
+                                                    {/* {review.details && (
                                                         <p className="text-sm text-gray-400 mt-2">{review.details}</p>
-                                                    )}
+                                                    )} */}
                                                 </div>
                                             </div>
                                         </div>

@@ -167,7 +167,7 @@ export function GlobalSearch({ className }) {
               type="button"
               variant="default"
               size="icon"
-              className="absolute right-1 top-1/2 h-9 w-9 sm:h-10 sm:w-10 -translate-y-1/2 rounded-full shrink-0"
+              className="absolute right-1 top-1/2 cursor-pointer h-9 w-9 sm:h-10 sm:w-10 -translate-y-1/2 rounded-full shrink-0"
               onClick={() => performSearch(value)}
             >
               <Search className="w-4 h-4" />

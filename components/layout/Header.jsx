@@ -499,7 +499,7 @@ export function Header() {
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <ShoppingBag className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">My Orders</span>
+                            <span className="text-sm font-medium">Orders</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/disputes')} className="cursor-pointer">
@@ -513,7 +513,7 @@ export function Header() {
                             <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary mr-2">
                               <Headphones className="w-4 h-4" />
                             </div>
-                            <span className="text-sm font-medium">My support tickets</span>
+                            <span className="text-sm font-medium">Support tickets</span>
                           </DropdownMenuItem>
 
                           <DropdownMenuItem onClick={() => router.push('/messages')} className="cursor-pointer">
