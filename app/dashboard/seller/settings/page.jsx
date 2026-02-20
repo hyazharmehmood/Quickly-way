@@ -15,6 +15,7 @@ import { ALL_WORLD_LANGUAGES } from '@/lib/shared/constants';
 import { Skeleton } from "@/components/ui/skeleton";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 
 const passwordChangeSchema = Yup.object({
     currentPassword: Yup.string().required('Current password is required'),
@@ -378,16 +379,12 @@ export default function FreelancerSettings() {
                                                     </div>
                                                     <div className="space-y-1.5">
                                                         <Label className="">Location</Label>
-                                                        <div className="relative">
-                                                            <Input
-                                                                value={location}
-                                                                onChange={(e) => setLocation(e.target.value)}
-                                                                disabled={isLoading}
-                                                                placeholder="e.g. New York, USA"
-                                                                className="w-full pl-9"
-                                                            />
-                                                            <MapPin className="w-4 h-4 text-muted-foreground absolute left-3 top-1/2 -translate-y-1/2" />
-                                                        </div>
+                                                        <LocationAutocomplete
+                                                            value={location}
+                                                            onChange={setLocation}
+                                                            placeholder="e.g. New York, USA"
+                                                            disabled={isLoading}
+                                                        />
                                                     </div>
 
                                                     <div className="space-y-1.5">
