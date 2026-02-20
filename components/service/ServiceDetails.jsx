@@ -259,7 +259,7 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                         </Button>
                                           
                                             <div className="text-base  flex-1 justify-center flex items-center gap-2  ">
-                                                {service.freelancerId ?<><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-green-600">Online</span></> : <><UserStatus userId={service.freelancerId} size="sm" /> <span className="text-gray-500">Offline</span></>}
+                                            <UserStatus userId={service.freelancerId} size="sm" showLabel={true} />
                                             </div> 
                                             <div className="flex-1 justify-center flex items-center gap-2 text-base text-gray-500 font-medium">
                                                 <Clock className="w-5 h-5 text-gray-400" />
