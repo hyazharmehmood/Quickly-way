@@ -58,13 +58,15 @@ export default function SupportTicketPage() {
     return () => socket.emit('supportTicket:unsubscribe', { ticketId });
   }, [socket, params.id, ticket?.id]);
 
-  // Real-time: listen for new messages
+  // Real-time: listen for new messages (only add others' messages from socket; our own are added from API to avoid duplicate)
   useEffect(() => {
-    if (!socket || !ticket?.id) return;
+    if (!socket || !ticket?.id || !user?.id) return;
     const ticketIdStr = String(ticket.id);
+    const isOwner = ticket.createdById === user.id || ticket.email === user.email;
     const handleNewMessage = (data) => {
       if (String(data?.ticketId) !== ticketIdStr || !data?.message) return;
       const msg = data.message;
+      if (msg.role === 'CLIENT' && isOwner) return;
       setTicket((prev) => {
         if (!prev || prev.messages?.some((m) => m.id === msg.id)) return prev;
         return { ...prev, messages: [...(prev.messages || []), msg] };
@@ -72,7 +74,7 @@ export default function SupportTicketPage() {
     };
     socket.on('supportTicket:new_message', handleNewMessage);
     return () => socket.off('supportTicket:new_message', handleNewMessage);
-  }, [socket, ticket?.id]);
+  }, [socket, ticket?.id, ticket?.createdById, ticket?.email, user?.id]);
 
   const fetchTicket = async () => {
     try {
@@ -129,10 +131,12 @@ export default function SupportTicketPage() {
         attachments: attachments.length ? attachments : undefined,
       });
       if (res.data?.success) {
-        setTicket((prev) => ({
-          ...prev,
-          messages: [...(prev?.messages || []), res.data.message],
-        }));
+        const newMsg = res.data.message;
+        setTicket((prev) => {
+          if (!prev) return prev;
+          if (prev.messages?.some((m) => m.id === newMsg?.id)) return prev;
+          return { ...prev, messages: [...(prev.messages || []), newMsg] };
+        });
         setMessageContent('');
       } else {
         toast.error(res.data?.error || 'Failed to send');
@@ -166,7 +170,8 @@ export default function SupportTicketPage() {
   if (!ticket) return null;
 
   const isOwner = user && (ticket.createdById === user.id || ticket.email === user.email);
-  const chatEnabled = isOwner && !!ticket.assignedAgentId;
+  const isResolved = ticket.status === 'RESOLVED';
+  const chatEnabled = isOwner && !!ticket.assignedAgentId && !isResolved;
 
   return (
     <div className="max-w-7xl mx-auto py-8 px-4">
@@ -332,7 +337,11 @@ export default function SupportTicketPage() {
 
           {isOwner && (
             <div className="mt-4 px-4 pb-4">
-              {chatEnabled ? (
+              {isResolved ? (
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center text-sm text-muted-foreground">
+                  This ticket has been resolved. Chat is closed. If you need further help, please open a new support ticket.
+                </div>
+              ) : chatEnabled ? (
                 <ChatInput
                   value={messageContent}
                   onChange={setMessageContent}

@@ -50,7 +50,7 @@ export async function GET(request) {
     else if (country) location = country;
     else location = data.results[0].formatted_address || null;
 
-    return NextResponse.json({ success: true, location });
+    return NextResponse.json({ success: true, location, city: city || null, country: country || null });
   } catch (err) {
     console.error('Geocode reverse error:', err);
     return NextResponse.json(

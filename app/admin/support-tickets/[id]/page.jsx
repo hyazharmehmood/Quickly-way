@@ -66,13 +66,14 @@ export default function AdminSupportTicketDetailPage() {
     return () => socket.emit('supportTicket:unsubscribe', { ticketId });
   }, [socket, params.id, ticket?.id]);
 
-  // Real-time: listen for new messages
+  // Real-time: listen for new messages (only add client messages from socket; our own agent/admin replies are added from API to avoid duplicate)
   useEffect(() => {
     if (!socket || !ticket?.id) return;
     const ticketIdStr = String(ticket.id);
     const handleNewMessage = (data) => {
       if (String(data?.ticketId) !== ticketIdStr || !data?.message) return;
       const msg = data.message;
+      if (msg.role !== 'CLIENT') return;
       setTicket((prev) => {
         if (!prev || prev.messages?.some((m) => m.id === msg.id)) return prev;
         return { ...prev, messages: [...(prev.messages || []), msg] };
@@ -174,10 +175,12 @@ export default function AdminSupportTicketDetailPage() {
         attachments: attachments.length ? attachments : undefined,
       });
       if (res.data?.success) {
-        setTicket((prev) => ({
-          ...prev,
-          messages: [...(prev?.messages || []), res.data.message],
-        }));
+        const newMsg = res.data.message;
+        setTicket((prev) => {
+          if (!prev) return prev;
+          if (prev.messages?.some((m) => m.id === newMsg?.id)) return prev;
+          return { ...prev, messages: [...(prev.messages || []), newMsg] };
+        });
         setMessageContent('');
       } else toast.error(res.data?.error || 'Failed to send');
     } catch (err) {

@@ -132,20 +132,20 @@ export function Header() {
           const data = await res.json();
           if (data.success && data.location) {
             setLocationFilter(data.location);
+            if (data.country) setManualCountry(data.country);
+            if (data.city) setManualLocation(data.city);
+            else if (data.location) setManualLocation(data.location);
             setIsLocationPickerOpen(false);
-            // toast.success('Location set — services filtered by your location');
           } else {
             const fallback = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
             setLocationFilter(fallback);
             setIsLocationPickerOpen(false);
-            // toast.success('Location set — services filtered by your location');
           }
         } catch (err) {
           console.error('Geocoding error:', err);
           const coords = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
           setLocationFilter(coords);
           setIsLocationPickerOpen(false);
-          // toast.success('Location set — services filtered by your location');
         } finally {
           setIsDetectingLocation(false);
         }
