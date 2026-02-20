@@ -1,18 +1,19 @@
 "use client";
 
 import React, { useState } from 'react';
-import { Plus, MoreVertical,  Eye, Power, Pencil } from 'lucide-react';
+import Image from 'next/image';
+import { Plus, Pencil, MoreVertical } from 'lucide-react';
 import Link from 'next/link';
-import { ServiceCard } from '@/components/service/ServiceCard';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
-    DropdownMenuTrigger
+    DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { ServiceApprovalStatusBadge } from '@/components/service/ServiceApprovalStatusBadge';
 
 export default function FreelancerServicesPage() {
     const [myServices, setMyServices] = useState([]);
@@ -116,15 +117,6 @@ export default function FreelancerServicesPage() {
         );
     }
 
-    const getStatusBadge = (status) => {
-        switch (status) {
-            case 'Approved': return <Badge variant="secondary" className="bg-green-500/10 text-green-700 border-green-500/20">Approved</Badge>;
-            case 'Requested': return <Badge variant="secondary" className="bg-amber-500/10 text-amber-700 border-amber-500/20">Requested</Badge>;
-            case 'Rejected': return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
-            default: return <Badge>{status}</Badge>;
-        }
-    };
-
     return (
         <div className="animate-in fade-in duration-500 space-y-4">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -140,33 +132,55 @@ export default function FreelancerServicesPage() {
                 </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                 {myServices.map((service) => (
-                    <div key={service.id} className="relative group">
-                        <div className="absolute top-1.5 left-1.5 z-10">
-                            {getStatusBadge(service.status)}
+                    <Card
+                        key={service.id}
+                        className="border shadow-none overflow-hidden group hover:border-primary/30 transition-colors"
+                    >
+                        <div className="relative aspect-16/10 bg-muted">
+                            {service.coverImage ? (
+                                <Image
+                                    src={service.coverImage}
+                                    alt=""
+                                    fill
+                                    className="object-cover"
+                                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                                />
+                            ) : (
+                                <div className="absolute inset-0 flex items-center justify-center text-muted-foreground/40 text-sm">
+                                    No image
+                                </div>
+                            )}
+                            <div className="absolute top-2 right-2 z-10">
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button variant="outline" size="icon" className="h-8 w-8 rounded-full backdrop-blur-sm bg-background/80 hover:bg-background">
+                                            <MoreVertical className="h-4 w-4" />
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent align="end">
+                                        <Link href={`/dashboard/seller/services/${service.id}/edit`}>
+                                            <DropdownMenuItem className="cursor-pointer">
+                                                <Pencil className="h-4 w-4" />
+                                                <span className="text-primary">Edit</span>
+                                            </DropdownMenuItem>
+                                        </Link>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                            </div>
                         </div>
-                        <div className="absolute top-1.5 right-1.5 z-10 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                    <Button variant="outline" size="icon" className="h-8 w-8 rounded-full backdrop-blur-sm">
-                                        <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                    <Link href={`/dashboard/seller/services/${service.id}/edit`}>
-                                        <DropdownMenuItem className="cursor-pointer">
-                                            <Pencil className=" h-4 w-4" />
-                                            <span className="text-primary">Edit</span>   
-                                        </DropdownMenuItem>
-                                    </Link>
-                                </DropdownMenuContent>
-                            </DropdownMenu>
-                        </div>
-
-                        <ServiceCard service={service} />
-                      
-                    </div>
+                        <CardContent className="p-4 space-y-4">
+                            <h3 className="font-medium line-clamp-2">{service.title}</h3>
+                            <div className="flex items-center justify-between gap-2">
+                                <p className="text-sm text-muted-foreground truncate">
+                                    {service.currency} {service.price}
+                                </p>
+                                <ServiceApprovalStatusBadge status={service.approvalStatus} />
+                            </div>
+                          
+                        </CardContent>
+                    </Card>
                 ))}
             </div>
         </div>

@@ -6,24 +6,11 @@ import Link from 'next/link';
 import { ClipboardList, RefreshCw, Search, ExternalLink } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from '@/utils/api';
 import { toast } from 'sonner';
-
-const StatusBadge = ({ status }) => {
-    switch (status) {
-        case 'APPROVED':
-            return <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Approved</Badge>;
-        case 'PENDING_APPROVAL':
-            return <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">Requested</Badge>;
-        case 'REJECTED':
-            return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
-        default:
-            return <Badge>{status || '—'}</Badge>;
-    }
-};
+import { ServiceApprovalStatusBadge } from '@/components/service/ServiceApprovalStatusBadge';
 
 export default function AdminServicesPage() {
     const [services, setServices] = useState([]);
@@ -117,7 +104,7 @@ export default function AdminServicesPage() {
             </div>
 
             {loading ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                     {[1, 2, 3, 4, 5, 6].map((i) => (
                         <Card key={i} className="border-border shadow-none overflow-hidden">
                             <Skeleton className="aspect-16/10 w-full" />
@@ -146,11 +133,11 @@ export default function AdminServicesPage() {
                     </CardContent>
                 </Card>
             ) : (
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-4">
                     {filteredServices.map((service) => (
                         <Card
                             key={service.id}
-                            className="border-border shadow-none overflow-hidden group hover:border-primary/30 transition-colors"
+                            className="border shadow-none overflow-hidden group hover:border-primary/30 transition-colors"
                         >
                             <div className="relative aspect-16/10 bg-muted">
                                 {service.coverImage ? (
@@ -166,14 +153,14 @@ export default function AdminServicesPage() {
                                         No image
                                     </div>
                                 )}
-                                <div className="absolute top-2 left-2">
-                                    <StatusBadge status={service.approvalStatus} />
-                                </div>
+                              
                             </div>
-                            <CardContent className="p-4">
-                                <h3 className="font-medium line-clamp-2 mb-1">{service.title}</h3>
-                                <p className="text-sm text-muted-foreground truncate mb-3">
-                                    {service.freelancer?.name || '—'}
+                            <CardContent className="p-4 space-y-4">
+                                <h3 className="font-medium line-clamp-2 ">{service.title}</h3>
+                                <p className="text-sm text-muted-foreground truncate ">
+                                     <div className="flex items-center justify-between"> {service.freelancer?.name || '—'} 
+                                    <ServiceApprovalStatusBadge status={service.approvalStatus} />
+                                </div>
                                 </p>
                                 <Link href={`/admin/services/${service.id}`} className="block">
                                     <Button variant="secondary" size="sm" className="w-full">

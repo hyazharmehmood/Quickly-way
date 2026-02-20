@@ -16,19 +16,7 @@ import { Label } from '@/components/ui/label';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 import { toast } from 'sonner';
-
-const StatusBadge = ({ status }) => {
-    switch (status) {
-        case 'APPROVED':
-            return <Badge className="bg-green-500/10 text-green-700 border-green-500/20">Approved</Badge>;
-        case 'PENDING_APPROVAL':
-            return <Badge className="bg-amber-500/10 text-amber-700 border-amber-500/20">Requested</Badge>;
-        case 'REJECTED':
-            return <Badge variant="destructive" className="bg-destructive/10 text-destructive border-destructive/20">Rejected</Badge>;
-        default:
-            return <Badge>{status || '—'}</Badge>;
-    }
-};
+import { ServiceApprovalStatusBadge } from '@/components/service/ServiceApprovalStatusBadge';
 
 export default function AdminServiceDetailPage() {
     const params = useParams();
@@ -249,7 +237,7 @@ export default function AdminServiceDetailPage() {
                             <h3 className="font-semibold">Admin actions</h3>
                             <div className="flex items-center gap-2">
                                 <Label className="text-muted-foreground text-sm">Status</Label>
-                                <StatusBadge status={service.approvalStatus} />
+                                <ServiceApprovalStatusBadge status={service.approvalStatus} />
                             </div>
                             {service.approvalStatus === 'REJECTED' && service.rejectionReason && (
                                 <div className="rounded-lg bg-destructive/5 border border-destructive/20 p-3">
