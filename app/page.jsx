@@ -5,10 +5,12 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { CategoryFilter } from '@/components/category/CategoryFilter';
 import { ServiceGrid } from '@/components/service/ServiceGrid';
 import { HomeBanner } from '@/components/banner/HomeBanner';
+import useLocationFilterStore from '@/store/useLocationFilterStore';
 
 function HomeContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const { clearLocationFilter } = useLocationFilterStore();
   const [selectedSkill, setSelectedSkill] = useState(null);
   const [sellerFilter, setSellerFilter] = useState({ online: false, offline: false });
   const searchQuery = searchParams.get('q') || '';
@@ -21,6 +23,7 @@ function HomeContent() {
   const handleClearFilters = () => {
     setSelectedSkill(null);
     setSellerFilter({ online: false, offline: false });
+    clearLocationFilter();
     router.push('/');
   };
 

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import api from '@/utils/api';
 import { HomeBanner } from '../banner/HomeBanner';
-import useAuthStore from '@/store/useAuthStore';
+import useLocationFilterStore from '@/store/useLocationFilterStore';
 
 const DEFAULT_PAGE_SIZE = 12;
 
@@ -21,7 +21,7 @@ export function ServiceGrid({
   onServiceClick,
   onClearFilters,
 }) {
-  const { user } = useAuthStore();
+  const { locationFilter } = useLocationFilterStore();
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -30,9 +30,9 @@ export function ServiceGrid({
   const [total, setTotal] = useState(0);
   const [skillName, setSkillName] = useState(null);
 
-  // User's set location (from Header) – when this changes, services refetch so list reflects location
-  const userLocation = user?.location?.trim();
-  const locationParam = !userLocation || userLocation === 'All location' || userLocation === 'All World' ? '' : userLocation;
+  // Filter-only location from Header (not saved to profile)
+  const locationParam = !locationFilter || locationFilter === 'All location' || locationFilter === 'All World' ? '' : locationFilter.trim();
+  const displayLocationFilter = locationParam ? (locationFilter.includes(',') ? locationFilter.split(',')[0].trim() : locationFilter) : null;
 
   useEffect(() => {
     // Fetch skill name if skillSlug is provided (for display purposes only)
@@ -164,7 +164,7 @@ export function ServiceGrid({
 
   const filterState = { ...DEFAULT_SELLER_FILTER, ...(sellerFilter || {}) };
   const hasSellerFilter = filterState.online || filterState.offline;
-  const hasAnyFilter = skillSlug || searchQuery || hasSellerFilter;
+  const hasAnyFilter = skillSlug || searchQuery || hasSellerFilter || !!locationParam;
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-2 md:py-6">
@@ -189,11 +189,19 @@ export function ServiceGrid({
             </span>
           </>
         )}
-        {hasSellerFilter && (
+        {displayLocationFilter && (
+          <>
+            <span className="text-sm text-muted-foreground">Location:</span>
+            <span className="px-3 py-1.5 bg-primary/10 text-primary rounded-md text-sm font-medium border border-primary/20">
+              {displayLocationFilter}
+            </span>
+          </>
+        )}
+        {/* {hasSellerFilter && (
           <span className="px-3 py-1.5 bg-secondary rounded-md text-sm font-medium">
             {filterState.online && !filterState.offline ? 'Online sellers' : 'Offline sellers'}
           </span>
-        )}
+        )} */}
         <span className="text-sm text-muted-foreground flex-1 min-w-0" />
         <span className="text-sm text-muted-foreground shrink-0">
           {services.length} of {total} {total === 1 ? 'result' : 'results'}
@@ -255,7 +263,7 @@ export function ServiceGrid({
               return skillSlug ? `No services found for "${skillName || skillSlug}".` : 'No services found.';
             })()}
           </p>
-          {onClearFilters && (skillSlug || searchQuery || sellerFilter?.online || sellerFilter?.offline) && (
+          {onClearFilters && (skillSlug || searchQuery || sellerFilter?.online || sellerFilter?.offline || locationParam) && (
             <Button
               onClick={onClearFilters}
               variant="ghost"

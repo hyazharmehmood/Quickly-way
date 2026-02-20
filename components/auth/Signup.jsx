@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import useAuthStore from '@/store/useAuthStore';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import { toast } from 'sonner';
 
 const signupSchema = yup.object({
@@ -199,9 +200,12 @@ const Signup = ({ onSignInClick, onPostServiceClick }) => {
         </form>
 
         <div className=" text-center">
-        <div className="flex items-center justify-">
+        <div className="flex items-center justify-center">
           <p className="caption text-center">
-            By joining, you agree to our <a href="#" className="underline">Terms & Conditions</a> and <a href="#" className="underline">Privacy policy</a>
+            By joining, you agree to our{' '}
+            <Link href="/terms" className="underline text-primary hover:no-underline font-medium">Terms &amp; Conditions</Link>
+            {' '}and{' '}
+            <Link href="/privacy" className="underline text-primary hover:no-underline font-medium">Privacy policy</Link>
           </p>
          </div>
           <p className="body">

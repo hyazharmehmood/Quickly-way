@@ -48,12 +48,14 @@ import { GlobalSearch } from '@/components/search/GlobalSearch';
 import { useContactSupport } from '@/context/ContactSupportContext';
 import useChatUnreadStore from '@/store/useChatUnreadStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
+import useLocationFilterStore from '@/store/useLocationFilterStore';
 
 export function Header() {
   const router = useRouter();
   const pathname = usePathname();
   const [logoError, setLogoError] = useState(false);
-  const { isLoggedIn, role, isSeller, sellerStatus, user, logout, setUser, refreshProfile } = useAuthStore();
+  const { isLoggedIn, role, isSeller, sellerStatus, user, logout, setUser } = useAuthStore();
+  const { locationFilter, setLocationFilter } = useLocationFilterStore();
   const normalizedRole = role ? role.toUpperCase() : '';
   const isAdmin = normalizedRole === 'ADMIN';
 
@@ -87,38 +89,15 @@ export function Header() {
   }, [socket, isConnected, isLoggedIn, pathname, setConversationsUnread, applyConversationUpdated]);
 
   const [isLocationPickerOpen, setIsLocationPickerOpen] = useState(false);
-  const [currentLocation, setCurrentLocation] = useState('All location');
   const [manualLocation, setManualLocation] = useState('');
   const [manualCountry, setManualCountry] = useState('');
   const [countryPopoverOpen, setCountryPopoverOpen] = useState(false);
   const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-  // Header display: when area/city/zip selected show city only (e.g. Lahore); else show full
-  const displayLocation = currentLocation.includes(',')
-    ? currentLocation.split(',')[0].trim()
-    : currentLocation;
+  // Header display: when area/city/zip selected show city only (e.g. Lahore); else show full. Filter-only, not saved to profile.
+  const displayLocation = locationFilter.includes(',')
+    ? locationFilter.split(',')[0].trim()
+    : locationFilter;
 
-  // Load saved location from profile when user is logged in
-  useEffect(() => {
-    if (!isLoggedIn) return;
-    if (user?.location) {
-      const loc = user.location.trim();
-      setCurrentLocation(loc === 'All World' ? 'All location' : loc);
-    } else {
-      setCurrentLocation('All location');
-    }
-  }, [isLoggedIn, user?.location]);
-
-  const saveLocationToProfile = async (locationValue) => {
-    if (!isLoggedIn || !locationValue) return;
-    try {
-      const res = await api.put('/auth/profile', { location: locationValue });
-      if (res.data?.user) setUser(res.data.user);
-      else await refreshProfile();
-    } catch (err) {
-      console.error('Failed to save location to profile:', err);
-    }
-  };
-  
   // Check if we can go back (not on home page)
   const canGoBack = pathname !== '/' && pathname !== '/dashboard/seller' && !pathname.startsWith('/dashboard/seller') && pathname !== '/admin';
 
@@ -131,9 +110,9 @@ export function Header() {
   };
 
   const handleLocationChange = (location) => {
-    setCurrentLocation(location);
+    setLocationFilter(location);
     setIsLocationPickerOpen(false);
-    saveLocationToProfile(location);
+    // toast.success('Services filtered by location');
   };
 
   const handleDetectLocation = () => {
@@ -152,24 +131,21 @@ export function Header() {
           );
           const data = await res.json();
           if (data.success && data.location) {
-            setCurrentLocation(data.location);
+            setLocationFilter(data.location);
             setIsLocationPickerOpen(false);
-            await saveLocationToProfile(data.location);
-            toast.success('Location detected and saved to profile');
+            // toast.success('Location set — services filtered by your location');
           } else {
             const fallback = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
-            setCurrentLocation(fallback);
+            setLocationFilter(fallback);
             setIsLocationPickerOpen(false);
-            await saveLocationToProfile(fallback);
-            toast.success('Location detected and saved to profile');
+            // toast.success('Location set — services filtered by your location');
           }
         } catch (err) {
           console.error('Geocoding error:', err);
           const coords = `${latitude.toFixed(4)}°, ${longitude.toFixed(4)}°`;
-          setCurrentLocation(coords);
+          setLocationFilter(coords);
           setIsLocationPickerOpen(false);
-          await saveLocationToProfile(coords);
-          toast.success('Location detected and saved to profile');
+          // toast.success('Location set — services filtered by your location');
         } finally {
           setIsDetectingLocation(false);
         }
@@ -188,12 +164,11 @@ export function Header() {
 
   const handleCountrySelect = (countryName) => {
     if (!countryName) return;
-    setCurrentLocation(countryName);
+    setLocationFilter(countryName);
     setManualCountry('');
     setCountryPopoverOpen(false);
     setIsLocationPickerOpen(false);
-    saveLocationToProfile(countryName);
-    // toast.success('Country set. Search limited to ' + countryName);
+    // toast.success('Services filtered by ' + countryName);
   };
 
   const handleSetManualLocation = () => {
@@ -202,11 +177,10 @@ export function Header() {
       toast.error('Search and select a location, then click Set');
       return;
     }
-    setCurrentLocation(loc);
+    setLocationFilter(loc);
     setManualLocation('');
     setIsLocationPickerOpen(false);
-    saveLocationToProfile(loc);
-    toast.success('Location set');
+    // toast.success('Services filtered by ' + (loc.includes(',') ? loc.split(',')[0].trim() : loc));
   };
 
   const handleBack = () => {
