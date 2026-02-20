@@ -111,7 +111,7 @@ export function KeywordSelector({
   return (
     <div className="space-y-2">
       <Label htmlFor="keywords" className="">
-        Positive keywords
+        Search keywords
       </Label>
 
       {/* Keywords Dropdown */}
