@@ -41,7 +41,9 @@ export const DashboardSidebar = ({ menuItems, roleName = "User", onLogout }) => 
             {/* Logo area */}
             <div className="p-6 flex items-center justify-between h-20">
                 <div className="flex items-center gap-4">
-                    <Image src="/images/qw logo tran.png" alt="Quicklyway Logo" width={140} height={40} />
+                    <Link href="/">
+                        <Image src="/images/qw logo tran.png" alt="Quicklyway Logo" width={140} height={40} />
+                    </Link>
                     {/* <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center text-primary-foreground flex-shrink-0 shadow-lg shadow-primary/20">
                         <ShieldCheck className="w-5 h-5" />
                     </div> */}
