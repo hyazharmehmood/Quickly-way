@@ -244,11 +244,11 @@ export function CategoryFilter({
                                     )}
 
                                     {/* Show message if no skills */}
-                                    {(!subcategory.skills || subcategory.skills.length === 0) && (
+                                    {/* {(!subcategory.skills || subcategory.skills.length === 0) && (
                                       <p className="text-xs text-muted-foreground/60 italic py-2">
                                         No skills available
                                       </p>
-                                    )}
+                                    )} */}
                                   </div>
                                 ))}
                               </div>
