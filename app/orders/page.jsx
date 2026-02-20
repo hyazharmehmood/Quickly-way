@@ -69,7 +69,7 @@ export default function ClientOrdersPage() {
     const getStatusBadge = (status) => {
         const config = STATUS_CONFIG[status] || STATUS_CONFIG.PENDING_ACCEPTANCE;
         return (
-            <Badge variant="secondary" className={config.color}>
+            <Badge variant="secondary" className={`whitespace-nowrap ${config.color}`}>
                 {config.label}
             </Badge>
         );

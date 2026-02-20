@@ -355,7 +355,7 @@ export default function OrderDetailPage() {
                                         Order #{order.orderNumber}
                                     </p>
                                 </div>
-                                <OrderStatusBadge status={order.status} />
+                                {/* <OrderStatusBadge status={order.status} /> */}
                             </div>
                         </CardHeader>
                         <CardContent className="space-y-6">
