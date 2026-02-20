@@ -29,12 +29,15 @@ export function UserStatus({ userId, showLabel = false, size = 'sm' }) {
       color: 'bg-green-500',
       label: 'Online',
       icon: '🟢',
+      textColor: 'text-green-500',
     },
     offline: {
       color: 'bg-gray-400',
       label: 'Offline',
       icon: '⚫',
+      textColor: 'text-gray-400',
     },
+
   };
 
   const config = statusConfig[status] || statusConfig.offline;
@@ -48,7 +51,7 @@ export function UserStatus({ userId, showLabel = false, size = 'sm' }) {
     <div className="flex items-center gap-1.5">
       <div className={`${config.color} ${sizeClasses[size]} rounded-full`} />
       {showLabel && (
-        <span className="text-xs text-muted-foreground">{config.label}</span>
+        <span className={`text-base ${config.textColor}`}>{config.label}</span>
       )}
     </div>
   );
