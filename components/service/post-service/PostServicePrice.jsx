@@ -203,13 +203,13 @@ const PostServicePrice = (props) => {
                                         {isExpanded && (
                                             <div className="relative animate-in slide-in-from-top-2 duration-200">
                                                 <label className="absolute -top-2.5 left-3 bg-[#FAFAFA] px-1 text-xs font-medium text-gray-500">
-                                                    Included
+                                                    Add Details
                                                 </label>
                                                 <Textarea
                                                     rows={3}
                                                     value={breakdown.included || ""}
                                                     onChange={(e) => handlePriceBreakdownChange(index, 'included', e.target.value)}
-                                                    placeholder="List what's included (e.g., 2 Revisions, Source File)..."
+                                                    placeholder="Add details about the package"
                                                     className="w-full "
                                                 />
                                             </div>
