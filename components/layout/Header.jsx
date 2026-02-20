@@ -40,7 +40,7 @@ import {
 import { COUNTRIES_FOR_LOCATION } from '@/utils/constants';
 import LocationAutocomplete from '@/components/ui/LocationAutocomplete';
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle } from 'lucide-react';
+import { UserIcon, Settings, LogOut, LayoutDashboard, UserCheck, ShoppingBag, MessageSquare, Languages, HelpCircle, Store, AlertCircle, Heart, X, Trash2 } from 'lucide-react';
 import { RoleSwitcher } from '@/components/dashboard/RoleSwitcher';
 import { NotificationDropdown } from '@/components/notifications/NotificationDropdown';
 import { ChatNotificationDropdown } from '@/components/notifications/ChatNotificationDropdown';
@@ -49,6 +49,8 @@ import { useContactSupport } from '@/context/ContactSupportContext';
 import useChatUnreadStore from '@/store/useChatUnreadStore';
 import { useGlobalSocket } from '@/hooks/useGlobalSocket';
 import useLocationFilterStore from '@/store/useLocationFilterStore';
+import useFavoritesStore from '@/store/useFavoritesStore';
+import Link from 'next/link';
 
 export function Header() {
   const router = useRouter();
@@ -56,6 +58,7 @@ export function Header() {
   const [logoError, setLogoError] = useState(false);
   const { isLoggedIn, role, isSeller, sellerStatus, user, logout, setUser } = useAuthStore();
   const { locationFilter, setLocationFilter } = useLocationFilterStore();
+  const { favorites, removeFavorite, clearAllFavorites } = useFavoritesStore();
   const normalizedRole = role ? role.toUpperCase() : '';
   const isAdmin = normalizedRole === 'ADMIN';
 
@@ -359,8 +362,106 @@ export function Header() {
 
         
 
-          {/* Utility Buttons: Notifications & Support */}
+          {/* Utility Buttons: Favorites, Notifications & Support */}
           <div className="flex items-center gap-1 sm:gap-3 md:gap-5 lg:gap-6 shrink-0">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-8 w-8 sm:h-9 sm:w-9 relative"
+                  aria-label="Favorites"
+                >
+                  <Heart className="h-4 w-4 sm:w-5 sm:h-5" />
+                  {favorites?.length > 0 && (
+                    <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] rounded-full bg-primary text-primary-foreground text-[10px] font-medium flex items-center justify-center px-1">
+                      {favorites.length > 9 ? '9+' : favorites.length}
+                    </span>
+                  )}
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-80 max-h-[380px] overflow-y-auto p-0 rounded-xl border border-border shadow-xl" align="end" sideOffset={8}>
+                <div className="px-4 py-3 border-b border-border">
+                  <DropdownMenuLabel className="font-semibold text-foreground p-0">Favorites</DropdownMenuLabel>
+                  <p className="text-xs text-muted-foreground mt-0.5">Your saved services</p>
+                </div>
+                {!favorites?.length ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground px-4">
+                    No favorites yet. Save services from their detail page.
+                  </div>
+                ) : (
+                  <>
+                    <div className="py-1">
+                      {favorites.map((fav) => (
+                        <DropdownMenuItem
+                          key={fav.id}
+                          className="cursor-pointer p-0 focus:bg-muted/50 rounded-none"
+                          onSelect={(e) => e.preventDefault()}
+                        >
+                          <div className="flex items-center gap-3 px-4 py-3 w-full">
+                            <Link href={`/services/${fav.id}`} className="flex items-center gap-3 flex-1 min-w-0">
+                              <div className="w-10 h-10 rounded-lg bg-muted overflow-hidden shrink-0 border border-border">
+                                {fav.image ? (
+                                  <img
+                                    src={fav.image}
+                                    alt=""
+                                    className="w-full h-full object-cover"
+                                  />
+                                ) : (
+                                  <div className="w-full h-full flex items-center justify-center text-muted-foreground/50">
+                                    <Heart className="w-4 h-4" />
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex-1 min-w-0 text-left">
+                                <p className="font-medium text-sm text-foreground line-clamp-2 leading-tight">
+                                  {fav.title || 'Service'}
+                                </p>
+                                {fav.price != null && (
+                                  <p className="text-xs text-muted-foreground mt-0.5">
+                                    {fav.currency} {typeof fav.price === 'number' ? fav.price.toLocaleString() : fav.price}
+                                  </p>
+                                )}
+                              </div>
+                            </Link>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
+                              aria-label="Remove from favorites"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                removeFavorite(fav.id);
+                                toast.success('Removed from favorites');
+                              }}
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </div>
+                    <div className="border-t border-border px-4 py-2">
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10 text-xs"
+                        onClick={() => {
+                          clearAllFavorites();
+                          toast.success('Favorites cleared');
+                        }}
+                      >
+                        <Trash2 className="h-3.5 w-3.5 mr-1.5" />
+                        Clear all
+                      </Button>
+                    </div>
+                  </>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
             {isLoggedIn && (
               <>
                 <ChatNotificationDropdown />
