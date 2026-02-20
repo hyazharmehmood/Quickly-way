@@ -188,7 +188,7 @@ const PostServicePrice = (props) => {
                                                 onClick={() => toggleExpand(index)}
                                                 className="flex items-center justify-between w-full gap-2 text-sm font-medium text-gray-600 hover:text-gray-900 transition-colors"
                                             >
-                                                View details
+                                              Add details
                                                 <svg
                                                     className={`w-4 h-4 transition-transform duration-200 ${isExpanded ? 'rotate-180' : ''}`}
                                                     fill="none"
@@ -203,7 +203,7 @@ const PostServicePrice = (props) => {
                                         {isExpanded && (
                                             <div className="relative animate-in slide-in-from-top-2 duration-200">
                                                 <label className="absolute -top-2.5 left-3 bg-[#FAFAFA] px-1 text-xs font-medium text-gray-500">
-                                                    Add Details
+                                                    Included
                                                 </label>
                                                 <Textarea
                                                     rows={3}
