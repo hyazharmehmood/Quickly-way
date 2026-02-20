@@ -16,6 +16,9 @@ import SubmitReviewModal from './modals/SubmitReviewModal';
 import { ServiceCard } from './ServiceCard';
 import { UserStatus } from '@/components/chat/UserStatus';
 import useAuthStore from '@/store/useAuthStore';
+import useFavoritesStore from '@/store/useFavoritesStore';
+import { cn } from '@/utils';
+import { toast } from 'sonner';
 
 const getTimezoneFromLocation = (location) => {
     const loc = location?.toLowerCase() || '';
@@ -30,6 +33,8 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
     console.log('service', service);
     const router = useRouter();
     const { isLoggedIn, user } = useAuthStore();
+    const { isFavorite, toggleFavorite } = useFavoritesStore();
+    const isFavorited = isFavorite(service?.id);
     const isOwner = isLoggedIn && user?.id && (service.freelancerId === user.id || service.rawData?.freelancerId === user.id);
     const isRejected = service.rawData?.approvalStatus === 'REJECTED' || service.approvalStatus === 'REJECTED';
     const rejectionReason = service.rawData?.rejectionReason || service.rejectionReason;
@@ -208,10 +213,24 @@ const ServiceDetails = ({ service, reviews: propReviews, moreServices = [], onNa
                                                 <span className="font-medium text-gray-500">{service.hires?.toFixed(0) } hires</span>
                                             </div>
                                         </div>
-                                        <Button type="button" variant="outline" className="">
-                                            <Heart className="w-4 h-4" />
-                                            
-                                        </Button>
+                                       
+                                            <Heart
+                                              onClick={() => {
+                                                toggleFavorite({
+                                                  id: service.id,
+                                                  title: service.title,
+                                                  price: service.price,
+                                                  currency: service.currency,
+                                                  thumbnailUrl: service.thumbnailUrl,
+                                                  coverImage: service.coverImage,
+                                                  image: service.image,
+                                                  galleryUrls: service.galleryUrls,
+                                                });
+                                                toast.success(isFavorited ? 'Removed from favorites' : 'Added to favorites');
+                                              }}
+                                              className={cn('w-8 h-8 text-sm cursor-pointer text-gray-500 hover:text-primary', isFavorited && 'fill-current text-primary')}
+                                            />
+                                        
                                     </div>
 
                                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-3 mt-4 text-gray-600 max-w-3xl">
