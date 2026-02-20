@@ -26,7 +26,7 @@ const PostServiceProfile = ({
 }) => {
     const profileInputRef = useRef(null);
     const [isDetectingLocation, setIsDetectingLocation] = useState(false);
-
+console.log(">>>>",yearsOfExperience);
     // Compress image helper
     const compressImage = (file) => {
         return new Promise((resolve) => {

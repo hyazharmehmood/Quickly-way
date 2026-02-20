@@ -176,10 +176,12 @@ const PostService = ({ onCancel, onSave, initialData }) => {
     // Fetch User Data on Mount and Prefill Profile
     React.useEffect(() => {
         const fetchUserData = async () => {
+            console.log(">>>Azhar>>>",initialData);
             try {
                 // Fetch profile to get availability and user ID
                 const response = await api.get('/auth/me');
                 const userData = response.data.user;
+                console.log(">>>Azhar>>>",userData);
                 setUser(userData);
                 
                 // Prefill profile fields from user data
@@ -189,7 +191,7 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                     setShowEmail(userData.showEmail || false);
                     setShowMobile(userData.showMobile || false);
                     setProfileLocation(userData.location || "");
-                    setYearsOfExperience(userData.yearsOfExperience || 0);
+                    setYearsOfExperience(initialData?.freelancer?.yearsOfExperience || 0);
                     
                     // Parse phone number if it exists
                     if (userData.phoneNumber) {
@@ -367,10 +369,11 @@ const PostService = ({ onCancel, onSave, initialData }) => {
                 location: profileLocation,
                 showEmail,
                 showMobile,
+
                 yearsOfExperience: yearsOfExperience != null && yearsOfExperience !== '' ? Number(yearsOfExperience) : null,
                 employmentStatus: availableForJob ? "I am ready for full-time employment" : null,
             };
-
+console.log(">>>Azhar>>>",uploadedProfileImage);
             // Update profile (don't fail service creation if profile update fails)
             await api.put('/auth/profile', profilePayload).catch((err) => {
                 console.error("Profile update error (non-blocking):", err);

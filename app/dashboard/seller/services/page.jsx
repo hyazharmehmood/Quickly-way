@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { Plus, Pencil, MoreVertical } from 'lucide-react';
+import { Plus, Pencil, MoreVertical, EyeIcon } from 'lucide-react';
 import Link from 'next/link';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from "@/components/ui/button";
@@ -164,6 +164,12 @@ export default function FreelancerServicesPage() {
                                             <DropdownMenuItem className="cursor-pointer">
                                                 <Pencil className="h-4 w-4" />
                                                 <span className="text-primary">Edit</span>
+                                            </DropdownMenuItem>
+                                        </Link>
+                                        <Link href={`/admin/services/${service.id}`} className="block">
+                                            <DropdownMenuItem className="cursor-pointer">
+                                                <EyeIcon className="h-4 w-4" />
+                                                <span className="text-primary">View</span>
                                             </DropdownMenuItem>
                                         </Link>
                                     </DropdownMenuContent>
