@@ -50,7 +50,7 @@ export function ChatNotificationDropdown({ className }) {
           variant="ghost"
           size="icon"
           className={cn(
-            'relative rounded-full hover:bg-muted transition-colors focus-visible:outline-none',
+            'relative rounded-full hover:bg-muted transition-colors focus-visible:outline-none cursor-pointer',
             className
           )}
           aria-label="Chat notifications"
@@ -82,7 +82,7 @@ export function ChatNotificationDropdown({ className }) {
             {conversationsWithUnread.length === 0 ? (
               <div className="py-8 px-4 text-center">
                 <p className="text-sm text-muted-foreground mb-3">No new messages</p>
-                <Button
+                {/* <Button
                   variant="outline"
                   size="sm"
                   className="rounded-full"
@@ -90,7 +90,7 @@ export function ChatNotificationDropdown({ className }) {
                 >
                   <MessageSquare className="w-4 h-4 mr-2" />
                   Open Inbox
-                </Button>
+                </Button> */}
               </div>
             ) : (
               conversationsWithUnread.map((conv) => (

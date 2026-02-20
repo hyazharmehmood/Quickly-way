@@ -203,14 +203,14 @@ export function Header() {
                 onClick={handleBack}
                 aria-label="Go back"
               >
-                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+                <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 cursor-pointer" />
               </Button>
             )}
 
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 sm:h-9 sm:w-9"
+              className="h-8 w-8 sm:h-9 sm:w-9 cursor-pointer"
               onClick={() => handleNavigate('')}
               aria-label="Go home"
             >
@@ -220,7 +220,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex"
+              className="h-8 w-8 sm:h-9 sm:w-9 hidden sm:flex cursor-pointer"
               onClick={() => window.location.reload()}
               aria-label="Refresh page"
             >
@@ -232,7 +232,7 @@ export function Header() {
               <Button
                 variant="ghost"
                 size="sm"
-                className="gap-1.5 sm:gap-2  min-w-0 px-2 sm:px-3 h-8 sm:h-9 md:h-10 "
+                className="gap-1.5 sm:gap-2  min-w-0 px-2 sm:px-3 h-8 sm:h-9 md:h-10 cursor-pointer"
               >
                 <MapPin className="w-4 h-4 shrink-0" aria-hidden />
                 <span className="text-xs sm:text-sm font-normal truncate  lg:max-w-none">
@@ -370,7 +370,7 @@ export function Header() {
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 sm:gap-2 md:h-10 md:px-4"
+              className="h-8 w-8 sm:h-9 sm:w-auto sm:px-3 sm:gap-2 md:h-10 md:px-4 cursor-pointer"
               onClick={openContactSupport}
               aria-label="Support"
             >

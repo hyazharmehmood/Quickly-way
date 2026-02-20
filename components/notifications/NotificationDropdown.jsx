@@ -125,7 +125,7 @@ export function NotificationDropdown({ className }) {
           variant="ghost"
           size="icon"
           className={cn(
-            'relative rounded-full hover:bg-muted transition-colors focus-visible:outline-none',
+            'relative rounded-full hover:bg-muted transition-colors focus-visible:outline-none cursor-pointer',
             className
           )}
         >
